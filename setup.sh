@@ -2,9 +2,8 @@
 # =================================================================
 # SYSTEM 777 — Setup Automático Completo
 # UN SOLO COMANDO: ./setup.sh
+# Configura: GitHub, Cloudflare DNS, Cloudflare Pages, Actions, Build
 # =================================================================
-
-# NO usar set -e para que no se detenga en errores menores
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -16,16 +15,8 @@ NC='\033[0m'
 
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENV_FILE="$PROJECT_DIR/.env"
-
-banner() {
-    clear
-    echo -e "${CYAN}"
-    echo "╔═══════════════════════════════════════════════════════════╗"
-    echo "║              S Y S T E M   7 7 7                         ║"
-    echo "║           SETUP AUTOMÁTICO — UN SOLO COMANDO             ║"
-    echo "╚═══════════════════════════════════════════════════════════╝"
-    echo -e "${NC}"
-}
+DOMAIN="jrsystem7777.com"
+PAGES_PROJECT="system777"
 
 log()   { echo -e "${GREEN}[✓]${NC} $1"; }
 warn()  { echo -e "${YELLOW}[!]${NC} $1"; }
@@ -40,12 +31,11 @@ check_env() {
     step "PASO 1: Verificando credenciales"
 
     if [ ! -f "$ENV_FILE" ]; then
-        err "No existe .env. Crea uno primero."
+        err "No existe .env. Crea uno primero desde .env.example"
     fi
 
     source "$ENV_FILE"
 
-    # Generar AUTH_SECRET si falta
     if [ -z "${AUTH_SECRET:-}" ]; then
         NEW_SECRET=$(openssl rand -base64 32 2>/dev/null || head -c 32 /dev/urandom | base64)
         sed -i "s|^AUTH_SECRET=\"\"|AUTH_SECRET=\"$NEW_SECRET\"|" "$ENV_FILE"
@@ -55,7 +45,6 @@ check_env() {
 
     source "$ENV_FILE"
 
-    # Verificar variables obligatorias
     [ -z "${DATABASE_URL:-}" ] && err "Falta DATABASE_URL en .env"
     [ -z "${CLOUDFLARE_API_TOKEN:-}" ] && err "Falta CLOUDFLARE_API_TOKEN en .env"
     [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ] && err "Falta CLOUDFLARE_ACCOUNT_ID en .env"
@@ -75,24 +64,36 @@ setup_github() {
     GITHUB_USER=$(echo "$GITHUB_REPO" | cut -d'/' -f1)
     REPO_NAME=$(echo "$GITHUB_REPO" | cut -d'/' -f2)
 
-    # Verificar token
     info "Verificando token de GitHub..."
     GH_USER=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/user" | grep -o '"login":"[^"]*"' | cut -d'"' -f4)
-    
+
     if [ -z "$GH_USER" ]; then
-        warn "Token de GitHub inválido o sin permisos"
-        warn "Continuando de todas formas..."
-    else
-        log "GitHub autenticado como: $GH_USER"
-        # Actualizar GITHUB_REPO si el usuario es diferente
-        if [ "$GH_USER" != "$GITHUB_USER" ]; then
-            GITHUB_REPO="$GH_USER/$REPO_NAME"
-            sed -i "s|^GITHUB_REPO=.*|GITHUB_REPO=\"$GITHUB_REPO\"|" "$ENV_FILE"
-            log "GitHub repo actualizado: $GITHUB_REPO"
-        fi
+        err "Token de GitHub inválido — verifica GITHUB_TOKEN en .env"
+    fi
+    log "GitHub autenticado como: $GH_USER"
+
+    if [ "$GH_USER" != "$GITHUB_USER" ]; then
+        GITHUB_REPO="$GH_USER/$REPO_NAME"
+        sed -i "s|^GITHUB_REPO=.*|GITHUB_REPO=\"$GITHUB_REPO\"|" "$ENV_FILE"
+        log "GitHub repo actualizado: $GITHUB_REPO"
     fi
 
-    # .gitignore
+    REPO_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" \
+        -H "Authorization: token $GITHUB_TOKEN" \
+        "https://api.github.com/repos/$GITHUB_REPO")
+
+    if [ "$REPO_EXISTS" = "404" ]; then
+        info "Creando repository $GITHUB_REPO..."
+        curl -s -X POST \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/user/repos" \
+            -d "{\"name\":\"$REPO_NAME\",\"description\":\"SYSTEM 777\",\"private\":false,\"auto_init\":true}" > /dev/null
+        log "Repository creado"
+    else
+        log "Repository ya existe"
+    fi
+
     cat > "$PROJECT_DIR/.gitignore" << 'GITIGNORE'
 node_modules/
 .next/
@@ -107,23 +108,18 @@ npm-debug.log*
 deploy.log
 GITIGNORE
 
-    # Git setup
     cd "$PROJECT_DIR"
     git init 2>/dev/null || true
-    
-    # Configurar remote
     git remote remove origin 2>/dev/null || true
     git remote add origin "https://$GITHUB_TOKEN@github.com/$GITHUB_REPO.git" 2>/dev/null || true
-    
-    # Commit
+
     git add -A
     git commit -m "feat: SYSTEM 777 platform setup" 2>/dev/null || log "Sin cambios nuevos"
     git branch -M main
-    
-    # Push
+
     info "Subiendo código a GitHub..."
     git push -u origin main --force 2>&1 | tail -3
-    
+
     if [ ${PIPESTATUS[0]} -eq 0 ]; then
         log "Código subido a GitHub"
     else
@@ -132,15 +128,67 @@ GITIGNORE
 }
 
 # =================================================================
-# PASO 3: Cloudflare DNS
+# PASO 3: GitHub Actions Secrets
 # =================================================================
-setup_dns() {
-    step "PASO 3: Configurando DNS en Cloudflare"
+setup_github_secrets() {
+    step "PASO 3: Configurando GitHub Actions Secrets"
 
     source "$ENV_FILE"
-    DOMAIN="jrsystem7777.com"
+    GITHUB_USER=$(echo "$GITHUB_REPO" | cut -d'/' -f1)
 
-    # Obtener Zone ID
+    PUB_KEY_DATA=$(curl -s \
+        -H "Authorization: token $GITHUB_TOKEN" \
+        -H "Accept: application/vnd.github.v3+json" \
+        "https://api.github.com/repos/$GITHUB_REPO/actions/secrets/public-key")
+
+    KEY_ID=$(echo "$PUB_KEY_DATA" | python3 -c "import sys,json;print(json.load(sys.stdin)['key_id'])" 2>/dev/null)
+    PUB_KEY=$(echo "$PUB_KEY_DATA" | python3 -c "import sys,json;print(json.load(sys.stdin)['key'])" 2>/dev/null)
+
+    if [ -z "$KEY_ID" ] || [ -z "$PUB_KEY" ]; then
+        warn "No se pudo obtener public key — configura secrets manualmente"
+        return
+    fi
+
+    encrypt_value() {
+        python3 -c "
+import base64
+from nacl.public import PublicKey, SealedBox
+pubkey = PublicKey(base64.b64decode('$PUB_KEY'))
+box = SealedBox(pubkey)
+print(base64.b64encode(box.encrypt('$1'.encode())).decode())
+" 2>/dev/null
+    }
+
+    CF_TOKEN_ENC=$(encrypt_value "$CLOUDFLARE_API_TOKEN")
+    CF_ACCOUNT_ENC=$(encrypt_value "$CLOUDFLARE_ACCOUNT_ID")
+
+    if [ -n "$CF_TOKEN_ENC" ]; then
+        curl -s -o /dev/null -X PUT \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/$GITHUB_REPO/actions/secrets/CLOUDFLARE_API_TOKEN" \
+            -d "{\"encrypted_value\":\"$CF_TOKEN_ENC\",\"key_id\":\"$KEY_ID\"}"
+        log "Secret CLOUDFLARE_API_TOKEN configurado"
+    fi
+
+    if [ -n "$CF_ACCOUNT_ENC" ]; then
+        curl -s -o /dev/null -X PUT \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/$GITHUB_REPO/actions/secrets/CLOUDFLARE_ACCOUNT_ID" \
+            -d "{\"encrypted_value\":\"$CF_ACCOUNT_ENC\",\"key_id\":\"$KEY_ID\"}"
+        log "Secret CLOUDFLARE_ACCOUNT_ID configurado"
+    fi
+}
+
+# =================================================================
+# PASO 4: Cloudflare DNS
+# =================================================================
+setup_dns() {
+    step "PASO 4: Configurando DNS en Cloudflare"
+
+    source "$ENV_FILE"
+
     ZONE_DATA=$(curl -s \
         -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
         "https://api.cloudflare.com/client/v4/zones?name=$DOMAIN" 2>/dev/null)
@@ -148,16 +196,33 @@ setup_dns() {
     ZONE_ID=$(echo "$ZONE_DATA" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
 
     if [ -z "$ZONE_ID" ]; then
-        warn "Dominio $DOMAIN no encontrado en Cloudflare"
-        warn "Agrégalo desde el Dashboard de Cloudflare primero"
+        warn "Dominio $DOMAIN no encontrado en Cloudflare — agrégalo primero"
         return
     fi
     log "Zone ID: $ZONE_ID"
 
-    # Crear registros DNS para Cloudflare Pages
+    # Limpiar registros A antiguos del VPS
+    for TYPE_A in "A"; do
+        EXISTING_A=$(curl -s \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records?type=$TYPE_A&name=$DOMAIN" 2>/dev/null)
+        echo "$EXISTING_A" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+for r in d.get('result',[]):
+    if r['type']=='A' and r['name'] in ['$DOMAIN','www.$DOMAIN']:
+        print(r['id'])
+" 2>/dev/null | while read -r RID; do
+            curl -s -X DELETE \
+                -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+                "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/$RID" > /dev/null 2>&1
+            log "Registro A antiguo eliminado (VPS)"
+        done
+    done
+
     RECORDS=(
-        "CNAME|$DOMAIN|system777.pages.dev|true"
-        "CNAME|www.$DOMAIN|system777.pages.dev|true"
+        "CNAME|$DOMAIN|${PAGES_PROJECT}.pages.dev|true"
+        "CNAME|www.$DOMAIN|${PAGES_PROJECT}.pages.dev|true"
     )
 
     for record in "${RECORDS[@]}"; do
@@ -186,7 +251,6 @@ setup_dns() {
         fi
     done
 
-    # SSL
     curl -s -X PATCH \
         -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
         -H "Content-Type: application/json" \
@@ -194,7 +258,6 @@ setup_dns() {
         -d '{"value":"full"}' > /dev/null 2>&1
     log "SSL: Full mode"
 
-    # Always HTTPS
     curl -s -X PATCH \
         -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
         -H "Content-Type: application/json" \
@@ -204,17 +267,16 @@ setup_dns() {
 }
 
 # =================================================================
-# PASO 4: Cloudflare Pages
+# PASO 5: Cloudflare Pages
 # =================================================================
 setup_pages() {
-    step "PASO 4: Configurando Cloudflare Pages"
+    step "PASO 5: Configurando Cloudflare Pages"
 
     source "$ENV_FILE"
 
-    # Verificar si existe
     PAGES_HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
         -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-        "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/system777" 2>/dev/null)
+        "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$PAGES_PROJECT" 2>/dev/null)
 
     if [ "$PAGES_HTTP" = "404" ]; then
         info "Creando proyecto Cloudflare Pages..."
@@ -222,15 +284,15 @@ setup_pages() {
             -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
             -H "Content-Type: application/json" \
             "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects" \
-            -d '{
-                "name":"system777",
-                "production_branch":"main",
-                "build_config":{
-                    "build_command":"npm install && npx prisma generate && npx @cloudflare/next-on-pages",
-                    "destination_dir":".vercel/output/static"
+            -d "{
+                \"name\":\"$PAGES_PROJECT\",
+                \"production_branch\":\"main\",
+                \"build_config\":{
+                    \"build_command\":\"npm install --legacy-peer-deps && npx prisma generate && npx @cloudflare/next-on-pages\",
+                    \"destination_dir\":\".vercel/output/static\"
                 }
-            }' 2>/dev/null)
-        
+            }" 2>/dev/null)
+
         if echo "$RESULT" | grep -q '"success":true'; then
             log "Proyecto Pages creado"
         else
@@ -238,14 +300,13 @@ setup_pages() {
         fi
     else
         log "Proyecto Pages ya existe"
-        # Actualizar build config
         curl -s -X PATCH \
             -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
             -H "Content-Type: application/json" \
-            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/system777" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$PAGES_PROJECT" \
             -d '{
                 "build_config":{
-                    "build_command":"npm install && npx prisma generate && npx @cloudflare/next-on-pages",
+                    "build_command":"npm install --legacy-peer-deps && npx prisma generate && npx @cloudflare/next-on-pages",
                     "destination_dir":".vercel/output/static"
                 }
             }' > /dev/null 2>&1
@@ -253,41 +314,41 @@ setup_pages() {
     fi
 
     # Dominios personalizados
-    for DOMAIN in "jrsystem7777.com" "www.jrsystem7777.com"; do
+    for D in "$DOMAIN" "www.$DOMAIN"; do
         curl -s -X PUT \
             -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
             -H "Content-Type: application/json" \
-            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/system777/domains" \
-            -d "{\"name\":\"$DOMAIN\"}" > /dev/null 2>&1
-        log "Dominio vinculado: $DOMAIN"
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$PAGES_PROJECT/domains" \
+            -d "{\"name\":\"$D\"}" > /dev/null 2>&1
+        log "Dominio vinculado: $D"
     done
 
-    # Variables de entorno
-    source "$ENV_FILE"
+    # nodejs_compat
     curl -s -X PATCH \
         -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
         -H "Content-Type: application/json" \
-        "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/system777" \
-        -d "{
-            \"deployment_configs\":{
-                \"production\":{
-                    \"env_vars\":{
-                        \"DATABASE_URL\":{\"value\":\"$DATABASE_URL\"},
-                        \"AUTH_SECRET\":{\"value\":\"$AUTH_SECRET\"},
-                        \"NEXTAUTH_URL\":{\"value\":\"https://jrsystem7777.com\"},
-                        \"NODE_VERSION\":{\"value\":\"20\"}
+        "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$PAGES_PROJECT" \
+        -d '{
+            "deployment_configs":{
+                "production":{
+                    "compatibility_flags":["nodejs_compat"],
+                    "env_vars":{
+                        "DATABASE_URL":{"value":"'"$DATABASE_URL"'"},
+                        "AUTH_SECRET":{"value":"'"$AUTH_SECRET"'"},
+                        "NEXTAUTH_URL":{"value":"https://'"$DOMAIN"'"},
+                        "NODE_VERSION":{"value":"20"}
                     }
                 }
             }
-        }" > /dev/null 2>&1
-    log "Variables de entorno configuradas"
+        }' > /dev/null 2>&1
+    log "Variables de entorno + nodejs_compat configurados"
 }
 
 # =================================================================
-# PASO 5: GitHub Actions
+# PASO 6: GitHub Actions Workflow
 # =================================================================
 setup_actions() {
-    step "PASO 5: Configurando GitHub Actions"
+    step "PASO 6: Configurando GitHub Actions"
 
     mkdir -p "$PROJECT_DIR/.github/workflows"
 
@@ -299,19 +360,35 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  deployments: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    name: Deploy to Cloudflare Pages
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
-      - run: npx prisma generate
-      - run: npx @cloudflare/next-on-pages
-      - uses: cloudflare/wrangler-action@v3
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Build for Cloudflare Pages
+        run: npx @cloudflare/next-on-pages
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -320,7 +397,6 @@ WORKFLOW
 
     log "Workflow creado"
 
-    # Subir
     cd "$PROJECT_DIR"
     git add .github/
     git commit -m "ci: deploy workflow" 2>/dev/null || true
@@ -329,31 +405,27 @@ WORKFLOW
 }
 
 # =================================================================
-# PASO 6: Build
+# PASO 7: Build local
 # =================================================================
 do_build() {
-    step "PASO 6: Instalando y construyendo"
+    step "PASO 7: Construyendo"
 
     cd "$PROJECT_DIR"
 
-    # Node.js 20
     export NVM_DIR="$HOME/.nvm"
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
     nvm use 20 2>/dev/null || true
 
     info "Instalando dependencias..."
-    npm install 2>&1 | tail -3
+    npm install --legacy-peer-deps 2>&1 | tail -3
     log "Dependencias OK"
 
     info "Generando Prisma..."
     npx prisma generate 2>&1 | tail -2
     log "Prisma OK"
 
-    info "Instalando adaptador Cloudflare..."
-    npm install -D @cloudflare/next-on-pages wrangler 2>&1 | tail -2
-    log "Adaptador OK"
-
-    info "Construyendo..."
+    info "Construyendo para Cloudflare Pages..."
+    rm -rf .vercel .next
     npx @cloudflare/next-on-pages 2>&1 | tail -5
 
     if [ -d ".vercel/output/static" ]; then
@@ -364,21 +436,43 @@ do_build() {
 }
 
 # =================================================================
+# PASO 8: Deploy inicial
+# =================================================================
+do_deploy() {
+    step "PASO 8: Deploy a Cloudflare Pages"
+
+    source "$ENV_FILE"
+    cd "$PROJECT_DIR"
+
+    if [ -d ".vercel/output/static" ]; then
+        export CLOUDFLARE_API_TOKEN="$CLOUDFLARE_API_TOKEN"
+        npx wrangler pages deploy .vercel/output/static \
+            --project-name=$PAGES_PROJECT \
+            --branch=main 2>&1 | tail -5
+        log "Deploy completado"
+    else
+        warn "No hay build — se saltó el deploy local"
+        warn "GitHub Actions lo hará en el próximo push"
+    fi
+}
+
+# =================================================================
 # RESUMEN
 # =================================================================
 summary() {
     source "$ENV_FILE"
-    
+
     echo ""
     echo -e "${GREEN}╔═══════════════════════════════════════════════════════════╗${NC}"
     echo -e "${GREEN}║              ✅  TODO CONFIGURADO                        ║${NC}"
     echo -e "${GREEN}╚═══════════════════════════════════════════════════════════╝${NC}"
     echo ""
-    echo -e "${BOLD}Tu sitio:${NC}    ${CYAN}https://jrsystem7777.com${NC}"
-    echo -e "${BOLD}Pages:${NC}      ${CYAN}https://system777.pages.dev${NC}"
+    echo -e "${BOLD}Tu sitio:${NC}    ${CYAN}https://$DOMAIN${NC}"
+    echo -e "${BOLD}Pages:${NC}      ${CYAN}https://${PAGES_PROJECT}.pages.dev${NC}"
     echo -e "${BOLD}GitHub:${NC}     ${CYAN}https://github.com/$GITHUB_REPO${NC}"
+    echo -e "${BOLD}Actions:${NC}    ${CYAN}https://github.com/$GITHUB_REPO/actions${NC}"
     echo ""
-    echo -e "${YELLOW}Espera 5-30 min para propagación DNS${NC}"
+    echo -e "${YELLOW}Espera 2-5 min para propagación DNS${NC}"
     echo ""
 }
 
@@ -386,13 +480,22 @@ summary() {
 # MAIN
 # =================================================================
 main() {
-    banner
+    clear
+    echo -e "${CYAN}"
+    echo "╔═══════════════════════════════════════════════════════════╗"
+    echo "║              S Y S T E M   7 7 7                         ║"
+    echo "║           SETUP AUTOMÁTICO — UN SOLO COMANDO             ║"
+    echo "╚═══════════════════════════════════════════════════════════╝"
+    echo -e "${NC}"
+
     check_env
     setup_github
+    setup_github_secrets
     setup_dns
     setup_pages
     setup_actions
     do_build
+    do_deploy
     summary
 }
 
