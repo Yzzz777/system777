@@ -180,13 +180,10 @@ setup_cloudflare_dns() {
 
     log "Zone ID encontrado: $ZONE_ID"
 
-    # Obtener IP del servidor (si existe)
-    ORIGIN_IP="37.60.245.118"  # IP del VPS según memoria
-
-    # Configurar registros DNS
+    # Configurar registros DNS (Cloudflare Pages)
     records=(
-        "A|$DOMAIN|$ORIGIN_IP|true"
-        "A|www.$DOMAIN|$ORIGIN_IP|true"
+        "CNAME|$DOMAIN|system777.pages.dev|true"
+        "CNAME|www.$DOMAIN|system777.pages.dev|true"
     )
 
     for record in "${records[@]}"; do
