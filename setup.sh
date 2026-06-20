@@ -113,7 +113,7 @@ GITIGNORE
     
     # Configurar remote
     git remote remove origin 2>/dev/null || true
-    git remote add origin "https://github.com/$GITHUB_REPO.git" 2>/dev/null || true
+    git remote add origin "https://$GITHUB_TOKEN@github.com/$GITHUB_REPO.git" 2>/dev/null || true
     
     # Commit
     git add -A

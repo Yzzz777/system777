@@ -140,10 +140,10 @@ GITIGNORE
     # Configurar git remote
     cd "$PROJECT_DIR"
     if ! git remote get-url origin >/dev/null 2>&1; then
-        git remote add origin "https://github.com/$GITHUB_REPO.git" 2>/dev/null || true
+        git remote add origin "https://$GITHUB_TOKEN@github.com/$GITHUB_REPO.git" 2>/dev/null || true
         log "Remote origin configurado"
     else
-        git remote set-url origin "https://github.com/$GITHUB_REPO.git"
+        git remote set-url origin "https://$GITHUB_TOKEN@github.com/$GITHUB_REPO.git"
         log "Remote origin actualizado"
     fi
 

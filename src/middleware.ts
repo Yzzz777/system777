@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 const securityHeaders = [
   ["Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com;"],
@@ -10,7 +11,7 @@ const securityHeaders = [
   ["X-XSS-Protection", "1; mode=block"],
 ];
 
-export function proxy(request: Request) {
+export function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
   for (const [key, value] of securityHeaders) {
