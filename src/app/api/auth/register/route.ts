@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import argon2 from "argon2";
+
+export const runtime = "edge";
+import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { z } from "zod";
 
@@ -55,7 +57,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const hashedPassword = await argon2.hash(password);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     const user = await db.user.create({
       data: { name, email, username, password: hashedPassword },

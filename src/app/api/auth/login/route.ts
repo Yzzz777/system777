@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import argon2 from "argon2";
+
+export const runtime = "edge";
+import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { z } from "zod";
 
@@ -48,7 +50,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
-    const isValid = await argon2.verify(user.password, password);
+    const isValid = await bcrypt.compare(password, user.password);
 
     if (!isValid) {
       await db.activityLog.create({
