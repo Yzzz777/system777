@@ -1,11 +1,39 @@
+# Dependencies
 node_modules/
+.pnp
+.pnp.js
+
+# Next.js
 .next/
 out/
+
+# Production
+build/
+.vercel/
+
+# Environment
 .env
 .env.local
-.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Debug
 npm-debug.log*
-.vercel/
-.wrangler/
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Prisma
+prisma/migrations/
+
+# Logs
 *.log
 deploy.log
