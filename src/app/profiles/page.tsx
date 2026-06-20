@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Star, Github, Twitter, Globe } from "lucide-react";
 import { FadeIn, FadeInUp, StaggerContainer, StaggerItem, HoverScale } from "@/components/ui/Animations";
-import Image from "next/image";
+/* using img tags for external images */
 
 const profiles = [
   {
@@ -214,13 +214,11 @@ export default function ProfilesPage() {
               <HoverScale>
                 <div className="glass rounded-2xl overflow-hidden h-full flex flex-col transition-all hover:border-white/10">
                   <div className="relative h-64 overflow-hidden bg-gradient-to-br from-[#121212] to-[#1a1a1a]">
-                    <Image
+                    <img
                       src={person.photo}
                       alt={person.name}
-                      fill
-                      className="object-cover transition-transform duration-500 hover:scale-110"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      unoptimized
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                      loading="lazy"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     <div className="absolute bottom-4 left-4 right-4">
