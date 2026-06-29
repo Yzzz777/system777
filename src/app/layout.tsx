@@ -3,6 +3,8 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import Providers from "@/components/Providers";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import ThemePicker from "@/components/ThemePicker";
 import "./globals.css";
 
 const inter = Inter({
@@ -36,11 +38,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <body className="min-h-screen bg-[#0A0A0A] text-gray-300 antialiased">
+      <body className="min-h-screen antialiased" style={{ background: "var(--color-background, #0A0A0A)", color: "var(--color-text, #e5e7eb)" }}>
         <Providers>
-          <Navbar />
-          <main className="pt-16">{children}</main>
-          <Footer />
+          <ThemeProvider>
+            <Navbar />
+            <main className="pt-16">{children}</main>
+            <Footer />
+            <ThemePicker />
+          </ThemeProvider>
         </Providers>
       </body>
     </html>
