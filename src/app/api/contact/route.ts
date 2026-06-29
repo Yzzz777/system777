@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { createContactMessage } from "@/lib/db";
+import { z } from "zod";
 
 export const runtime = "edge";
-import { z } from "zod";
 
 const contactSchema = z.object({
   name: z.string().min(2).max(100),
@@ -20,10 +20,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
     }
 
-    await db.contactMessage.create({ data: parsed.data });
+    await createContactMessage(parsed.data);
 
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (err: unknown) {
+    console.error("Contact error:", err);
+    const msg = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { ensureUsersTable, createUser } from "@/lib/db";
+import { z } from "zod";
 
 export const runtime = "edge";
-import { db } from "@/lib/db";
-import { z } from "zod";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -46,25 +46,26 @@ export async function POST(request: Request) {
 
     const { name, email, username, password } = parsed.data;
 
-    const existingUser = await db.user.findFirst({
-      where: { OR: [{ email }, { username }] },
-    });
+    await ensureUsersTable();
 
-    if (existingUser) {
-      return NextResponse.json(
-        { error: existingUser.email === email ? "Email already registered" : "Username already taken" },
-        { status: 409 }
-      );
+    const { findUserByEmail, findUserByUsername } = await import("@/lib/db");
+    const existingEmail = await findUserByEmail(email);
+    if (existingEmail) {
+      return NextResponse.json({ error: "Email already registered" }, { status: 409 });
+    }
+
+    const existingUsername = await findUserByUsername(username);
+    if (existingUsername) {
+      return NextResponse.json({ error: "Username already taken" }, { status: 409 });
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
-
-    const user = await db.user.create({
-      data: { name, email, username, password: hashedPassword },
-    });
+    const user = await createUser({ name, email, username, password: hashedPassword });
 
     return NextResponse.json({ success: true, user: { id: user.id, email: user.email } }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (err: unknown) {
+    console.error("Register error:", err);
+    const msg = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

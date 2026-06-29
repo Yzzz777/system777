@@ -15,7 +15,6 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npx prisma generate
       - run: npx @cloudflare/next-on-pages
       - uses: cloudflare/wrangler-action@v3
         with:

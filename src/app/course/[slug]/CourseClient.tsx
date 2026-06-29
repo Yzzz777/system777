@@ -1,8 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, Clock, Users, Star, ArrowLeft, Check, Lock, Play, ChevronRight, Shield } from "lucide-react";
+import { useState } from "react";
+import { BookOpen, Clock, Users, Star, ArrowLeft, Check, Lock, Play, ChevronRight, Shield, X, FileText } from "lucide-react";
 import { FadeIn } from "@/components/ui/Animations";
+
+interface Lesson {
+  title: string;
+  duration: string;
+  free: boolean;
+  videoId?: string;
+  content?: string;
+}
 
 interface CourseData {
   slug: string;
@@ -17,12 +26,18 @@ interface CourseData {
   price: number;
   isPremium: boolean;
   topics: string[];
-  curriculum: { title: string; lessons: { title: string; duration: string; free: boolean }[] }[];
+  curriculum: { title: string; lessons: Lesson[] }[];
   requirements: string[];
   whatYouLearn: string[];
 }
 
 export default function CourseClient({ course, freeLessons, totalLessons }: { course: CourseData; freeLessons: number; totalLessons: number }) {
+  const [activeLesson, setActiveLesson] = useState<{ sectionIdx: number; lessonIdx: number } | null>(null);
+
+  const currentLesson = activeLesson
+    ? course.curriculum[activeLesson.sectionIdx]?.lessons[activeLesson.lessonIdx]
+    : null;
+
   return (
     <div className="min-h-screen py-12">
       <div className="mx-auto max-w-6xl px-4">
@@ -92,18 +107,31 @@ export default function CourseClient({ course, freeLessons, totalLessons }: { co
                       </div>
                       <div className="mt-3 space-y-2">
                         {section.lessons.map((lesson, j) => (
-                          <div key={j} className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-white/5 transition-colors">
+                          <button
+                            key={j}
+                            onClick={() => {
+                              if (lesson.free || !course.isPremium) {
+                                setActiveLesson({ sectionIdx: i, lessonIdx: j });
+                              }
+                            }}
+                            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 transition-colors ${
+                              lesson.free || !course.isPremium
+                                ? "hover:bg-white/5 cursor-pointer"
+                                : "cursor-default"
+                            }`}
+                          >
                             <div className="flex items-center gap-3">
-                              {lesson.free ? (
+                              {lesson.free || !course.isPremium ? (
                                 <Play className="h-4 w-4 text-[#00FF88]" />
                               ) : (
                                 <Lock className="h-4 w-4 text-gray-600" />
                               )}
-                              <span className={`text-sm ${lesson.free ? "text-gray-300" : "text-gray-500"}`}>{lesson.title}</span>
+                              <span className={`text-sm text-left ${lesson.free || !course.isPremium ? "text-gray-300" : "text-gray-500"}`}>{lesson.title}</span>
                               {lesson.free && <span className="rounded-full bg-[#00FF88]/10 px-2 py-0.5 text-[10px] text-[#00FF88]">Gratis</span>}
+                              {lesson.videoId && <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] text-red-400">Video</span>}
                             </div>
                             <span className="text-xs text-gray-600">{lesson.duration}</span>
-                          </div>
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -174,6 +202,84 @@ export default function CourseClient({ course, freeLessons, totalLessons }: { co
           </div>
         </div>
       </div>
+
+      {activeLesson && currentLesson && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setActiveLesson(null)}>
+          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto glass rounded-2xl p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-xl font-bold text-white">{currentLesson.title}</h3>
+                <p className="text-sm text-gray-500">{course.curriculum[activeLesson.sectionIdx].title} · {currentLesson.duration}</p>
+              </div>
+              <button onClick={() => setActiveLesson(null)} className="rounded-lg p-2 text-gray-400 hover:bg-white/5 hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {currentLesson.videoId && (
+              <div className="mb-6 aspect-video rounded-xl overflow-hidden bg-[#121212]">
+                <iframe
+                  src={`https://www.youtube.com/embed/${currentLesson.videoId}`}
+                  title={currentLesson.title}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            )}
+
+            {currentLesson.content && (
+              <div className="rounded-xl bg-white/[0.02] border border-white/5 p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <FileText className="h-5 w-5 text-[#00FF88]" />
+                  <h4 className="font-semibold text-white">Contenido de la Lección</h4>
+                </div>
+                <div className="prose prose-invert prose-sm max-w-none text-gray-300 leading-relaxed whitespace-pre-line">
+                  {currentLesson.content}
+                </div>
+              </div>
+            )}
+
+            {!currentLesson.videoId && !currentLesson.content && (
+              <div className="rounded-xl bg-white/[0.02] border border-white/5 p-8 text-center">
+                <Play className="mx-auto h-12 w-12 text-gray-600 mb-4" />
+                <p className="text-gray-400">Contenido de la lección próximamente disponible</p>
+              </div>
+            )}
+
+            <div className="mt-6 flex justify-between">
+              <button
+                onClick={() => {
+                  if (activeLesson.lessonIdx > 0) {
+                    setActiveLesson({ ...activeLesson, lessonIdx: activeLesson.lessonIdx - 1 });
+                  } else if (activeLesson.sectionIdx > 0) {
+                    const prevSection = course.curriculum[activeLesson.sectionIdx - 1];
+                    setActiveLesson({ sectionIdx: activeLesson.sectionIdx - 1, lessonIdx: prevSection.lessons.length - 1 });
+                  }
+                }}
+                disabled={activeLesson.sectionIdx === 0 && activeLesson.lessonIdx === 0}
+                className="rounded-xl border border-white/10 px-5 py-2.5 text-sm text-gray-400 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() => {
+                  const section = course.curriculum[activeLesson.sectionIdx];
+                  if (activeLesson.lessonIdx < section.lessons.length - 1) {
+                    setActiveLesson({ ...activeLesson, lessonIdx: activeLesson.lessonIdx + 1 });
+                  } else if (activeLesson.sectionIdx < course.curriculum.length - 1) {
+                    setActiveLesson({ sectionIdx: activeLesson.sectionIdx + 1, lessonIdx: 0 });
+                  }
+                }}
+                disabled={activeLesson.sectionIdx === course.curriculum.length - 1 && activeLesson.lessonIdx === course.curriculum[activeLesson.sectionIdx].lessons.length - 1}
+                className="rounded-xl bg-[#00FF88] px-5 py-2.5 text-sm font-semibold text-black hover:bg-[#00CC6A] disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

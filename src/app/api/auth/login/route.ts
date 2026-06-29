@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { ensureUsersTable, findUserByEmail, createActivityLog } from "@/lib/db";
+import { z } from "zod";
 
 export const runtime = "edge";
-import { db } from "@/lib/db";
-import { z } from "zod";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -41,33 +41,30 @@ export async function POST(request: Request) {
 
     const { email, password } = parsed.data;
 
-    const user = await db.user.findUnique({ where: { email } });
+    await ensureUsersTable();
+    const user = await findUserByEmail(email);
 
     if (!user || !user.password) {
-      await db.activityLog.create({
-        data: { userId: "system", action: "FAILED_LOGIN", details: `Failed login for ${email}`, ip },
-      });
+      await createActivityLog({ userId: "system", action: "FAILED_LOGIN", details: `Failed login for ${email}`, ip });
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
     const isValid = await bcrypt.compare(password, user.password);
 
     if (!isValid) {
-      await db.activityLog.create({
-        data: { userId: user.id, action: "FAILED_LOGIN", details: "Invalid password", ip },
-      });
+      await createActivityLog({ userId: user.id, action: "FAILED_LOGIN", details: "Invalid password", ip });
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
-    await db.activityLog.create({
-      data: { userId: user.id, action: "LOGIN", ip },
-    });
+    await createActivityLog({ userId: user.id, action: "LOGIN", ip });
 
     return NextResponse.json({
       success: true,
       user: { id: user.id, email: user.email, name: user.name, role: user.role, username: user.username },
     });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (err: unknown) {
+    console.error("Login error:", err);
+    const msg = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
