@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Mail, MessageCircle, Send, Loader2, CheckCircle, MapPin } from "lucide-react";
 import { siteConfig } from "@/lib/config";
 import { FadeIn } from "@/components/ui/Animations";
@@ -8,15 +8,24 @@ import { FadeIn } from "@/components/ui/Animations";
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     setLoading(true);
     try {
       const res = await fetch("/api/contact", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
-      if (res.ok) { setSuccess(true); setForm({ name: "", email: "", subject: "", message: "" }); }
-    } catch {}
+      if (res.ok) { setSuccess(true); setError(""); setForm({ name: "", email: "", subject: "", message: "" }); }
+    } catch { setError("Error al enviar el mensaje. Intenta de nuevo."); }
     setLoading(false);
   };
 
@@ -79,6 +88,11 @@ export default function ContactPage() {
                     <label className="mb-1.5 block text-sm font-medium text-gray-300">Mensaje</label>
                     <textarea required rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-[#00FF88]/50" placeholder="Cuéntanos más..." />
                   </div>
+                  {error && (
+                    <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-400">
+                      {error}
+                    </div>
+                  )}
                   <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#00FF88] py-3 text-sm font-semibold text-black transition-all hover:bg-[#00CC6A] disabled:opacity-50">
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                     {loading ? "Enviando..." : "Enviar Mensaje"}

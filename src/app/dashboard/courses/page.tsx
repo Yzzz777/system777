@@ -1,16 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, BookOpen, Clock, CheckCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, BookOpen, Clock, CheckCircle, Loader2 } from "lucide-react";
 import { FadeIn } from "@/components/ui/Animations";
 
-const enrolledCourses = [
-  { title: "Guía Completa de JavaScript", slug: "javascript-complete", progress: 75, total: 42, completed: 31, category: "Programación", image: "JS" },
-  { title: "Curso Completo de React", slug: "react-complete", progress: 40, total: 60, completed: 24, category: "Frontend", image: "R" },
-  { title: "Hacking Ético Completo", slug: "ethical-hacking", progress: 15, total: 80, completed: 12, category: "Ciberseguridad", image: "HE" },
-];
+interface EnrolledCourse {
+  title: string;
+  slug: string;
+  progress: number;
+  total: number;
+  completed: number;
+  category: string;
+  image: string;
+}
 
 export default function DashboardCoursesPage() {
+  const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/enroll")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.courses) setEnrolledCourses(data.courses);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="min-h-screen py-12">
       <div className="mx-auto max-w-5xl px-4">
@@ -25,8 +43,14 @@ export default function DashboardCoursesPage() {
           </div>
         </FadeIn>
 
+        {loading && (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-[#00FF88]" />
+          </div>
+        )}
+
         <div className="space-y-4">
-          {enrolledCourses.map((course) => (
+          {!loading && enrolledCourses.map((course) => (
             <FadeIn key={course.slug}>
               <Link href={`/course/${course.slug}`} className="glass block rounded-2xl p-6 transition-all hover:border-white/10">
                 <div className="flex items-start gap-4">

@@ -40,6 +40,116 @@ export default function CourseClient({ course, freeLessons, totalLessons }: { co
   const [enrolled, setEnrolled] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
+  const [quizMode, setQuizMode] = useState(false);
+  const [quizSectionIdx, setQuizSectionIdx] = useState(0);
+  const [quizQuestionIdx, setQuizQuestionIdx] = useState(0);
+  const [quizScore, setQuizScore] = useState(0);
+  const [quizSelected, setQuizSelected] = useState<number | null>(null);
+  const [quizAnswered, setQuizAnswered] = useState(false);
+  const [quizComplete, setQuizComplete] = useState(false);
+
+  const quizData: Record<number, { question: string; options: string[]; correct: number }[]> = {
+    0: [
+      { question: "Que significa HTML?", options: ["Hyper Text Markup Language", "High Tech Modern Language", "Home Tool Markup Language", "Hyperlinks and Text Markup Language"], correct: 0 },
+      { question: "Cual es la etiqueta para crear un enlace?", options: ["<link>", "<a>", "<href>", "<url>"], correct: 1 },
+      { question: "Que etiqueta se usa para imagenes?", options: ["<picture>", "<img>", "<image>", "<src>"], correct: 1 },
+    ],
+    1: [
+      { question: "Que propiedad CSS controla el tamanio del texto?", options: ["text-size", "font-size", "text-style", "font-style"], correct: 1 },
+      { question: "Que valor de display crea un layout flexbox?", options: ["display: block", "display: flex", "display: inline", "display: grid"], correct: 1 },
+      { question: "Que propiedad CSS crea un grid?", options: ["display: table", "display: flex", "display: grid", "display: layout"], correct: 2 },
+    ],
+    2: [
+      { question: "Como se declara una constante en JavaScript?", options: ["var", "let", "const", "define"], correct: 2 },
+      { question: "Que metodo selecciona un elemento por ID?", options: ["querySelector", "getElementById", "getElement", "findElement"], correct: 1 },
+      { question: "Que evento se dispara al hacer clic?", options: ["onhover", "onclick", "onscroll", "onload"], correct: 1 },
+    ],
+    3: [
+      { question: "Que hook gestiona el estado en React?", options: ["useEffect", "useState", "useRef", "useMemo"], correct: 1 },
+      { question: "Que hook ejecuta efectos secundarios?", options: ["useState", "useCallback", "useEffect", "useReducer"], correct: 2 },
+      { question: "Que retorna useState?", options: ["Un valor", "Una funcion", "[valor, setter]", "Un objeto"], correct: 2 },
+    ],
+    4: [
+      { question: "Que framework es para React en el servidor?", options: ["Express", "Next.js", "Fastify", "NestJS"], correct: 1 },
+      { question: "Que permite App Router en Next.js?", options: ["Solo rutas GET", "Layouts anidados", "Solo SSR", "Solo CSR"], correct: 1 },
+      { question: "Que son los Server Components?", options: ["Componentes con CSS", "Componentes renderizados en servidor", "Componentes estaticos", "Componentes de clase"], correct: 1 },
+    ],
+    5: [
+      { question: "Como se imprime en Python?", options: ["console.log()", "echo()", "print()", "write()"], correct: 2 },
+      { question: "Que tipo de dato es [1, 2, 3]?", options: ["Tuple", "List", "Array", "Dictionary"], correct: 1 },
+      { question: "Como se define una funcion en Python?", options: ["function", "def", "func", "define"], correct: 1 },
+    ],
+    6: [
+      { question: "Que es el hacking etico?", options: ["Hackear sin permiso", "Pentesting autorizado", "Robar datos", "Crear virus"], correct: 1 },
+      { question: "Que herramienta escanea puertos?", options: ["Wireshark", "Nmap", "Metasploit", "Burp Suite"], correct: 1 },
+      { question: "Cuantas fases tiene el pentesting?", options: ["3", "4", "5", "7"], correct: 2 },
+    ],
+    7: [
+      { question: "Que comando muestra archivos en Linux?", options: ["dir", "ls", "show", "list"], correct: 1 },
+      { question: "Que comando cambia de directorio?", options: ["move", "cd", "goto", "switch"], correct: 1 },
+      { question: "Que comando crea una carpeta?", options: ["create", "mkdir", "newdir", "makedir"], correct: 1 },
+    ],
+    8: [
+      { question: "Que framework se usa para bots de Discord?", options: ["discord.py", "Discord.js", "Discord API", "BotPress"], correct: 1 },
+      { question: "Que son los Slash Commands?", options: ["Comandos de teclado", "Comandos con /", "Comandos de mouse", "Comandos voice"], correct: 1 },
+      { question: "Que libreria maneja eventos en Discord.js?", options: ["events.js", "Node.js EventEmitter", "on.js", "discord-events"], correct: 1 },
+    ],
+    9: [
+      { question: "Que es Node.js?", options: ["Un navegador", "Runtime de JavaScript", "Un lenguaje", "Un framework"], correct: 1 },
+      { question: "Que framework web es Express?", options: ["Frontend", "Backend", "Base de datos", "DevOps"], correct: 1 },
+      { question: "Que modulo gestiona paquetes?", options: ["yarn", "npm", "pip", "cargo"], correct: 1 },
+    ],
+    10: [
+      { question: "Que tipo de base de datos es PostgreSQL?", options: ["NoSQL", "Relacional", "Graph", "Key-Value"], correct: 1 },
+      { question: "Que clausula filtra resultados?", options: ["ORDER BY", "WHERE", "GROUP BY", "HAVING"], correct: 1 },
+      { question: "Que JOIN retorna todas las filas?", options: ["INNER JOIN", "LEFT JOIN", "RIGHT JOIN", "CROSS JOIN"], correct: 1 },
+    ],
+    11: [
+      { question: "Que es Docker?", options: ["Un lenguaje", "Una plataforma de containers", "Un editor", "Una base de datos"], correct: 1 },
+      { question: "Que archivo define un container?", options: ["config.yml", "Dockerfile", "container.json", "docker.xml"], correct: 1 },
+      { question: "Que comando crea un container?", options: ["docker create", "docker run", "docker start", "docker init"], correct: 1 },
+    ],
+    12: [
+      { question: "Que es un pentest?", options: ["Un ataque real", "Una auditoria de seguridad", "Una configuracion", "Un script"], correct: 1 },
+      { question: "Que framework de explotacion es popular?", options: ["Wireshark", "Nmap", "Metasploit", "Snort"], correct: 2 },
+      { question: "Que es post-explotacion?", options: ["Atacar", "Mantener acceso y mover lateralmente", "Escaneo", "Reconocimiento"], correct: 1 },
+    ],
+    13: [
+      { question: "Que es un firewall?", options: ["Un antivirus", "Un filtro de trafico de red", "Un proxy", "Un router"], correct: 1 },
+      { question: "Que protocolo analiza paquetes?", options: ["FTP", "Wireshark", "DHCP", "ARP"], correct: 1 },
+      { question: "Que es IDS?", options: ["Sistema de deteccion de intrusiones", "Sistema de archivos", "Servidor DNS", "Sistema de respaldo"], correct: 0 },
+    ],
+    14: [
+      { question: "Que es React Native?", options: ["Un framework web", "Una plataforma movil con React", "Una libreria CSS", "Un servidor"], correct: 1 },
+      { question: "Que es Expo?", options: ["Una DB", "Una plataforma para React Native", "Un editor", "Un testing tool"], correct: 1 },
+      { question: "Para que plataformas compila React Native?", options: ["Solo Android", "Solo iOS", "iOS y Android", "Solo web"], correct: 2 },
+    ],
+    15: [
+      { question: "Que es Django?", options: ["Un frontend framework", "Un framework web Python", "Una DB", "Un lenguaje"], correct: 1 },
+      { question: "Que es ORM en Django?", options: ["Un lenguaje de marcado", "Mapeo objeto-relacional", "Un protocolo", "Un editor"], correct: 1 },
+      { question: "Que comando crea un proyecto Django?", options: ["django create", "django-admin startproject", "django init", "django new"], correct: 1 },
+    ],
+    16: [
+      { question: "Que es AWS?", options: ["Un framework", "Un proveedor de cloud computing", "Un lenguaje", "Un navegador"], correct: 1 },
+      { question: "Que servicio provee computacion virtual?", options: ["S3", "EC2", "RDS", "Lambda"], correct: 1 },
+      { question: "Que servicio es almacenamiento?", options: ["EC2", "Lambda", "S3", "VPC"], correct: 2 },
+    ],
+    17: [
+      { question: "Que es malware?", options: ["Software benigno", "Software malicioso", "Hardware", "Red"], correct: 1 },
+      { question: "Que analisis ejecuta el codigo?", options: ["Estatico", "Dinamico", "Manual", "Blind"], correct: 1 },
+      { question: "Que es una sandbox?", options: ["Un editor", "Un entorno aislado de analisis", "Un antivirus", "Un firewall"], correct: 1 },
+    ],
+    18: [
+      { question: "Que es Git?", options: ["Un editor", "Un sistema de control de versiones", "Un lenguaje", "Un navegador"], correct: 1 },
+      { question: "Que comando crea un repositorio?", options: ["git new", "git init", "git create", "git start"], correct: 1 },
+      { question: "Que comando sube cambios?", options: ["git push", "git upload", "git send", "git sync"], correct: 0 },
+    ],
+    19: [
+      { question: "Que es TypeScript?", options: ["Un framework", "JavaScript con tipos estaticos", "Un navegador", "Una DB"], correct: 1 },
+      { question: "Como se define un tipo?", options: ["var x: number", "let x = number", "type x = number", "int x"], correct: 2 },
+      { question: "Que son las interfaces?", options: ["Archivos CSS", "Contratos de tipo para objetos", "Base de datos", "APIs REST"], correct: 1 },
+    ],
+  };
 
   const currentLesson = activeLesson
     ? course.curriculum[activeLesson.sectionIdx]?.lessons[activeLesson.lessonIdx]
@@ -375,7 +485,13 @@ export default function CourseClient({ course, freeLessons, totalLessons }: { co
                   if (activeLesson.lessonIdx < section.lessons.length - 1) {
                     setActiveLesson({ ...activeLesson, lessonIdx: activeLesson.lessonIdx + 1 });
                   } else if (activeLesson.sectionIdx < course.curriculum.length - 1) {
-                    setActiveLesson({ sectionIdx: activeLesson.sectionIdx + 1, lessonIdx: 0 });
+                    setQuizMode(true);
+                    setQuizSectionIdx(activeLesson.sectionIdx);
+                    setQuizQuestionIdx(0);
+                    setQuizScore(0);
+                    setQuizSelected(null);
+                    setQuizAnswered(false);
+                    setQuizComplete(false);
                   }
                 }}
                 disabled={activeLesson.sectionIdx === course.curriculum.length - 1 && activeLesson.lessonIdx === course.curriculum[activeLesson.sectionIdx].lessons.length - 1}
@@ -384,6 +500,118 @@ export default function CourseClient({ course, freeLessons, totalLessons }: { co
                 Siguiente
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {quizMode && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setQuizMode(false)}>
+          <div className="w-full max-w-2xl glass rounded-2xl p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-xl font-bold text-white">
+                  {quizComplete ? "Resultados del Quiz" : `Quiz - ${course.curriculum[quizSectionIdx].title}`}
+                </h3>
+                {!quizComplete && (
+                  <p className="text-sm text-gray-500">Pregunta {quizQuestionIdx + 1} de 3</p>
+                )}
+              </div>
+              <button onClick={() => setQuizMode(false)} className="rounded-lg p-2 text-gray-400 hover:bg-white/5 hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            {!quizComplete ? (
+              <>
+                <div className="mb-4 h-2 overflow-hidden rounded-full bg-white/5">
+                  <div className="h-full rounded-full bg-[#00FF88] transition-all" style={{ width: `${((quizQuestionIdx) / 3) * 100}%` }} />
+                </div>
+                <p className="text-lg text-white mb-6">{quizData[quizSectionIdx]?.[quizQuestionIdx]?.question}</p>
+                <div className="space-y-3">
+                  {quizData[quizSectionIdx]?.[quizQuestionIdx]?.options.map((option, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        if (!quizAnswered) setQuizSelected(idx);
+                      }}
+                      disabled={quizAnswered}
+                      className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-sm text-left transition-all ${
+                        quizAnswered
+                          ? idx === quizData[quizSectionIdx][quizQuestionIdx].correct
+                            ? "border-[#00FF88] bg-[#00FF88]/10 text-[#00FF88]"
+                            : idx === quizSelected
+                            ? "border-red-500 bg-red-500/10 text-red-400"
+                            : "border-white/5 bg-white/[0.02] text-gray-500"
+                          : quizSelected === idx
+                          ? "border-[#00FF88] bg-[#00FF88]/10 text-[#00FF88]"
+                          : "border-white/5 bg-white/[0.02] text-gray-300 hover:bg-white/5"
+                      }`}
+                    >
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/10 text-xs">
+                        {String.fromCharCode(65 + idx)}
+                      </span>
+                      {option}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-6 flex justify-end">
+                  {!quizAnswered ? (
+                    <button
+                      onClick={() => {
+                        if (quizSelected !== null) {
+                          setQuizAnswered(true);
+                          if (quizSelected === quizData[quizSectionIdx][quizQuestionIdx].correct) {
+                            setQuizScore((s) => s + 1);
+                          }
+                        }
+                      }}
+                      disabled={quizSelected === null}
+                      className="rounded-xl bg-[#00FF88] px-6 py-2.5 text-sm font-semibold text-black hover:bg-[#00CC6A] disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      Verificar
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        if (quizQuestionIdx < 2) {
+                          setQuizQuestionIdx((q) => q + 1);
+                          setQuizSelected(null);
+                          setQuizAnswered(false);
+                        } else {
+                          setQuizComplete(true);
+                        }
+                      }}
+                      className="rounded-xl bg-[#00FF88] px-6 py-2.5 text-sm font-semibold text-black hover:bg-[#00CC6A]"
+                    >
+                      {quizQuestionIdx < 2 ? "Siguiente" : "Ver Resultados"}
+                    </button>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-6xl font-bold text-[#00FF88] mb-4">{quizScore}/3</div>
+                <p className="text-gray-400 mb-2">
+                  {quizScore === 3 ? "Perfecto! Dominas esta seccion." : quizScore >= 2 ? "Buen trabajo! Repasa lo que falte." : "Sigue practicando, tu puedes!"}
+                </p>
+                <div className="mt-8 flex justify-center gap-4">
+                  <button
+                    onClick={() => { setQuizMode(false); }}
+                    className="rounded-xl border border-white/10 px-6 py-2.5 text-sm text-gray-400 hover:bg-white/5"
+                  >
+                    Cerrar
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (activeLesson) markLessonComplete(quizSectionIdx, course.curriculum[quizSectionIdx].lessons.length - 1);
+                      setQuizMode(false);
+                    }}
+                    className="rounded-xl bg-[#00FF88] px-6 py-2.5 text-sm font-semibold text-black hover:bg-[#00CC6A]"
+                  >
+                    Completar Leccion
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
