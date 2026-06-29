@@ -2,36 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import AdminLayout from "@/components/AdminLayout";
 import {
-  LayoutDashboard,
-  Users,
-  BookOpen,
-  FileText,
-  MessageSquare,
-  ShoppingCart,
-  BarChart3,
-  Settings,
-  Shield,
-  LogOut,
   Plus,
   X,
   ToggleLeft,
   ToggleRight,
   Star,
-
+  BookOpen,
 } from "lucide-react";
-
-const adminNav = [
-  { label: "Panel", icon: LayoutDashboard, href: "/admin" },
-  { label: "Usuarios", icon: Users, href: "/admin/users" },
-  { label: "Cursos", icon: BookOpen, href: "/admin/courses" },
-  { label: "Blog", icon: FileText, href: "/admin/blog" },
-  { label: "Mensajes", icon: MessageSquare, href: "/admin/messages" },
-  { label: "Tienda", icon: ShoppingCart, href: "/admin/store" },
-  { label: "Analíticas", icon: BarChart3, href: "/admin/analytics" },
-  { label: "Seguridad", icon: Shield, href: "/admin/security" },
-  { label: "Configuración", icon: Settings, href: "/admin/settings" },
-];
 
 interface Course {
   id: number;
@@ -87,159 +66,123 @@ export default function CoursesPage() {
   };
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="hidden w-64 border-r border-white/5 bg-[#0A0A0A] lg:block">
-        <div className="p-6">
-          <Link href="/admin" className="flex items-center gap-2 text-lg font-bold">
-            <Shield className="h-5 w-5 text-[#00FF88]" />
-            <span className="text-white">Panel Admin</span>
+    <AdminLayout>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <Link href="/admin" className="mb-2 inline-block text-sm text-[#00FF88] hover:underline">
+            &larr; Volver al Panel
           </Link>
+          <h1 className="text-2xl font-bold text-white">Gestión de Cursos</h1>
+          <p className="mt-1 text-sm text-gray-400">{courses.length} cursos</p>
         </div>
-        <nav className="space-y-1 px-3">
-          {adminNav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
-                item.href === "/admin/courses"
-                  ? "bg-[#00FF88]/10 text-[#00FF88]"
-                  : "text-gray-400 hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="absolute bottom-0 w-64 border-t border-white/5 p-3">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-400 hover:bg-white/5 hover:text-white"
-          >
-            <LogOut className="h-4 w-4" />
-            Volver al Panel
-          </Link>
-        </div>
-      </aside>
+        <button
+          onClick={() => setShowModal(true)}
+          className="flex items-center gap-2 rounded-xl bg-[#00FF88] px-4 py-2.5 text-sm font-semibold text-black hover:bg-[#00FF88]/90"
+        >
+          <Plus className="h-4 w-4" />
+          Crear Curso
+        </button>
+      </div>
 
-      <main className="flex-1 p-4 sm:p-6 lg:p-8">
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <Link href="/admin" className="mb-2 inline-block text-sm text-[#00FF88] hover:underline">
-              &larr; Volver al Panel
-            </Link>
-            <h1 className="text-2xl font-bold text-white">Gestión de Cursos</h1>
-            <p className="mt-1 text-sm text-gray-400">{courses.length} cursos</p>
-          </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 rounded-xl bg-[#00FF88] px-4 py-2.5 text-sm font-semibold text-black hover:bg-[#00FF88]/90"
-          >
-            <Plus className="h-4 w-4" />
-            Crear Curso
-          </button>
-        </div>
+      <div className="mb-4 flex gap-2">
+        <button
+          onClick={() => setViewMode("grid")}
+          className={`rounded-lg px-3 py-1.5 text-xs ${viewMode === "grid" ? "bg-[#00FF88]/10 text-[#00FF88]" : "bg-white/5 text-gray-400"}`}
+        >
+          Cuadrícula
+        </button>
+        <button
+          onClick={() => setViewMode("list")}
+          className={`rounded-lg px-3 py-1.5 text-xs ${viewMode === "list" ? "bg-[#00FF88]/10 text-[#00FF88]" : "bg-white/5 text-gray-400"}`}
+        >
+          Lista
+        </button>
+      </div>
 
-        <div className="mb-4 flex gap-2">
-          <button
-            onClick={() => setViewMode("grid")}
-            className={`rounded-lg px-3 py-1.5 text-xs ${viewMode === "grid" ? "bg-[#00FF88]/10 text-[#00FF88]" : "bg-white/5 text-gray-400"}`}
-          >
-            Cuadrícula
-          </button>
-          <button
-            onClick={() => setViewMode("list")}
-            className={`rounded-lg px-3 py-1.5 text-xs ${viewMode === "list" ? "bg-[#00FF88]/10 text-[#00FF88]" : "bg-white/5 text-gray-400"}`}
-          >
-            Lista
-          </button>
-        </div>
-
-        {viewMode === "grid" ? (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {courses.map((course) => (
-              <div key={course.id} className="glass rounded-2xl p-5">
-                <div className="flex items-start justify-between">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#00FF88]/10">
-                    <BookOpen className="h-5 w-5 text-[#00FF88]" />
-                  </div>
-                  <button onClick={() => toggleActive(course.id)} title={course.active ? "Desactivar" : "Activar"}>
-                    {course.active ? (
-                      <ToggleRight className="h-6 w-6 text-[#00FF88]" />
-                    ) : (
-                      <ToggleLeft className="h-6 w-6 text-gray-500" />
-                    )}
-                  </button>
+      {viewMode === "grid" ? (
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+          {courses.map((course) => (
+            <div key={course.id} className="glass rounded-2xl p-5">
+              <div className="flex items-start justify-between">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#00FF88]/10">
+                  <BookOpen className="h-5 w-5 text-[#00FF88]" />
                 </div>
-                <h3 className="mt-3 font-semibold text-white">{course.title}</h3>
-                <p className="mt-1 text-xs text-gray-500 line-clamp-2">{course.description}</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <span className="rounded-full bg-white/5 px-2.5 py-0.5 text-xs text-gray-400">{course.category}</span>
-                  <span className="rounded-full bg-white/5 px-2.5 py-0.5 text-xs text-gray-400">{course.level}</span>
-                  {course.isPremium && (
-                    <span className="flex items-center gap-1 rounded-full bg-[#FFD93D]/10 px-2.5 py-0.5 text-xs text-[#FFD93D]">
-                      <Star className="h-3 w-3" /> Premium
-                    </span>
+                <button onClick={() => toggleActive(course.id)} title={course.active ? "Desactivar" : "Activar"}>
+                  {course.active ? (
+                    <ToggleRight className="h-6 w-6 text-[#00FF88]" />
+                  ) : (
+                    <ToggleLeft className="h-6 w-6 text-gray-500" />
                   )}
-                </div>
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="text-lg font-bold text-[#00FF88]">${course.price}</span>
-                  <button
-                    onClick={() => deleteCourse(course.id)}
-                    className="rounded-lg p-2 text-red-400 hover:bg-red-500/10"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
+                </button>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="glass rounded-2xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-white/5 text-xs text-gray-500 uppercase">
-                    <th className="px-6 py-4">Curso</th>
-                    <th className="px-6 py-4 hidden md:table-cell">Categoría</th>
-                    <th className="px-6 py-4 hidden sm:table-cell">Nivel</th>
-                    <th className="px-6 py-4">Precio</th>
-                    <th className="px-6 py-4 hidden sm:table-cell">Estado</th>
-                    <th className="px-6 py-4 text-right">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {courses.map((course) => (
-                    <tr key={course.id} className="border-b border-white/5 hover:bg-white/[0.02]">
-                      <td className="px-6 py-4">
-                        <div className="font-medium text-white">{course.title}</div>
-                        <div className="text-xs text-gray-500">{course.category}</div>
-                      </td>
-                      <td className="px-6 py-4 hidden md:table-cell text-gray-400">{course.level}</td>
-                      <td className="px-6 py-4 hidden sm:table-cell text-gray-400">{course.level}</td>
-                      <td className="px-6 py-4 font-semibold text-[#00FF88]">${course.price}</td>
-                      <td className="px-6 py-4 hidden sm:table-cell">
-                        <button onClick={() => toggleActive(course.id)}>
-                          {course.active ? (
-                            <span className="rounded-full bg-[#00FF88]/10 px-2.5 py-0.5 text-xs text-[#00FF88]">Activo</span>
-                          ) : (
-                            <span className="rounded-full bg-gray-500/10 px-2.5 py-0.5 text-xs text-gray-400">Inactivo</span>
-                          )}
-                        </button>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button onClick={() => deleteCourse(course.id)} className="rounded-lg p-2 text-red-400 hover:bg-red-500/10">
-                          <X className="h-4 w-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <h3 className="mt-3 font-semibold text-white">{course.title}</h3>
+              <p className="mt-1 text-xs text-gray-500 line-clamp-2">{course.description}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span className="rounded-full bg-white/5 px-2.5 py-0.5 text-xs text-gray-400">{course.category}</span>
+                <span className="rounded-full bg-white/5 px-2.5 py-0.5 text-xs text-gray-400">{course.level}</span>
+                {course.isPremium && (
+                  <span className="flex items-center gap-1 rounded-full bg-[#FFD93D]/10 px-2.5 py-0.5 text-xs text-[#FFD93D]">
+                    <Star className="h-3 w-3" /> Premium
+                  </span>
+                )}
+              </div>
+              <div className="mt-4 flex items-center justify-between">
+                <span className="text-lg font-bold text-[#00FF88]">${course.price}</span>
+                <button
+                  onClick={() => deleteCourse(course.id)}
+                  className="rounded-lg p-2 text-red-400 hover:bg-red-500/10"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
+          ))}
+        </div>
+      ) : (
+        <div className="glass rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-white/5 text-xs text-gray-500 uppercase">
+                  <th className="px-6 py-4">Curso</th>
+                  <th className="px-6 py-4 hidden md:table-cell">Categoría</th>
+                  <th className="px-6 py-4 hidden sm:table-cell">Nivel</th>
+                  <th className="px-6 py-4">Precio</th>
+                  <th className="px-6 py-4 hidden sm:table-cell">Estado</th>
+                  <th className="px-6 py-4 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {courses.map((course) => (
+                  <tr key={course.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+                    <td className="px-6 py-4">
+                      <div className="font-medium text-white">{course.title}</div>
+                      <div className="text-xs text-gray-500">{course.category}</div>
+                    </td>
+                    <td className="px-6 py-4 hidden md:table-cell text-gray-400">{course.level}</td>
+                    <td className="px-6 py-4 hidden sm:table-cell text-gray-400">{course.level}</td>
+                    <td className="px-6 py-4 font-semibold text-[#00FF88]">${course.price}</td>
+                    <td className="px-6 py-4 hidden sm:table-cell">
+                      <button onClick={() => toggleActive(course.id)}>
+                        {course.active ? (
+                          <span className="rounded-full bg-[#00FF88]/10 px-2.5 py-0.5 text-xs text-[#00FF88]">Activo</span>
+                        ) : (
+                          <span className="rounded-full bg-gray-500/10 px-2.5 py-0.5 text-xs text-gray-400">Inactivo</span>
+                        )}
+                      </button>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button onClick={() => deleteCourse(course.id)} className="rounded-lg p-2 text-red-400 hover:bg-red-500/10">
+                        <X className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
-      </main>
+        </div>
+      )}
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -334,6 +277,6 @@ export default function CoursesPage() {
           </div>
         </div>
       )}
-    </div>
+    </AdminLayout>
   );
 }
