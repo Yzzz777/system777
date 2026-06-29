@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { BookOpen, Clock, Users, Star, ArrowLeft, Check, Lock, Play, ChevronRight, Shield, X, FileText } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { BookOpen, Clock, Users, Star, ArrowLeft, Check, Lock, Play, ChevronRight, Shield, X, FileText, Loader2, CheckCircle2 } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { FadeIn } from "@/components/ui/Animations";
 
 interface Lesson {
@@ -32,11 +34,94 @@ interface CourseData {
 }
 
 export default function CourseClient({ course, freeLessons, totalLessons }: { course: CourseData; freeLessons: number; totalLessons: number }) {
+  const { data: session } = useSession();
+  const router = useRouter();
   const [activeLesson, setActiveLesson] = useState<{ sectionIdx: number; lessonIdx: number } | null>(null);
+  const [enrolled, setEnrolled] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
+  const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
 
   const currentLesson = activeLesson
     ? course.curriculum[activeLesson.sectionIdx]?.lessons[activeLesson.lessonIdx]
     : null;
+
+  const checkEnrollment = useCallback(async () => {
+    if (!session?.user) return;
+    try {
+      const res = await fetch(`/api/enroll?course=${course.slug}`);
+      const data = await res.json();
+      if (data.enrollment) {
+        setEnrolled(true);
+      }
+    } catch {}
+  }, [session, course.slug]);
+
+  useEffect(() => {
+    checkEnrollment();
+  }, [checkEnrollment]);
+
+  const handleEnroll = async () => {
+    if (!session?.user) {
+      router.push("/login");
+      return;
+    }
+    setEnrolling(true);
+    try {
+      const res = await fetch("/api/enroll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseSlug: course.slug }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEnrolled(true);
+      }
+    } catch {}
+    setEnrolling(false);
+  };
+
+  const handleStartCourse = () => {
+    if (!session?.user) {
+      router.push("/login");
+      return;
+    }
+    if (!enrolled) {
+      handleEnroll();
+    }
+    for (let i = 0; i < course.curriculum.length; i++) {
+      for (let j = 0; j < course.curriculum[i].lessons.length; j++) {
+        if (course.curriculum[i].lessons[j].free || !course.isPremium) {
+          setActiveLesson({ sectionIdx: i, lessonIdx: j });
+          return;
+        }
+      }
+    }
+  };
+
+  const handleLessonClick = (sectionIdx: number, lessonIdx: number) => {
+    const lesson = course.curriculum[sectionIdx].lessons[lessonIdx];
+    if (lesson.free || !course.isPremium || enrolled) {
+      setActiveLesson({ sectionIdx, lessonIdx });
+    }
+  };
+
+  const markLessonComplete = (sectionIdx: number, lessonIdx: number) => {
+    const key = `${sectionIdx}-${lessonIdx}`;
+    const newCompleted = new Set(completedLessons);
+    newCompleted.add(key);
+    setCompletedLessons(newCompleted);
+
+    const totalAccessible = course.curriculum.reduce((acc, section) => {
+      return acc + section.lessons.filter(l => l.free || !course.isPremium || enrolled).length;
+    }, 0);
+    const progress = Math.round((newCompleted.size / totalAccessible) * 100);
+
+    fetch("/api/enroll", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ courseSlug: course.slug, progress }),
+    }).catch(() => {});
+  };
 
   return (
     <div className="min-h-screen py-12">
@@ -55,6 +140,11 @@ export default function CourseClient({ course, freeLessons, totalLessons }: { co
                   {course.isPremium && (
                     <span className="rounded-full bg-[#7C3AED]/20 px-3 py-1 text-xs font-medium text-[#7C3AED] flex items-center gap-1">
                       <Shield className="h-3 w-3" /> Premium
+                    </span>
+                  )}
+                  {enrolled && (
+                    <span className="rounded-full bg-[#00FF88]/20 px-3 py-1 text-xs font-medium text-[#00FF88] flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3" /> Inscrito
                     </span>
                   )}
                 </div>
@@ -106,33 +196,34 @@ export default function CourseClient({ course, freeLessons, totalLessons }: { co
                         <span className="text-xs text-gray-500">{section.lessons.length} lecciones</span>
                       </div>
                       <div className="mt-3 space-y-2">
-                        {section.lessons.map((lesson, j) => (
-                          <button
-                            key={j}
-                            onClick={() => {
-                              if (lesson.free || !course.isPremium) {
-                                setActiveLesson({ sectionIdx: i, lessonIdx: j });
-                              }
-                            }}
-                            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 transition-colors ${
-                              lesson.free || !course.isPremium
-                                ? "hover:bg-white/5 cursor-pointer"
-                                : "cursor-default"
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              {lesson.free || !course.isPremium ? (
-                                <Play className="h-4 w-4 text-[#00FF88]" />
-                              ) : (
-                                <Lock className="h-4 w-4 text-gray-600" />
-                              )}
-                              <span className={`text-sm text-left ${lesson.free || !course.isPremium ? "text-gray-300" : "text-gray-500"}`}>{lesson.title}</span>
-                              {lesson.free && <span className="rounded-full bg-[#00FF88]/10 px-2 py-0.5 text-[10px] text-[#00FF88]">Gratis</span>}
-                              {lesson.videoId && <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] text-red-400">Video</span>}
-                            </div>
-                            <span className="text-xs text-gray-600">{lesson.duration}</span>
-                          </button>
-                        ))}
+                        {section.lessons.map((lesson, j) => {
+                          const isAccessible = lesson.free || !course.isPremium || enrolled;
+                          const lessonKey = `${i}-${j}`;
+                          const isCompleted = completedLessons.has(lessonKey);
+                          return (
+                            <button
+                              key={j}
+                              onClick={() => handleLessonClick(i, j)}
+                              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 transition-colors ${
+                                isAccessible ? "hover:bg-white/5 cursor-pointer" : "cursor-default"
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                {isCompleted ? (
+                                  <CheckCircle2 className="h-4 w-4 text-[#00FF88]" />
+                                ) : isAccessible ? (
+                                  <Play className="h-4 w-4 text-[#00FF88]" />
+                                ) : (
+                                  <Lock className="h-4 w-4 text-gray-600" />
+                                )}
+                                <span className={`text-sm text-left ${isAccessible ? "text-gray-300" : "text-gray-500"}`}>{lesson.title}</span>
+                                {lesson.free && <span className="rounded-full bg-[#00FF88]/10 px-2 py-0.5 text-[10px] text-[#00FF88]">Gratis</span>}
+                                {lesson.videoId && <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] text-red-400">Video</span>}
+                              </div>
+                              <span className="text-xs text-gray-600">{lesson.duration}</span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   ))}
@@ -169,8 +260,18 @@ export default function CourseClient({ course, freeLessons, totalLessons }: { co
                     <Shield className="h-4 w-4" /> Obtener Premium
                   </Link>
                 ) : (
-                  <button className="w-full rounded-xl bg-[#00FF88] py-3 text-sm font-semibold text-black transition-all hover:bg-[#00CC6A]">
-                    Empezar Gratis
+                  <button
+                    onClick={handleStartCourse}
+                    disabled={enrolling}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#00FF88] py-3 text-sm font-semibold text-black transition-all hover:bg-[#00CC6A] disabled:opacity-50"
+                  >
+                    {enrolling ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> Inscribiendo...</>
+                    ) : enrolled ? (
+                      <><Play className="h-4 w-4" /> Continuar Curso</>
+                    ) : (
+                      <><Play className="h-4 w-4" /> Empezar Gratis</>
+                    )}
                   </button>
                 )}
                 <div className="mt-6 space-y-3 text-sm">
@@ -247,7 +348,7 @@ export default function CourseClient({ course, freeLessons, totalLessons }: { co
               </div>
             )}
 
-            <div className="mt-6 flex justify-between">
+            <div className="mt-6 flex justify-between items-center">
               <button
                 onClick={() => {
                   if (activeLesson.lessonIdx > 0) {
@@ -261,6 +362,12 @@ export default function CourseClient({ course, freeLessons, totalLessons }: { co
                 className="rounded-xl border border-white/10 px-5 py-2.5 text-sm text-gray-400 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 Anterior
+              </button>
+              <button
+                onClick={() => markLessonComplete(activeLesson.sectionIdx, activeLesson.lessonIdx)}
+                className="rounded-xl border border-white/10 px-5 py-2.5 text-sm text-[#00FF88] hover:bg-white/5"
+              >
+                <Check className="h-4 w-4 inline mr-1" /> Marcar Completada
               </button>
               <button
                 onClick={() => {

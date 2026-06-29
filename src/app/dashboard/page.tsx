@@ -1,20 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import { LayoutDashboard, BookOpen, Award, Settings, LogOut, Clock, TrendingUp, Bell, CreditCard, Shield, ChevronRight, Video, MessageSquare, Phone, Calendar } from "lucide-react";
-
-const stats = [
-  { label: "Cursos Inscritos", value: "5", icon: BookOpen, color: "#00FF88" },
-  { label: "Certificados", value: "2", icon: Award, color: "#00C8FF" },
-  { label: "Horas Aprendidas", value: "48", icon: Clock, color: "#7C3AED" },
-  { label: "Nivel de Habilidad", value: "Intermedio", icon: TrendingUp, color: "#FFD93D" },
-];
-
-const enrolledCourses = [
-  { title: "Guía Completa de JavaScript", progress: 75, total: 42, completed: 31 },
-  { title: "Curso Completo de React", progress: 40, total: 60, completed: 24 },
-  { title: "Hacking Ético Completo", progress: 15, total: 80, completed: 12 },
-];
 
 const sidebarItems = [
   { label: "Panel", icon: LayoutDashboard, href: "/dashboard", active: true },
@@ -30,16 +20,84 @@ const sidebarItems = [
   { label: "Configuración", icon: Settings, href: "/dashboard/settings" },
 ];
 
+interface Enrollment {
+  id: string;
+  course_slug: string;
+  progress: number;
+  completed: boolean;
+  enrolled_at: string;
+}
+
+const courseNames: Record<string, string> = {
+  "html-fundamentals": "Fundamentos de HTML",
+  "css-masterclass": "Masterclass de CSS",
+  "javascript-complete": "Guía Completa de JavaScript",
+  "react-complete": "Curso Completo de React",
+  "nextjs-mastery": "Dominio de Next.js",
+  "python-complete": "Curso Completo de Python",
+  "ethical-hacking": "Hacking Ético Completo",
+  "linux-admin": "Administración de Linux",
+  "discord-js-bot": "Desarrollo de Bots con Discord.js",
+  "nodejs-backend": "Desarrollo Backend con Node.js",
+  "postgresql-database": "PostgreSQL Completo",
+  "kubernetes-docker": "Docker y Kubernetes",
+  "penetration-testing": "Pruebas de Penetración",
+  "network-security": "Seguridad de Redes",
+  "react-native-mobile": "Desarrollo Móvil con React Native",
+  "python-django": "Python Django Full Stack",
+  "cloud-aws": "Cloud Computing con AWS",
+  "malware-analysis": "Análisis de Malware",
+  "git-github-complete": "Git y GitHub Completo",
+  "typescript-complete": "TypeScript Completo",
+};
+
 export default function DashboardPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
+
+  useEffect(() => {
+    if (session?.user) {
+      fetch("/api/enroll")
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.enrollments) setEnrollments(data.enrollments);
+        })
+        .catch(() => {});
+    }
+  }, [session]);
+
+  if (status === "loading") {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#00FF88] border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!session?.user) return null;
+
+  const user = session.user;
+  const initials = (user.name?.[0] || user.email?.[0] || "U").toUpperCase();
+  const totalCourses = enrollments.length;
+  const completedCourses = enrollments.filter((e) => e.completed).length;
+  const avgProgress = totalCourses > 0 ? Math.round(enrollments.reduce((acc, e) => acc + e.progress, 0) / totalCourses) : 0;
+
   return (
     <div className="flex min-h-screen">
       <aside className="hidden w-64 border-r border-white/5 bg-[#0A0A0A] lg:block">
         <div className="p-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#00FF88]/10 text-sm font-bold text-[#00FF88]">JD</div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#00FF88]/10 text-sm font-bold text-[#00FF88]">{initials}</div>
             <div>
-              <div className="text-sm font-semibold text-white">Juan Pérez</div>
-              <div className="text-xs text-gray-500">@juanperez</div>
+              <div className="text-sm font-semibold text-white">{user.name || "Usuario"}</div>
+              <div className="text-xs text-gray-500">@{user.username || user.email?.split("@")[0]}</div>
             </div>
           </div>
         </div>
@@ -52,7 +110,7 @@ export default function DashboardPage() {
           ))}
         </nav>
         <div className="absolute bottom-0 w-64 border-t border-white/5 p-3">
-          <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-400 hover:bg-white/5 hover:text-white">
+          <button onClick={() => signOut()} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-400 hover:bg-white/5 hover:text-white">
             <LogOut className="h-4 w-4" />Cerrar Sesión
           </button>
         </div>
@@ -62,7 +120,7 @@ export default function DashboardPage() {
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white">Panel de Control</h1>
-            <p className="mt-1 text-sm text-gray-400">Bienvenido de nuevo, Juan!</p>
+            <p className="mt-1 text-sm text-gray-400">Bienvenido de nuevo, {user.name?.split(" ")[0] || "Usuario"}!</p>
           </div>
           <button className="relative rounded-xl border border-white/10 p-2.5 text-gray-400 hover:bg-white/5 hover:text-white">
             <Bell className="h-5 w-5" />
@@ -71,7 +129,12 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((s) => (
+          {[
+            { label: "Cursos Inscritos", value: totalCourses.toString(), icon: BookOpen, color: "#00FF88" },
+            { label: "Completados", value: completedCourses.toString(), icon: Award, color: "#00C8FF" },
+            { label: "Progreso Promedio", value: `${avgProgress}%`, icon: TrendingUp, color: "#7C3AED" },
+            { label: "Rol", value: user.role || "Estudiante", icon: Shield, color: "#FFD93D" },
+          ].map((s) => (
             <div key={s.label} className="glass rounded-2xl p-5">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: s.color + "15" }}>
                 <s.icon className="h-5 w-5" style={{ color: s.color }} />
@@ -88,18 +151,30 @@ export default function DashboardPage() {
             <Link href="/dashboard/courses" className="text-sm text-[#00FF88] hover:underline">Ver Todos</Link>
           </div>
           <div className="mt-4 space-y-4">
-            {enrolledCourses.map((course) => (
-              <div key={course.title} className="glass rounded-2xl p-5">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-white">{course.title}</h3>
-                  <span className="text-sm text-[#00FF88]">{course.progress}%</span>
-                </div>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/5">
-                  <div className="h-full rounded-full bg-gradient-to-r from-[#00FF88] to-[#00C8FF] transition-all" style={{ width: `${course.progress}%` }} />
-                </div>
-                <div className="mt-2 text-xs text-gray-500">{course.completed} de {course.total} lecciones completadas</div>
+            {enrollments.length === 0 ? (
+              <div className="glass rounded-2xl p-8 text-center">
+                <BookOpen className="mx-auto h-12 w-12 text-gray-600 mb-4" />
+                <p className="text-gray-400">Aún no te has inscrito en ningún curso</p>
+                <Link href="/courses" className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#00FF88] px-6 py-2.5 text-sm font-semibold text-black hover:bg-[#00CC6A]">
+                  Explorar Cursos
+                </Link>
               </div>
-            ))}
+            ) : (
+              enrollments.slice(0, 5).map((enrollment) => (
+                <Link key={enrollment.id} href={`/course/${enrollment.course_slug}`} className="glass rounded-2xl p-5 block hover:bg-white/[0.03] transition-colors">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-white">{courseNames[enrollment.course_slug] || enrollment.course_slug}</h3>
+                    <span className="text-sm text-[#00FF88]">{enrollment.progress}%</span>
+                  </div>
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/5">
+                    <div className="h-full rounded-full bg-gradient-to-r from-[#00FF88] to-[#00C8FF] transition-all" style={{ width: `${enrollment.progress}%` }} />
+                  </div>
+                  {enrollment.completed && (
+                    <div className="mt-2 text-xs text-[#00FF88]">Completado</div>
+                  )}
+                </Link>
+              ))
+            )}
           </div>
         </div>
 
@@ -125,19 +200,21 @@ export default function DashboardPage() {
           <div className="glass rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-white">Actividad Reciente</h2>
             <div className="mt-4 space-y-4">
-              {[
-                { text: "Completaste la lección: React Hooks", time: "Hace 2 horas" },
-                { text: "Obtuviste certificado: JavaScript Básico", time: "Hace 1 día" },
-                { text: "Te inscribiste en: Hacking Ético", time: "Hace 3 días" },
-              ].map((activity, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <div className="mt-1 h-2 w-2 rounded-full bg-[#00FF88]" />
-                  <div>
-                    <div className="text-sm text-gray-300">{activity.text}</div>
-                    <div className="text-xs text-gray-500">{activity.time}</div>
+              {enrollments.length === 0 ? (
+                <p className="text-sm text-gray-500">Sin actividad reciente</p>
+              ) : (
+                enrollments.slice(0, 3).map((e) => (
+                  <div key={e.id} className="flex items-start gap-3">
+                    <div className="mt-1 h-2 w-2 rounded-full bg-[#00FF88]" />
+                    <div>
+                      <div className="text-sm text-gray-300">
+                        {e.completed ? "Completaste" : "Estás en"}: {courseNames[e.course_slug] || e.course_slug}
+                      </div>
+                      <div className="text-xs text-gray-500">{e.progress}% completado</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>

@@ -78,4 +78,51 @@ export async function createActivityLog(data: { userId: string; action: string; 
   `;
 }
 
+export async function ensureEnrollmentsTable() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS enrollments (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      user_id TEXT NOT NULL,
+      course_slug TEXT NOT NULL,
+      progress INTEGER DEFAULT 0,
+      completed BOOLEAN DEFAULT false,
+      enrolled_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(user_id, course_slug)
+    )
+  `;
+}
+
+export async function enrollUser(userId: string, courseSlug: string) {
+  await ensureEnrollmentsTable();
+  const rows = await sql`
+    INSERT INTO enrollments (user_id, course_slug)
+    VALUES (${userId}, ${courseSlug})
+    ON CONFLICT (user_id, course_slug) DO NOTHING
+    RETURNING id, user_id, course_slug, progress, completed, enrolled_at
+  `;
+  if (rows.length === 0) {
+    return (await sql`SELECT * FROM enrollments WHERE user_id = ${userId} AND course_slug = ${courseSlug} LIMIT 1`)[0];
+  }
+  return rows[0];
+}
+
+export async function getUserEnrollment(userId: string, courseSlug: string) {
+  await ensureEnrollmentsTable();
+  const rows = await sql`SELECT * FROM enrollments WHERE user_id = ${userId} AND course_slug = ${courseSlug} LIMIT 1`;
+  return rows[0] || null;
+}
+
+export async function getUserEnrollments(userId: string) {
+  await ensureEnrollmentsTable();
+  return await sql`SELECT * FROM enrollments WHERE user_id = ${userId} ORDER BY enrolled_at DESC`;
+}
+
+export async function updateEnrollmentProgress(userId: string, courseSlug: string, progress: number) {
+  await ensureEnrollmentsTable();
+  await sql`
+    UPDATE enrollments SET progress = ${progress}, completed = ${progress >= 100}
+    WHERE user_id = ${userId} AND course_slug = ${courseSlug}
+  `;
+}
+
 export { sql };
