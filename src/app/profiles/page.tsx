@@ -16,7 +16,7 @@ const profiles = [
     color: "#FCC624",
     initials: "LT",
     category: "Open Source",
-    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Linus_Torvalds_in_Helsinki.jpg/440px-Linus_Torvalds_in_Helsinki.jpg",
+    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/LinuxCon_Europe_Linus_Torvalds_03_%28cropped%29.jpg/440px-LinuxCon_Europe_Linus_Torvalds_03_%28cropped%29.jpg",
     social: { github: "https://github.com/torvalds" },
   },
   {
@@ -29,7 +29,7 @@ const profiles = [
     color: "#00ADEF",
     initials: "BG",
     category: "Sistemas Operativos",
-    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Bill_Gates_in_2023.png/440px-Bill_Gates_in_2023.png",
+    photo: "https://upload.wikimedia.org/wikipedia/commons/d/d9/Bill_Gates_at_the_European_Commission_-_P067383-987995_%28cropped%29_5.jpg",
     social: { twitter: "https://twitter.com/BillGates" },
   },
   {
@@ -42,7 +42,7 @@ const profiles = [
     color: "#3776AB",
     initials: "GV",
     category: "Programación",
-    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Guido_van_Rossum_OSCON_2006.jpg/440px-Guido_van_Rossum_OSCON_2006.jpg",
+    photo: "https://upload.wikimedia.org/wikipedia/commons/6/6b/Guido_van_Rossum_in_PyConUS24_%28cropped%29.jpg",
     social: { github: "https://github.com/gvanrossum" },
   },
   {
@@ -55,7 +55,7 @@ const profiles = [
     color: "#F7DF1E",
     initials: "BE",
     category: "Programación",
-    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Brendan_Eich_Mozilla_Foundation_official_photo.jpg/440px-Brendan_Eich_Mozilla_Foundation_official_photo.jpg",
+    photo: "https://upload.wikimedia.org/wikipedia/commons/d/d1/Brendan_Eich_Mozilla_Foundation_official_photo.jpg",
     social: { twitter: "https://twitter.com/BrendanEich" },
   },
   {
@@ -68,7 +68,7 @@ const profiles = [
     color: "#555555",
     initials: "DR",
     category: "Sistemas Operativos",
-    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Dennis_Ritchie_2011.jpg/440px-Dennis_Ritchie_2011.jpg",
+    photo: "https://upload.wikimedia.org/wikipedia/commons/2/23/Dennis_Ritchie_2011.jpg",
     social: {},
   },
   {
@@ -81,7 +81,7 @@ const profiles = [
     color: "#ED8B00",
     initials: "JG",
     category: "Programación",
-    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/James_Gosling_2008.jpg/440px-James_Gosling_2008.jpg",
+    photo: "https://upload.wikimedia.org/wikipedia/commons/1/14/James_Gosling_2008.jpg",
     social: {},
   },
   {
@@ -94,7 +94,7 @@ const profiles = [
     color: "#FF6B9D",
     initials: "AL",
     category: "Programación",
-    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Ada_Lovelace_portrait.jpg/440px-Ada_Lovelace_portrait.jpg",
+    photo: "https://upload.wikimedia.org/wikipedia/commons/4/4c/Ada_Lovelace_daguerreotype_by_Antoine_Claudet_1843_-_cropped.png",
     social: {},
   },
   {
@@ -107,7 +107,7 @@ const profiles = [
     color: "#1877F2",
     initials: "MZ",
     category: "Desarrollo Web",
-    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Mark_Zuckerberg_F8_2019_Keynote_%2832831578717004%29.jpg/440px-Mark_Zuckerberg_F8_2019_Keynote_%2832831578717004%29.jpg",
+    photo: "https://upload.wikimedia.org/wikipedia/commons/0/0e/F20250904AH-2824_%2854778373111%29_%283x4_cropped_on_Zuckerberg_following_the_rule_of_thirds%29.jpg",
     social: { twitter: "https://twitter.com/fuckaboragezuck" },
   },
   {
@@ -120,7 +120,7 @@ const profiles = [
     color: "#339933",
     initials: "RD",
     category: "Backend",
-    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Node.js_logo.svg/440px-Node.js_logo.svg.png",
+    photo: "https://upload.wikimedia.org/wikipedia/commons/b/b2/Ryan_Dahl.jpg",
     social: { github: "https://github.com/ry" },
   },
   {
@@ -133,7 +133,7 @@ const profiles = [
     color: "#4FC08D",
     initials: "EY",
     category: "Frontend",
-    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Vue.js_Logo_2.svg/440px-Vue.js_Logo_2.svg.png",
+    photo: "https://avatars.githubusercontent.com/u/499550?v=4",
     social: { github: "https://github.com/yyx990803" },
   },
   {
@@ -146,7 +146,7 @@ const profiles = [
     color: "#000000",
     initials: "GR",
     category: "Full Stack",
-    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Nextjs-logo.svg/440px-Nextjs-logo.svg.png",
+    photo: "https://avatars.githubusercontent.com/u/13243?v=4",
     social: { twitter: "https://twitter.com/raaboraguchig" },
   },
   {
@@ -159,7 +159,7 @@ const profiles = [
     color: "#363636",
     initials: "GW",
     category: "Blockchain",
-    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Ethereum_logo_2014.svg/440px-Ethereum_logo_2014.svg.png",
+    photo: "https://upload.wikimedia.org/wikipedia/commons/b/bc/Gavin_Wood_in_2017.jpg",
     social: { github: "https://github.com/gavofyork" },
   },
 ];
