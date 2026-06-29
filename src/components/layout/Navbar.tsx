@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ChevronDown, Terminal, LogOut, User, LayoutDashboard } from "lucide-react";
+import { NotificationBell } from "@/components/NotificationBell";
 import { useSession, signOut } from "next-auth/react";
 import { siteConfig, navLinks } from "@/lib/config";
 import { cn } from "@/lib/utils";
@@ -80,11 +81,13 @@ export function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           {session ? (
-            <div className="relative">
-              <button
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-gray-300 transition-colors hover:bg-white/5 hover:text-white"
-              >
+            <>
+              <NotificationBell />
+              <div className="relative">
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-gray-300 transition-colors hover:bg-white/5 hover:text-white"
+                >
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#00FF88]/20 text-xs font-bold text-[#00FF88]">
                   {session.user?.name?.[0]?.toUpperCase() || "U"}
                 </div>
@@ -119,6 +122,7 @@ export function Navbar() {
                 )}
               </AnimatePresence>
             </div>
+            </>
           ) : (
             <>
               <Link href="/login" className="rounded-lg px-4 py-2 text-sm text-gray-300 transition-colors hover:text-white">
@@ -159,6 +163,10 @@ export function Navbar() {
             <div className="mt-4 flex flex-col gap-2 border-t border-white/5 pt-4">
               {session ? (
                 <>
+                  <div className="flex items-center gap-2 px-3 py-2">
+                    <NotificationBell />
+                    <span className="text-sm text-gray-400">Notificaciones</span>
+                  </div>
                   <Link href="/dashboard" onClick={() => setOpen(false)} className="rounded-lg px-3 py-2 text-sm text-gray-300">Panel</Link>
                   {session.user?.role === "OWNER" && (
                     <Link href="/admin" onClick={() => setOpen(false)} className="rounded-lg px-3 py-2 text-sm text-[#00FF88]">Admin</Link>

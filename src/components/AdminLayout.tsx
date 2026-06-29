@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { LayoutDashboard, Users, BookOpen, FileText, MessageSquare, ShoppingCart, BarChart3, Settings, Shield, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, FileText, MessageSquare, ShoppingCart, BarChart3, Settings, Shield, LogOut, Menu, X, CreditCard } from "lucide-react";
 
 const adminNav = [
   { label: "Panel", icon: LayoutDashboard, href: "/admin" },
@@ -11,6 +11,7 @@ const adminNav = [
   { label: "Cursos", icon: BookOpen, href: "/admin/courses" },
   { label: "Blog", icon: FileText, href: "/admin/blog" },
   { label: "Mensajes", icon: MessageSquare, href: "/admin/messages" },
+  { label: "Pagos", icon: CreditCard, href: "/admin/payments" },
   { label: "Tienda", icon: ShoppingCart, href: "/admin/store" },
   { label: "Analíticas", icon: BarChart3, href: "/admin/analytics" },
   { label: "Seguridad", icon: Shield, href: "/admin/security" },

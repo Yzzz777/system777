@@ -125,4 +125,94 @@ export async function updateEnrollmentProgress(userId: string, courseSlug: strin
   `;
 }
 
+export async function ensurePaymentsTable() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS payments (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT,
+      amount REAL NOT NULL,
+      method TEXT NOT NULL DEFAULT 'banreservas',
+      status TEXT NOT NULL DEFAULT 'pending',
+      reference TEXT,
+      proof_url TEXT,
+      type TEXT DEFAULT 'subscription',
+      plan_or_course TEXT,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+}
+
+export async function createPayment(data: {
+  name: string;
+  email: string;
+  phone?: string;
+  amount: number;
+  method: string;
+  reference?: string;
+  proofUrl?: string;
+  type?: string;
+  planOrCourse?: string;
+}) {
+  await ensurePaymentsTable();
+  const rows = await sql`
+    INSERT INTO payments (name, email, phone, amount, method, reference, proof_url, type, plan_or_course)
+    VALUES (${data.name}, ${data.email}, ${data.phone || ""}, ${data.amount}, ${data.method}, ${data.reference || ""}, ${data.proofUrl || ""}, ${data.type || "subscription"}, ${data.planOrCourse || ""})
+    RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function getAllPayments() {
+  await ensurePaymentsTable();
+  return await sql`SELECT * FROM payments ORDER BY created_at DESC`;
+}
+
+export async function updatePaymentStatus(id: string, status: string) {
+  await ensurePaymentsTable();
+  const rows = await sql`
+    UPDATE payments SET status = ${status} WHERE id = ${id} RETURNING *
+  `;
+  return rows[0] || null;
+}
+
+export async function ensureNotificationsTable() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      user_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      message TEXT NOT NULL,
+      read BOOLEAN DEFAULT false,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+}
+
+export async function getNotifications(userId: string) {
+  await ensureNotificationsTable();
+  return await sql`SELECT * FROM notifications WHERE user_id = ${userId} ORDER BY created_at DESC LIMIT 50`;
+}
+
+export async function createNotification(data: { userId: string; title: string; message: string }) {
+  await ensureNotificationsTable();
+  const rows = await sql`
+    INSERT INTO notifications (user_id, title, message)
+    VALUES (${data.userId}, ${data.title}, ${data.message})
+    RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function markNotificationRead(id: string) {
+  await ensureNotificationsTable();
+  await sql`UPDATE notifications SET read = true WHERE id = ${id}`;
+}
+
+export async function markAllNotificationsRead(userId: string) {
+  await ensureNotificationsTable();
+  await sql`UPDATE notifications SET read = true WHERE user_id = ${userId} AND read = false`;
+}
+
 export { sql };

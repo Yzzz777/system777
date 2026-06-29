@@ -3,7 +3,7 @@
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Check, ArrowLeft, Loader2, Building2, Copy, CheckCircle } from "lucide-react";
+import { Check, ArrowLeft, Loader2, Building2, Copy, CheckCircle, Upload, CreditCard, Wallet } from "lucide-react";
 
 const plans = [
   { id: "starter", name: "Starter", price: 9.99, period: "/mes", features: ["20+ cursos premium", "50 recursos/mes", "Certificación Starter", "Soporte por email"] },
@@ -19,40 +19,44 @@ const bankInfo = {
   accountType: "Corriente",
 };
 
+const paypalEmail = "pagos@jrsystem7777.com";
+
 function PremiumCheckoutContent() {
   const searchParams = useSearchParams();
   const courseSlug = searchParams.get("course");
   const [selectedPlan, setSelectedPlan] = useState<string>(courseSlug ? "course" : "pro");
+  const [paymentMethod, setPaymentMethod] = useState<"banreservas" | "paypal">("banreservas");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedPaypal, setCopiedPaypal] = useState(false);
+  const [proofFile, setProofFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", amount: "", reference: "" });
 
   const planInfo = plans.find(p => p.id === selectedPlan);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(bankInfo.accountNumber);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = (text: string, setCopiedState: (v: boolean) => void) => {
+    navigator.clipboard.writeText(text);
+    setCopiedState(true);
+    setTimeout(() => setCopiedState(false), 2000);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("/api/payments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: courseSlug ? "course" : "subscription",
-          planOrCourse: courseSlug || selectedPlan,
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          amount: parseFloat(formData.amount) || planInfo?.price || 0,
-          reference: formData.reference,
-        }),
-      });
+      const fd = new FormData();
+      fd.append("name", formData.name);
+      fd.append("email", formData.email);
+      fd.append("phone", formData.phone);
+      fd.append("amount", String(parseFloat(formData.amount) || planInfo?.price || 0));
+      fd.append("method", paymentMethod);
+      fd.append("reference", formData.reference);
+      fd.append("type", courseSlug ? "course" : "subscription");
+      fd.append("planOrCourse", courseSlug || selectedPlan);
+      if (proofFile) fd.append("proof", proofFile);
+
+      const res = await fetch("/api/payments", { method: "POST", body: fd });
       const data = await res.json();
       if (data.success) setSubmitted(true);
       else alert(data.error || "Error al enviar");
@@ -97,7 +101,7 @@ function PremiumCheckoutContent() {
           <h1 className="text-3xl font-bold text-white">
             {courseSlug ? `Obtener ${courseSlug.replace(/-/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())}` : "Actualizar a Premium"}
           </h1>
-          <p className="mt-3 text-gray-400">Paga por transferencia bancaria y activa tu acceso</p>
+          <p className="mt-3 text-gray-400">Elige tu método de pago y envía tu comprobante</p>
         </div>
 
         <div className="grid gap-8 lg:grid-cols-2">
@@ -136,39 +140,89 @@ function PremiumCheckoutContent() {
 
           <div className="space-y-6">
             <div className="glass rounded-2xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Datos Bancarios</h3>
-              <div className="rounded-xl bg-white/5 p-4 space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Banco</span>
-                  <span className="text-white font-medium">{bankInfo.bank}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">País</span>
-                  <span className="text-white font-medium">{bankInfo.country}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Titular</span>
-                  <span className="text-white font-medium">{bankInfo.accountName}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Tipo de cuenta</span>
-                  <span className="text-white font-medium">{bankInfo.accountType}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-400">N. de Cuenta</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-white font-mono font-bold">{bankInfo.accountNumber}</span>
-                    <button onClick={handleCopy} className="rounded-lg bg-[#00FF88]/10 p-1.5 text-[#00FF88] hover:bg-[#00FF88]/20">
-                      {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                    </button>
+              <h3 className="text-lg font-semibold text-white mb-4">Método de Pago</h3>
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                <button
+                  onClick={() => setPaymentMethod("banreservas")}
+                  className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all ${
+                    paymentMethod === "banreservas" ? "border-[#00FF88]/50 bg-[#00FF88]/5" : "border-white/5 bg-white/[0.02] hover:border-white/10"
+                  }`}
+                >
+                  <Building2 className={`h-5 w-5 ${paymentMethod === "banreservas" ? "text-[#00FF88]" : "text-gray-400"}`} />
+                  <div>
+                    <p className="text-sm font-medium text-white">Banreservas</p>
+                    <p className="text-[10px] text-gray-500">Transferencia bancaria</p>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setPaymentMethod("paypal")}
+                  className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all ${
+                    paymentMethod === "paypal" ? "border-[#00FF88]/50 bg-[#00FF88]/5" : "border-white/5 bg-white/[0.02] hover:border-white/10"
+                  }`}
+                >
+                  <Wallet className={`h-5 w-5 ${paymentMethod === "paypal" ? "text-[#00FF88]" : "text-gray-400"}`} />
+                  <div>
+                    <p className="text-sm font-medium text-white">PayPal</p>
+                    <p className="text-[10px] text-gray-500">Pago en línea</p>
+                  </div>
+                </button>
+              </div>
+
+              {paymentMethod === "banreservas" ? (
+                <div className="rounded-xl bg-white/5 p-4 space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Banco</span>
+                    <span className="text-white font-medium">{bankInfo.bank}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">País</span>
+                    <span className="text-white font-medium">{bankInfo.country}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Titular</span>
+                    <span className="text-white font-medium">{bankInfo.accountName}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Tipo de cuenta</span>
+                    <span className="text-white font-medium">{bankInfo.accountType}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-400">N. de Cuenta</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-mono font-bold">{bankInfo.accountNumber}</span>
+                      <button onClick={() => handleCopy(bankInfo.accountNumber, setCopied)} className="rounded-lg bg-[#00FF88]/10 p-1.5 text-[#00FF88] hover:bg-[#00FF88]/20">
+                        {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="border-t border-white/10 pt-3 flex justify-between text-sm">
+                    <span className="text-gray-400">Monto a pagar</span>
+                    <span className="text-[#00FF88] font-bold text-lg">${courseSlug ? "Consultar" : planInfo?.price}</span>
                   </div>
                 </div>
-                <div className="border-t border-white/10 pt-3 flex justify-between text-sm">
-                  <span className="text-gray-400">Monto a pagar</span>
-                  <span className="text-[#00FF88] font-bold text-lg">${courseSlug ? "Consultar" : planInfo?.price}</span>
+              ) : (
+                <div className="rounded-xl bg-white/5 p-4 space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-400">Email de PayPal</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-mono font-bold">{paypalEmail}</span>
+                      <button onClick={() => handleCopy(paypalEmail, setCopiedPaypal)} className="rounded-lg bg-[#00FF88]/10 p-1.5 text-[#00FF88] hover:bg-[#00FF88]/20">
+                        {copiedPaypal ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="border-t border-white/10 pt-3 flex justify-between text-sm">
+                    <span className="text-gray-400">Monto a enviar</span>
+                    <span className="text-[#00FF88] font-bold text-lg">${courseSlug ? "Consultar" : planInfo?.price}</span>
+                  </div>
+                  <p className="text-xs text-gray-500">Envía el pago al email indicado y adjunta el comprobante de transacción</p>
                 </div>
-              </div>
-              <p className="mt-3 text-xs text-gray-500">Realiza una transferencia o depósito por el monto indicado</p>
+              )}
+              <p className="mt-3 text-xs text-gray-500">
+                {paymentMethod === "banreservas"
+                  ? "Realiza una transferencia o depósito por el monto indicado"
+                  : "Realiza el pago vía PayPal y adjunta el comprobante de transacción"}
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="glass rounded-2xl p-6 space-y-4">
@@ -186,15 +240,23 @@ function PremiumCheckoutContent() {
                 <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-[#00FF88]/50" placeholder="809-000-0000" />
               </div>
               <div>
-                <label className="mb-1 block text-sm text-gray-400">Monto depositado ($)</label>
+                <label className="mb-1 block text-sm text-gray-400">Monto pagado ($)</label>
                 <input type="number" step="0.01" required value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-[#00FF88]/50" placeholder="29.99" />
               </div>
               <div>
                 <label className="mb-1 block text-sm text-gray-400">N. de Referencia / Comprobante</label>
                 <input type="text" required value={formData.reference} onChange={(e) => setFormData({ ...formData, reference: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-[#00FF88]/50" placeholder="Número de referencia del depósito" />
               </div>
+              <div>
+                <label className="mb-1 block text-sm text-gray-400">Comprobante de pago (imagen)</label>
+                <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-white/10 bg-white/5 px-4 py-3 text-sm text-gray-400 hover:border-[#00FF88]/30 hover:bg-white/[0.03] transition-all">
+                  <Upload className="h-4 w-4" />
+                  <span>{proofFile ? proofFile.name : "Subir imagen del comprobante"}</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => setProofFile(e.target.files?.[0] || null)} />
+                </label>
+              </div>
               <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#00FF88] py-3 text-sm font-semibold text-black hover:bg-[#00CC6A] disabled:opacity-50">
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
                 {loading ? "Enviando..." : "Enviar Comprobante"}
               </button>
               <p className="text-xs text-center text-gray-500">Tu acceso se activará una vez verificado el pago (24-48h)</p>

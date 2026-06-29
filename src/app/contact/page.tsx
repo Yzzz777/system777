@@ -24,9 +24,19 @@ export default function ContactPage() {
     setLoading(true);
     try {
       const res = await fetch("/api/contact", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
-      if (res.ok) { setSuccess(true); setError(""); setForm({ name: "", email: "", subject: "", message: "" }); }
-    } catch { setError("Error al enviar el mensaje. Intenta de nuevo."); }
-    setLoading(false);
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSuccess(true);
+        setError("");
+        setForm({ name: "", email: "", subject: "", message: "" });
+      } else {
+        setError(data.error || "Error al enviar el mensaje. Intenta de nuevo.");
+      }
+    } catch {
+      setError("Error al enviar el mensaje. Intenta de nuevo.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
