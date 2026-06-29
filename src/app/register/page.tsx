@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Terminal, Eye, EyeOff, Loader2 } from "lucide-react";
+import { signIn } from "next-auth/react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -25,9 +26,19 @@ export default function RegisterPage() {
         body: JSON.stringify({ name: form.name, email: form.email, username: form.username, password: form.password }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || "Error en el registro"); return; }
-      router.push("/login?registered=true");
-    } catch { setError("Algo salió mal"); } finally { setLoading(false); }
+      if (!res.ok) { setError(data.error || "Error en el registro"); setLoading(false); return; }
+      const result = await signIn("credentials", {
+        email: form.email,
+        password: form.password,
+        redirect: false,
+      });
+      if (result?.error) {
+        router.push("/login");
+      } else {
+        router.push("/dashboard");
+        router.refresh();
+      }
+    } catch { setError("Algo salió mal"); setLoading(false); }
   };
 
   return (

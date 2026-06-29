@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Star, Github, Twitter, Globe } from "lucide-react";
+import { Star, Github, Twitter } from "lucide-react";
 import { FadeIn, FadeInUp, StaggerContainer, StaggerItem, HoverScale } from "@/components/ui/Animations";
 /* using img tags for external images */
 

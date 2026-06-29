@@ -4,28 +4,36 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Terminal, Eye, EyeOff, Loader2 } from "lucide-react";
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [form, setForm] = useState({ email: "", password: "", remember: false });
+  const [form, setForm] = useState({ email: "", password: "" });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email, password: form.password }),
+      const result = await signIn("credentials", {
+        email: form.email,
+        password: form.password,
+        redirect: false,
       });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error || "Credenciales inválidas"); return; }
-      router.push("/dashboard");
-    } catch { setError("Algo salió mal"); } finally { setLoading(false); }
+      if (result?.error) {
+        setError("Credenciales inválidas");
+      } else {
+        router.push("/dashboard");
+        router.refresh();
+      }
+    } catch {
+      setError("Algo salió mal");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -53,13 +61,6 @@ export default function LoginPage() {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 text-sm text-gray-400">
-              <input type="checkbox" checked={form.remember} onChange={(e) => setForm({ ...form, remember: e.target.checked })} className="h-4 w-4 rounded border-white/10 bg-white/5" />
-              Recordarme
-            </label>
-            <Link href="/forgot-password" className="text-sm text-[#00FF88] hover:underline">¿Olvidaste tu contraseña?</Link>
           </div>
           <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#00FF88] py-3 text-sm font-semibold text-black transition-all hover:bg-[#00CC6A] disabled:opacity-50">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}

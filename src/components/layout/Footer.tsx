@@ -9,16 +9,17 @@ const footerLinks = {
     { label: "Desarrollo Discord", href: "/academy/discord" },
     { label: "Linux", href: "/academy/linux" },
   ],
-  Recursos: [
-    { label: "Git & GitHub", href: "/git-github" },
-    { label: "Sistemas Operativos", href: "/operating-systems" },
-    { label: "Blog", href: "/blog" },
-    { label: "Comunidad", href: "/community" },
-    { label: "Tienda", href: "/shop" },
+  Premium: [
+    { label: "Chat en Vivo", href: "/premium/chat" },
+    { label: "Llamadas de Voz/Video", href: "/premium/calls" },
+    { label: "Reuniones Zoom", href: "/premium/meetings" },
+    { label: "Agendar Clase", href: "/premium/schedule" },
+    { label: "Obtener Premium", href: "/premium/checkout" },
   ],
   Empresa: [
     { label: "Sobre Nosotros", href: "/about" },
     { label: "Contacto", href: "/contact" },
+    { label: "Blog", href: "/blog" },
     { label: "Privacidad", href: "/privacy" },
     { label: "Términos", href: "/terms" },
   ],

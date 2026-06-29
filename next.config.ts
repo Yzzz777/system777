@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "avatars.githubusercontent.com" },
@@ -18,7 +17,7 @@ const nextConfig: NextConfig = {
         { key: "X-XSS-Protection", value: "1; mode=block" },
         {
           key: "Permissions-Policy",
-          value: "camera=(), microphone=(), geolocation=()",
+          value: "camera=(self), microphone=(self), geolocation=()",
         },
       ],
     },

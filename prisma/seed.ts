@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import argon2 from "argon2";
+import bcrypt from "bcryptjs";
 
 const db = new PrismaClient();
 
@@ -13,7 +13,7 @@ async function main() {
     return;
   }
 
-  const hashedPassword = await argon2.hash(password);
+  const hashedPassword = await bcrypt.hash(password, 12);
 
   const user = await db.user.create({
     data: {
@@ -26,10 +26,10 @@ async function main() {
     },
   });
 
-  console.log("✅ Cuenta Owner creada:");
-  console.log("   Email:", user.email);
-  console.log("   Rol:", user.role);
-  console.log("   Usuario:", user.username);
+  console.log("Cuenta Owner creada:");
+  console.log("  Email:", user.email);
+  console.log("  Rol:", user.role);
+  console.log("  Usuario:", user.username);
 }
 
 main()

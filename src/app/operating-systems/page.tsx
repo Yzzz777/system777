@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { ExternalLink, Monitor, Cpu } from "lucide-react";
 import { FadeIn, StaggerContainer, StaggerItem, HoverScale } from "@/components/ui/Animations";
 

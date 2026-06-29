@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, BookOpen, Award, Settings, LogOut, Clock, TrendingUp, Bell, CreditCard, Shield, ChevronRight } from "lucide-react";
+import { LayoutDashboard, BookOpen, Award, Settings, LogOut, Clock, TrendingUp, Bell, CreditCard, Shield, ChevronRight, Video, MessageSquare, Phone, Calendar } from "lucide-react";
 
 const stats = [
   { label: "Cursos Inscritos", value: "5", icon: BookOpen, color: "#00FF88" },
@@ -20,6 +20,10 @@ const sidebarItems = [
   { label: "Panel", icon: LayoutDashboard, href: "/dashboard", active: true },
   { label: "Mis Cursos", icon: BookOpen, href: "/dashboard/courses" },
   { label: "Certificados", icon: Award, href: "/dashboard/certificates" },
+  { label: "Chat Premium", icon: MessageSquare, href: "/premium/chat", premium: true },
+  { label: "Llamadas", icon: Phone, href: "/premium/calls", premium: true },
+  { label: "Reuniones Zoom", icon: Calendar, href: "/premium/meetings", premium: true },
+  { label: "Agendar Zoom", icon: Video, href: "/premium/schedule", premium: true },
   { label: "Actividad", icon: Clock, href: "/dashboard/activity" },
   { label: "Suscripción", icon: CreditCard, href: "/dashboard/subscription" },
   { label: "Seguridad", icon: Shield, href: "/dashboard/security" },
@@ -43,6 +47,7 @@ export default function DashboardPage() {
           {sidebarItems.map((item) => (
             <Link key={item.href} href={item.href} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${item.active ? "bg-[#00FF88]/10 text-[#00FF88]" : "text-gray-400 hover:bg-white/5 hover:text-white"}`}>
               <item.icon className="h-4 w-4" />{item.label}
+              {"premium" in item && item.premium && <span className="ml-auto rounded-full bg-[#7C3AED]/20 px-1.5 py-0.5 text-[10px] text-[#7C3AED]">Premium</span>}
             </Link>
           ))}
         </nav>
@@ -104,6 +109,9 @@ export default function DashboardPage() {
             <div className="mt-4 space-y-2">
               {[
                 { label: "Explorar Cursos", href: "/courses" },
+                { label: "Chat Premium", href: "/premium/chat" },
+                { label: "Reuniones Zoom", href: "/premium/meetings" },
+                { label: "Llamadas", href: "/premium/calls" },
                 { label: "Ver Certificados", href: "/dashboard/certificates" },
                 { label: "Actualizar Perfil", href: "/dashboard/settings" },
                 { label: "Unirse a la Comunidad", href: "/community" },

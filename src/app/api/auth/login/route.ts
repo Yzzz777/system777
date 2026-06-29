@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 
 export const runtime = "edge";
-import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { z } from "zod";
 

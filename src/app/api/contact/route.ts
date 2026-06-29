@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
 
 export const runtime = "edge";
-import { db } from "@/lib/db";
 import { z } from "zod";
 
 const contactSchema = z.object({

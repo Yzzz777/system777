@@ -28,9 +28,12 @@ export const navLinks = [
   { label: "Leyendas", href: "/profiles" },
   { label: "Blog", href: "/blog" },
   { label: "Comunidad", href: "/community" },
-  { label: "Recursos", href: "/resources", children: [
-    { label: "Git & GitHub", href: "/git-github" },
-    { label: "Sistemas Operativos", href: "/operating-systems" },
+  { label: "Premium", href: "/premium/checkout", children: [
+    { label: "Chat Premium", href: "/premium/chat" },
+    { label: "Llamadas", href: "/premium/calls" },
+    { label: "Reuniones Zoom", href: "/premium/meetings" },
+    { label: "Agendar Clase", href: "/premium/schedule" },
+    { label: "Obtener Premium", href: "/premium/checkout" },
   ]},
   { label: "Contacto", href: "/contact" },
 ];

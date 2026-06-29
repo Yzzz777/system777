@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Clock, User, Tag } from "lucide-react";
+import { Search, Clock, User } from "lucide-react";
 import { FadeIn, StaggerContainer, StaggerItem, HoverScale } from "@/components/ui/Animations";
 
 const posts = [
