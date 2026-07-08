@@ -78,6 +78,20 @@ const ALL_COMMANDS = [
   { category: "Owner", emoji: "👑", icon: Crown, color: "#FFD93D", name: "broadcast", desc: "Mensaje a todos los servers.", usage: "/broadcast [mensaje]" },
   { category: "Owner", emoji: "👑", icon: Crown, color: "#FFD93D", name: "eval", desc: "Ejecutar código JS.", usage: "/eval [código]" },
   { category: "Owner", emoji: "👑", icon: Crown, color: "#FFD93D", name: "shell", desc: "Ejecutar comando del sistema.", usage: "/shell [comando]" },
+
+  { category: "Diversión", emoji: "🎮", icon: Gamepad2, color: "#FF6B6B", name: "love", desc: "Calcula el amor entre dos usuarios.", usage: "/love @user1 @user2" },
+  { category: "Diversión", emoji: "🎮", icon: Gamepad2, color: "#FF6B6B", name: "roast", desc: "Insulta aleatorio (con cariño).", usage: "/roast [@usuario]" },
+  { category: "Diversión", emoji: "🎮", icon: Gamepad2, color: "#FF6B6B", name: "compliment", desc: "Halago aleatorio.", usage: "/compliment [@usuario]" },
+  { category: "Diversión", emoji: "🎮", icon: Gamepad2, color: "#FF6B6B", name: "rate", desc: "Califica algo del 1 al 10.", usage: "/rate [algo]" },
+  { category: "Diversión", emoji: "🎮", icon: Gamepad2, color: "#FF6B6B", name: "ascii", desc: "Convierte texto a ASCII art.", usage: "/ascii [texto]" },
+  { category: "Diversión", emoji: "🎮", icon: Gamepad2, color: "#FF6B6B", name: "urban", desc: "Definición de Urban Dictionary.", usage: "/urban [término]" },
+
+  { category: "Utilidad", emoji: "🔧", icon: Globe, color: "#FF8C42", name: "password", desc: "Genera contraseña segura.", usage: "/password [longitud]" },
+  { category: "Utilidad", emoji: "🔧", icon: Globe, color: "#FF8C42", name: "reverse", desc: "Invierte un texto.", usage: "/reverse [texto]" },
+  { category: "Utilidad", emoji: "🔧", icon: Globe, color: "#FF8C42", name: "base64", desc: "Codifica/decodifica Base64.", usage: "/base64 [texto] [encode|decode]" },
+  { category: "Utilidad", emoji: "🔧", icon: Globe, color: "#FF8C42", name: "bmi", desc: "Calcula tu IMC.", usage: "/bmi [peso] [altura]" },
+  { category: "Utilidad", emoji: "🔧", icon: Globe, color: "#FF8C42", name: "color", desc: "Info de un color hex.", usage: "/color [#FF5733]" },
+  { category: "Utilidad", emoji: "🔧", icon: Globe, color: "#FF8C42", name: "timestamp", desc: "Genera timestamps Discord.", usage: "/timestamp [fecha] [formato]" },
 ];
 
 const CATEGORIES = ["Todos", ...Array.from(new Set(ALL_COMMANDS.map((c) => c.category)))];
