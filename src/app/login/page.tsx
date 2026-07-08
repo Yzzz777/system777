@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Terminal, Eye, EyeOff, Loader2 } from "lucide-react";
-import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,13 +17,14 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     try {
-      const result = await signIn("credentials", {
-        email: form.email,
-        password: form.password,
-        redirect: false,
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email, password: form.password }),
       });
-      if (result?.error) {
-        setError("Credenciales inválidas");
+      const data = await res.json();
+      if (data.error) {
+        setError(data.error);
       } else {
         router.push("/dashboard");
         router.refresh();
@@ -78,7 +78,7 @@ export default function LoginPage() {
         </div>
 
         <button
-          onClick={() => signIn("discord", { callbackUrl: "/bot/dashboard" })}
+          onClick={() => window.location.href = "/api/auth/discord"}
           className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#5865F2] py-3 text-sm font-semibold text-white transition-all hover:bg-[#4752c4]"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">

@@ -1,6 +1,5 @@
 "use client";
 
-import { useSession, signIn } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
@@ -8,6 +7,7 @@ import {
   Server, Users, Zap, Clock,
   RefreshCw, LogIn, ShieldCheck, Terminal,
 } from "lucide-react";
+import { getSession } from "@/lib/session";
 
 interface BotStats {
   tag: string;
@@ -40,13 +40,15 @@ function formatUptime(seconds: number): string {
 }
 
 export default function BotDashboardPage() {
-  const { data: session, status } = useSession();
+  const [session, setSession] = useState<ReturnType<typeof getSession>>(null);
   const [stats, setStats] = useState<BotStats | null>(null);
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (status !== "authenticated") { setLoading(false); return; }
+    const s = getSession();
+    setSession(s);
+    if (!s) { setLoading(false); return; }
     const fetchData = async () => {
       try {
         const [statsRes, guildsRes] = await Promise.allSettled([
@@ -59,9 +61,9 @@ export default function BotDashboardPage() {
       setLoading(false);
     };
     fetchData();
-  }, [status]);
+  }, []);
 
-  if (status === "loading") {
+  if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-[#5865F2] border-t-transparent rounded-full animate-spin" />
@@ -83,7 +85,7 @@ export default function BotDashboardPage() {
             Inicia sesión con tu cuenta de Discord para acceder al panel y gestionar tus servidores.
           </p>
           <button
-            onClick={() => signIn("discord")}
+            onClick={() => window.location.href = "/api/auth/discord"}
             className="w-full flex items-center justify-center gap-3 py-3.5 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] transition-colors font-bold text-white"
           >
             <LogIn size={18} />
@@ -98,9 +100,9 @@ export default function BotDashboardPage() {
     <main className="min-h-screen pt-24 pb-12 px-4">
       <div className="max-w-6xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-4 mb-10">
-          {session.user?.image && (
+          {session.avatar && (
             <Image
-              src={session.user.image}
+              src={`https://cdn.discordapp.com/avatars/${session.id}/${session.avatar}.png`}
               alt="avatar"
               width={56}
               height={56}
@@ -110,7 +112,7 @@ export default function BotDashboardPage() {
           <div>
             <h1 className="text-2xl font-black">
               <span className="bg-gradient-to-r from-[#5865F2] to-[#7C3AED] bg-clip-text text-transparent">
-                Hola, {session.user?.name?.split("#")[0]}
+                Hola, {session.global_name || session.username}
               </span>
             </h1>
             <p className="text-gray-500 text-sm">Panel de control de System 777 Bot</p>

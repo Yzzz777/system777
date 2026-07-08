@@ -1,24 +1,20 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-const securityHeaders = [
-  ["X-Frame-Options", "DENY"],
-  ["X-Content-Type-Options", "nosniff"],
-  ["Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload"],
-  ["Referrer-Policy", "strict-origin-when-cross-origin"],
-  ["Permissions-Policy", "camera=(self), microphone=(self), geolocation=()"],
-  ["X-XSS-Protection", "1; mode=block"],
-];
+export function middleware(request: NextRequest) {
+  const session = request.cookies.get("system777_session")?.value;
 
-export function middleware() {
-  const response = NextResponse.next();
+  // Protected routes
+  const protectedPaths = ["/dashboard", "/bot/dashboard"];
+  const isProtected = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path));
 
-  for (const [key, value] of securityHeaders) {
-    response.headers.set(key, value);
+  if (isProtected && !session) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/dashboard/:path*", "/bot/dashboard/:path*"],
 };

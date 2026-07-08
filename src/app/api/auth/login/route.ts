@@ -58,10 +58,28 @@ export async function POST(request: Request) {
 
     await createActivityLog({ userId: user.id, action: "LOGIN", ip });
 
-    return NextResponse.json({
+    const sessionData = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      username: user.username,
+      expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+    };
+
+    const jwt = btoa(JSON.stringify(sessionData));
+
+    const response = NextResponse.json({
       success: true,
       user: { id: user.id, email: user.email, name: user.name, role: user.role, username: user.username },
     });
+
+    response.headers.set(
+      "Set-Cookie",
+      `system777_session=${jwt}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`
+    );
+
+    return response;
   } catch (err: unknown) {
     console.error("Login error:", err);
     const msg = err instanceof Error ? err.message : "Internal server error";

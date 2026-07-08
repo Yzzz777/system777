@@ -16,7 +16,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
-    error: "/auth/error",
   },
   providers: [
     Discord({
