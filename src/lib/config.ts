@@ -25,6 +25,11 @@ export const navLinks = [
     { label: "Desarrollo Discord", href: "/academy/discord" },
     { label: "Linux", href: "/academy/linux" },
   ]},
+  { label: "Bot", href: "/bot", children: [
+    { label: "Dashboard", href: "/bot/dashboard" },
+    { label: "Comandos", href: "/bot/commands" },
+    { label: "Estado", href: "/bot/status" },
+  ]},
   { label: "Leyendas", href: "/profiles" },
   { label: "Blog", href: "/blog" },
   { label: "Comunidad", href: "/community" },

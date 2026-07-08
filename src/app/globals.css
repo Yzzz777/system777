@@ -122,3 +122,18 @@ body {
 .bg-theme-surface { background-color: var(--color-surface); }
 .text-theme-text { color: var(--color-text); }
 .text-theme-secondary { color: var(--color-text-secondary); }
+
+/* Bot section styles (purple/violet theme) */
+.bot-section {
+  --bot-primary: #5865F2;
+  --bot-secondary: #7C3AED;
+  --bot-accent: #EB459E;
+}
+.bot-section .glass {
+  background: rgba(88, 101, 242, 0.03);
+  border: 1px solid rgba(88, 101, 242, 0.08);
+}
+.bot-section .glass:hover {
+  background: rgba(88, 101, 242, 0.06);
+  border-color: rgba(88, 101, 242, 0.15);
+}

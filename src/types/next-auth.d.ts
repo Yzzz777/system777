@@ -7,6 +7,11 @@ declare module "next-auth" {
       role: string;
       username?: string;
     } & DefaultSession["user"];
+    accessToken?: string;
+    tokenProvider?: string;
+    discordId?: string;
+    discordUsername?: string;
+    discordAvatar?: string;
   }
 }
 
@@ -15,5 +20,10 @@ declare module "next-auth/jwt" {
     id?: string;
     role?: string;
     username?: string;
+    accessToken?: string;
+    tokenProvider?: string;
+    discordId?: string;
+    discordUsername?: string;
+    discordAvatar?: string;
   }
 }
