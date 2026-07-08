@@ -3,8 +3,8 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
-  Shield, Music, Coins, BarChart3, Ticket, Users,
-  ArrowRight, Zap, Globe, ChevronRight, Star,
+  Shield, Music, Coins, BarChart3, Ticket,
+  ArrowRight, Globe,
   MessageSquare, Lock, Gamepad2, Bot as BotIcon,
 } from "lucide-react";
 import { FadeIn, FadeInUp, StaggerContainer, StaggerItem, HoverScale, GlowPulse } from "@/components/ui/Animations";

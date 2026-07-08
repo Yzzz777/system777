@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import {
-  Server, Users, Zap, Clock, ExternalLink,
+  Server, Users, Zap, Clock,
   RefreshCw, LogIn, ShieldCheck, Terminal,
 } from "lucide-react";
 
@@ -98,9 +98,9 @@ export default function BotDashboardPage() {
     <main className="min-h-screen pt-24 pb-12 px-4">
       <div className="max-w-6xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-4 mb-10">
-          {(session.user?.image || (session as Record<string, unknown>).discordAvatar) && (
+          {session.user?.image && (
             <Image
-              src={session.user?.image || `https://cdn.discordapp.com/avatars/${(session as Record<string, unknown>).discordId}/${(session as Record<string, unknown>).discordAvatar}.png`}
+              src={session.user.image}
               alt="avatar"
               width={56}
               height={56}

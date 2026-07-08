@@ -68,7 +68,7 @@ const ALL_COMMANDS = [
   { category: "Utilidad", emoji: "🔧", icon: Globe, color: "#FF8C42", name: "ticket", desc: "Sistema de tickets.", usage: "/ticket setup/categoria/config" },
   { category: "Utilidad", emoji: "🔧", icon: Globe, color: "#FF8C42", name: "welcome", desc: "Configura bienvenida.", usage: "/welcome setup" },
   { category: "Utilidad", emoji: "🔧", icon: Globe, color: "#FF8C42", name: "autorole", desc: "Rol automático al entrar.", usage: "/autorole [rol]" },
-  { category: "Utilidad", emoji: "🔧", icon: Globe, color: "#FF8C42", name: "starboard", dest: "Mensajes destacados.", usage: "/starboard" },
+  { category: "Utilidad", emoji: "🔧", icon: Globe, color: "#FF8C42", name: "starboard", desc: "Mensajes destacados.", usage: "/starboard" },
   { category: "Utilidad", emoji: "🔧", icon: Globe, color: "#FF8C42", name: "giveaway", desc: "Sorteos con botones.", usage: "/giveaway start/end/reroll" },
   { category: "Utilidad", emoji: "🔧", icon: Globe, color: "#FF8C42", name: "network", desc: "Herramientas de red.", usage: "/network ping/traceroute/nslookup/ssl" },
 
@@ -88,7 +88,7 @@ export default function BotCommandsPage() {
 
   const filtered = ALL_COMMANDS.filter((cmd) => {
     const matchCat = activeCategory === "Todos" || cmd.category === activeCategory;
-    const matchSearch = !search || cmd.name.toLowerCase().includes(search.toLowerCase()) || cmd.desc.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = !search || cmd.name.toLowerCase().includes(search.toLowerCase()) || cmd.desc?.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
   });
 

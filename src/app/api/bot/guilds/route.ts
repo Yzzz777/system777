@@ -18,7 +18,7 @@ export async function GET() {
   try {
     const [userGuildsRes, botGuildsRes] = await Promise.all([
       fetch("https://discord.com/api/v10/users/@me/guilds", {
-        headers: { Authorization: `Bearer ${(session as Record<string, unknown>).accessToken}` },
+        headers: { Authorization: `Bearer ${(session as unknown as Record<string, unknown>).accessToken}` },
         cache: "no-store",
       }),
       fetch(`${BOT_API}/api/public/guilds`, { cache: "no-store" }),

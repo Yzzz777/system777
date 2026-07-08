@@ -74,13 +74,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async session({ session, token }) {
       session.user.id = token.sub as string;
-      (session as Record<string, unknown>).accessToken = token.accessToken as string;
-      (session as Record<string, unknown>).tokenProvider = token.tokenProvider as string;
-      (session as Record<string, unknown>).discordId = token.discordId as string;
-      (session as Record<string, unknown>).discordUsername = token.discordUsername as string;
-      (session as Record<string, unknown>).discordAvatar = token.discordAvatar as string;
+      (session as unknown as Record<string, unknown>).accessToken = token.accessToken as string;
+      (session as unknown as Record<string, unknown>).tokenProvider = token.tokenProvider as string;
+      (session as unknown as Record<string, unknown>).discordId = token.discordId as string;
+      (session as unknown as Record<string, unknown>).discordUsername = token.discordUsername as string;
+      (session as unknown as Record<string, unknown>).discordAvatar = token.discordAvatar as string;
       if (token.tokenProvider === "credentials") {
-        session.user.role = (token as { role?: string }).role;
+        session.user.role = (token as { role?: string }).role ?? "";
         session.user.username = (token as { username?: string }).username;
       } else if (token.tokenProvider === "discord") {
         session.user.name = (token.discordUsername as string) ?? session.user.name;
