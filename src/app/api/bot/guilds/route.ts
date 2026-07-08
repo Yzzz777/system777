@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 const BOT_API = process.env.BOT_API_URL ?? "";
