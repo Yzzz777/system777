@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
 import { BookOpen, Clock, Users, Star, ArrowLeft, Check, Lock, Play, ChevronRight, Shield, X, FileText, Loader2, CheckCircle2 } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/components/Providers";
 import { useRouter } from "next/navigation";
 import { FadeIn } from "@/components/ui/Animations";
 

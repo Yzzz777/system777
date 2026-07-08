@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ChevronDown, Terminal, LogOut, User, LayoutDashboard } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
-import { useSession, signOut } from "next-auth/react";
+import { useSession, signOut } from "@/components/Providers";
 import { siteConfig, navLinks } from "@/lib/config";
 import { cn } from "@/lib/utils";
 

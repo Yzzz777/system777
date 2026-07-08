@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/components/Providers";
 import { ArrowLeft, Award, CheckCircle2 } from "lucide-react";
 import { FadeIn } from "@/components/ui/Animations";
 import Certificate from "@/components/Certificate";

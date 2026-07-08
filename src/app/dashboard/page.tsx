@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
+import { useSession, signOut } from "@/components/Providers";
 import { LayoutDashboard, BookOpen, Award, Settings, LogOut, Clock, TrendingUp, Bell, CreditCard, Shield, ChevronRight, Video, MessageSquare, Phone, Calendar } from "lucide-react";
 
 const sidebarItems = [
