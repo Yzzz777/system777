@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Terminal, Eye, EyeOff, Loader2 } from "lucide-react";
-import { signIn } from "next-auth/react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -27,12 +26,13 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || "Error en el registro"); setLoading(false); return; }
-      const result = await signIn("credentials", {
-        email: form.email,
-        password: form.password,
-        redirect: false,
+      const loginRes = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email, password: form.password }),
       });
-      if (result?.error) {
+      const loginData = await loginRes.json();
+      if (loginData.error) {
         router.push("/login");
       } else {
         router.push("/dashboard");

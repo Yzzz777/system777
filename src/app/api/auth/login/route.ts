@@ -41,14 +41,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
-    const isValid = await bcrypt.compare(password, user.password);
+    const isValid = await bcrypt.compare(password, user.password as string);
 
     if (!isValid) {
-      await createActivityLog({ userId: user.id, action: "FAILED_LOGIN", details: "Invalid password", ip });
+      await createActivityLog({ userId: user.id as string, action: "FAILED_LOGIN", details: "Invalid password", ip });
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
-    await createActivityLog({ userId: user.id, action: "LOGIN", ip });
+    await createActivityLog({ userId: user.id as string, action: "LOGIN", ip });
 
     const sessionData = {
       id: user.id,
