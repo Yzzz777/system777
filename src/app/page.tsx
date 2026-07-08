@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import {
   Code, Shield, Terminal, MessageSquare, Cloud, Database,
   ArrowRight, Users, BookOpen, Award, Zap, Globe,
-  ChevronRight, Star, Play, Cpu, Layers, Rocket, Server
+  ChevronRight, Star, Play, Cpu, Layers, Rocket, Server,
+  Bot as BotIcon, Music, Coins, BarChart3, Lock
 } from "lucide-react";
 import { FadeIn, FadeInUp, StaggerContainer, StaggerItem, HoverScale, GlowPulse, FloatingElement } from "@/components/ui/Animations";
 
@@ -168,6 +169,62 @@ export default function HomePage() {
               </StaggerItem>
             ))}
           </StaggerContainer>
+        </div>
+      </section>
+
+      {/* Bot Showcase */}
+      <section className="py-24 bg-gradient-to-b from-transparent via-[#5865F2]/[0.02] to-transparent">
+        <div className="mx-auto max-w-7xl px-4">
+          <FadeIn>
+            <div className="text-center">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#5865F2]/20 bg-[#5865F2]/5 px-4 py-1.5 text-sm text-[#5865F2]">
+                <BotIcon className="h-3 w-3" />
+                <span>Discord Bot</span>
+              </div>
+              <h2 className="text-3xl font-bold text-white sm:text-4xl">
+                <span className="bg-gradient-to-r from-[#5865F2] to-[#7C3AED] bg-clip-text text-transparent">System 777 Bot</span>
+              </h2>
+              <p className="mx-auto mt-4 max-w-2xl text-gray-400">El bot definitivo para Discord. Moderación, música, economía, niveles y protección en un solo bot profesional.</p>
+            </div>
+          </FadeIn>
+          <StaggerContainer className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { icon: Shield, title: "Moderación", desc: "Ban, kick, warn, timeout y más.", color: "#5865F2" },
+              { icon: Lock, title: "Protección", desc: "Anti-raid, anti-nuke, automod.", color: "#7C3AED" },
+              { icon: Music, title: "Música", desc: "YouTube, Spotify, cola y controles.", color: "#EB459E" },
+              { icon: Coins, title: "Economía", desc: "Monedas, banco, daily, slots.", color: "#FEE75C" },
+            ].map((f) => (
+              <StaggerItem key={f.title}>
+                <HoverScale>
+                  <div className="glass rounded-2xl p-6 h-full">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl" style={{ backgroundColor: f.color + "15" }}>
+                      <f.icon className="h-6 w-6" style={{ color: f.color }} />
+                    </div>
+                    <h3 className="mt-4 text-lg font-semibold text-white">{f.title}</h3>
+                    <p className="mt-2 text-sm text-gray-400">{f.desc}</p>
+                  </div>
+                </HoverScale>
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
+          <FadeIn delay={0.2}>
+            <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <Link href="/bot" className="group flex items-center gap-2 rounded-xl bg-[#5865F2] px-8 py-3.5 text-sm font-semibold text-white transition-all hover:bg-[#4752c4] hover:shadow-[0_0_30px_rgba(88,101,242,0.3)]">
+                Explorar Bot <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+              <a
+                href={`https://discord.com/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_BOT_CLIENT_ID ?? "1502804306125132057"}&permissions=8&integration_type=0&scope=applications.commands+bot`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-xl border border-white/10 px-8 py-3.5 text-sm font-semibold text-white transition-all hover:border-[#5865F2]/30 hover:bg-white/5"
+              >
+                <BotIcon className="h-4 w-4" /> Añadir al Servidor
+              </a>
+              <Link href="/bot/dashboard" className="flex items-center gap-2 rounded-xl border border-[#7C3AED]/20 bg-[#7C3AED]/5 px-8 py-3.5 text-sm font-semibold text-[#7C3AED] transition-all hover:bg-[#7C3AED]/10">
+                <BarChart3 className="h-4 w-4" /> Dashboard
+              </Link>
+            </div>
+          </FadeIn>
         </div>
       </section>
 
