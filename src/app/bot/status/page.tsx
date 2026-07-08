@@ -16,6 +16,15 @@ interface BotStatus {
   nodeVersion: string;
 }
 
+function formatUptime(seconds: number): string {
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (d > 0) return `${d}d ${h}h ${m}m`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
 export default function BotStatusPage() {
   const [status, setStatus] = useState<BotStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,16 +32,26 @@ export default function BotStatusPage() {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const BOT_API = process.env.NEXT_PUBLIC_BOT_API_URL ?? "";
-        if (BOT_API) {
-          const res = await fetch(`${BOT_API}/api/status`);
-          if (res.ok) setStatus(await res.json());
+        const res = await fetch("/api/bot/stats");
+        if (res.ok) {
+          const data = await res.json();
+          setStatus({
+            status: data.online ? "online" : "offline",
+            ping: data.ping,
+            uptime: { seconds: data.uptime, formatted: formatUptime(data.uptime) },
+            guilds: data.guilds,
+            users: data.users,
+            commands: { total: data.commands || 0, used: 0, topCommand: null },
+            memory: { heapMB: data.memory || "0", rssMB: "0" },
+            version: "1.2.0",
+            nodeVersion: "v20",
+          });
         }
       } catch {}
       setLoading(false);
     };
     fetchStatus();
-    const interval = setInterval(fetchStatus, 30000);
+    const interval = setInterval(fetchStatus, 15000);
     return () => clearInterval(interval);
   }, []);
 
