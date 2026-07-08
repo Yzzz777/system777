@@ -1,14 +1,8 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { ensureUsersTable, findUserByEmail, createActivityLog } from "@/lib/db";
-import { z } from "zod";
 
 export const runtime = "edge";
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-});
 
 const RATE_LIMIT_STORE = new Map<string, { count: number; resetAt: number }>();
 
@@ -33,13 +27,11 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const parsed = loginSchema.safeParse(body);
+    const { email, password } = body;
 
-    if (!parsed.success) {
+    if (!email || !password) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 400 });
     }
-
-    const { email, password } = parsed.data;
 
     await ensureUsersTable();
     const user = await findUserByEmail(email);

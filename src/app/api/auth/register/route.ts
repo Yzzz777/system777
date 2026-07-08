@@ -1,54 +1,29 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { ensureUsersTable, createUser } from "@/lib/db";
-import { z } from "zod";
+import { ensureUsersTable, createUser, findUserByEmail, findUserByUsername } from "@/lib/db";
 
 export const runtime = "edge";
 
-const registerSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  username: z.string().min(3).max(20).regex(/^[a-z0-9_]+$/, "Username can only contain lowercase letters, numbers and underscores"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-});
-
-const RATE_LIMIT_STORE = new Map<string, { count: number; resetAt: number }>();
-
-function checkRateLimit(ip: string, limit = 5, windowMs = 15 * 60 * 1000): boolean {
-  const now = Date.now();
-  const record = RATE_LIMIT_STORE.get(ip);
-
-  if (!record || now > record.resetAt) {
-    RATE_LIMIT_STORE.set(ip, { count: 1, resetAt: now + windowMs });
-    return true;
-  }
-
-  if (record.count >= limit) return false;
-
-  record.count++;
-  return true;
-}
-
 export async function POST(request: Request) {
-  const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
-
-  if (!checkRateLimit(ip)) {
-    return NextResponse.json({ error: "Too many registration attempts. Try again later." }, { status: 429 });
-  }
-
   try {
     const body = await request.json();
-    const parsed = registerSchema.safeParse(body);
+    const { name, email, username, password } = body;
 
-    if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
+    if (!name || !email || !username || !password) {
+      return NextResponse.json({ error: "All fields are required" }, { status: 400 });
     }
-
-    const { name, email, username, password } = parsed.data;
+    if (typeof email !== "string" || !email.includes("@")) {
+      return NextResponse.json({ error: "Invalid email" }, { status: 400 });
+    }
+    if (typeof password !== "string" || password.length < 8) {
+      return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
+    }
+    if (typeof username !== "string" || username.length < 3) {
+      return NextResponse.json({ error: "Username must be at least 3 characters" }, { status: 400 });
+    }
 
     await ensureUsersTable();
 
-    const { findUserByEmail, findUserByUsername } = await import("@/lib/db");
     const existingEmail = await findUserByEmail(email);
     if (existingEmail) {
       return NextResponse.json({ error: "Email already registered" }, { status: 409 });

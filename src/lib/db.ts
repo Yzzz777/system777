@@ -1,9 +1,25 @@
 import { neon } from "@neondatabase/serverless";
 
-const sql = neon(process.env.DATABASE_URL!);
+let _sql: ReturnType<typeof neon> | null = null;
+
+function getSql() {
+  if (!_sql) {
+    _sql = neon(process.env.DATABASE_URL!);
+  }
+  return _sql;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SqlQueryResult = Record<string, any>[];
+
+function query(strings: TemplateStringsArray, ...values: unknown[]): Promise<SqlQueryResult> {
+  return getSql()(strings, ...values) as Promise<SqlQueryResult>;
+}
+
+export { query as sql };
 
 export async function ensureUsersTable() {
-  await sql`
+  await query`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
       email TEXT UNIQUE NOT NULL,
@@ -20,22 +36,22 @@ export async function ensureUsersTable() {
 }
 
 export async function findUserByEmail(email: string) {
-  const rows = await sql`SELECT * FROM users WHERE email = ${email} LIMIT 1`;
+  const rows = await query`SELECT * FROM users WHERE email = ${email} LIMIT 1`;
   return rows[0] || null;
 }
 
 export async function findUserByUsername(username: string) {
-  const rows = await sql`SELECT * FROM users WHERE username = ${username} LIMIT 1`;
+  const rows = await query`SELECT * FROM users WHERE username = ${username} LIMIT 1`;
   return rows[0] || null;
 }
 
 export async function findUserById(id: string) {
-  const rows = await sql`SELECT * FROM users WHERE id = ${id} LIMIT 1`;
+  const rows = await query`SELECT * FROM users WHERE id = ${id} LIMIT 1`;
   return rows[0] || null;
 }
 
 export async function createUser(data: { name: string; email: string; username: string; password: string }) {
-  const rows = await sql`
+  const rows = await query`
     INSERT INTO users (name, email, username, password)
     VALUES (${data.name}, ${data.email}, ${data.username}, ${data.password})
     RETURNING id, email, name, username, role
@@ -44,7 +60,7 @@ export async function createUser(data: { name: string; email: string; username: 
 }
 
 export async function createContactMessage(data: { name: string; email: string; subject: string; message: string }) {
-  await sql`
+  await query`
     CREATE TABLE IF NOT EXISTS contact_messages (
       id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
       name TEXT NOT NULL,
@@ -55,14 +71,14 @@ export async function createContactMessage(data: { name: string; email: string; 
       created_at TIMESTAMP DEFAULT NOW()
     )
   `;
-  await sql`
+  await query`
     INSERT INTO contact_messages (name, email, subject, message)
     VALUES (${data.name}, ${data.email}, ${data.subject}, ${data.message})
   `;
 }
 
 export async function createActivityLog(data: { userId: string; action: string; details?: string; ip?: string }) {
-  await sql`
+  await query`
     CREATE TABLE IF NOT EXISTS activity_logs (
       id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
       user_id TEXT NOT NULL,
@@ -72,14 +88,14 @@ export async function createActivityLog(data: { userId: string; action: string; 
       created_at TIMESTAMP DEFAULT NOW()
     )
   `;
-  await sql`
+  await query`
     INSERT INTO activity_logs (user_id, action, details, ip)
     VALUES (${data.userId}, ${data.action}, ${data.details || ""}, ${data.ip || ""})
   `;
 }
 
 export async function ensureEnrollmentsTable() {
-  await sql`
+  await query`
     CREATE TABLE IF NOT EXISTS enrollments (
       id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
       user_id TEXT NOT NULL,
@@ -94,39 +110,39 @@ export async function ensureEnrollmentsTable() {
 
 export async function enrollUser(userId: string, courseSlug: string) {
   await ensureEnrollmentsTable();
-  const rows = await sql`
+  const rows = await query`
     INSERT INTO enrollments (user_id, course_slug)
     VALUES (${userId}, ${courseSlug})
     ON CONFLICT (user_id, course_slug) DO NOTHING
     RETURNING id, user_id, course_slug, progress, completed, enrolled_at
   `;
   if (rows.length === 0) {
-    return (await sql`SELECT * FROM enrollments WHERE user_id = ${userId} AND course_slug = ${courseSlug} LIMIT 1`)[0];
+    return (await query`SELECT * FROM enrollments WHERE user_id = ${userId} AND course_slug = ${courseSlug} LIMIT 1`)[0];
   }
   return rows[0];
 }
 
 export async function getUserEnrollment(userId: string, courseSlug: string) {
   await ensureEnrollmentsTable();
-  const rows = await sql`SELECT * FROM enrollments WHERE user_id = ${userId} AND course_slug = ${courseSlug} LIMIT 1`;
+  const rows = await query`SELECT * FROM enrollments WHERE user_id = ${userId} AND course_slug = ${courseSlug} LIMIT 1`;
   return rows[0] || null;
 }
 
 export async function getUserEnrollments(userId: string) {
   await ensureEnrollmentsTable();
-  return await sql`SELECT * FROM enrollments WHERE user_id = ${userId} ORDER BY enrolled_at DESC`;
+  return await query`SELECT * FROM enrollments WHERE user_id = ${userId} ORDER BY enrolled_at DESC`;
 }
 
 export async function updateEnrollmentProgress(userId: string, courseSlug: string, progress: number) {
   await ensureEnrollmentsTable();
-  await sql`
+  await query`
     UPDATE enrollments SET progress = ${progress}, completed = ${progress >= 100}
     WHERE user_id = ${userId} AND course_slug = ${courseSlug}
   `;
 }
 
 export async function ensurePaymentsTable() {
-  await sql`
+  await query`
     CREATE TABLE IF NOT EXISTS payments (
       id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
       name TEXT NOT NULL,
@@ -156,7 +172,7 @@ export async function createPayment(data: {
   planOrCourse?: string;
 }) {
   await ensurePaymentsTable();
-  const rows = await sql`
+  const rows = await query`
     INSERT INTO payments (name, email, phone, amount, method, reference, proof_url, type, plan_or_course)
     VALUES (${data.name}, ${data.email}, ${data.phone || ""}, ${data.amount}, ${data.method}, ${data.reference || ""}, ${data.proofUrl || ""}, ${data.type || "subscription"}, ${data.planOrCourse || ""})
     RETURNING *
@@ -166,19 +182,19 @@ export async function createPayment(data: {
 
 export async function getAllPayments() {
   await ensurePaymentsTable();
-  return await sql`SELECT * FROM payments ORDER BY created_at DESC`;
+  return await query`SELECT * FROM payments ORDER BY created_at DESC`;
 }
 
 export async function updatePaymentStatus(id: string, status: string) {
   await ensurePaymentsTable();
-  const rows = await sql`
+  const rows = await query`
     UPDATE payments SET status = ${status} WHERE id = ${id} RETURNING *
   `;
   return rows[0] || null;
 }
 
 export async function ensureNotificationsTable() {
-  await sql`
+  await query`
     CREATE TABLE IF NOT EXISTS notifications (
       id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
       user_id TEXT NOT NULL,
@@ -192,12 +208,12 @@ export async function ensureNotificationsTable() {
 
 export async function getNotifications(userId: string) {
   await ensureNotificationsTable();
-  return await sql`SELECT * FROM notifications WHERE user_id = ${userId} ORDER BY created_at DESC LIMIT 50`;
+  return await query`SELECT * FROM notifications WHERE user_id = ${userId} ORDER BY created_at DESC LIMIT 50`;
 }
 
 export async function createNotification(data: { userId: string; title: string; message: string }) {
   await ensureNotificationsTable();
-  const rows = await sql`
+  const rows = await query`
     INSERT INTO notifications (user_id, title, message)
     VALUES (${data.userId}, ${data.title}, ${data.message})
     RETURNING *
@@ -207,12 +223,11 @@ export async function createNotification(data: { userId: string; title: string; 
 
 export async function markNotificationRead(id: string) {
   await ensureNotificationsTable();
-  await sql`UPDATE notifications SET read = true WHERE id = ${id}`;
+  await query`UPDATE notifications SET read = true WHERE id = ${id}`;
 }
 
 export async function markAllNotificationsRead(userId: string) {
   await ensureNotificationsTable();
-  await sql`UPDATE notifications SET read = true WHERE user_id = ${userId} AND read = false`;
+  await query`UPDATE notifications SET read = true WHERE user_id = ${userId} AND read = false`;
 }
 
-export { sql };
