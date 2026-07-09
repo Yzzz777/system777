@@ -35,6 +35,10 @@ interface BotStats {
   commands?: number;
   channels?: number;
   voiceChannels?: number;
+  node?: string;
+  version?: string;
+  heapUsed?: number;
+  rss?: number;
 }
 
 interface Guild {
@@ -140,6 +144,7 @@ interface Analytics {
   activeUsers: number;
   topCommands: { name: string; uses: number }[];
   dailyStats: { date: string; commands: number; users: number }[];
+  uptime?: number;
 }
 
 interface UserProfile {
@@ -163,6 +168,63 @@ interface ModerationCase {
   moderatorId?: string;
   reason: string;
   duration?: string;
+  timestamp: string;
+}
+
+interface TicketButton {
+  id: string;
+  emoji: string;
+  label: string;
+  buttonId: string;
+  color: string;
+  description: string;
+  welcomeMessage: string;
+}
+
+interface SecurityData {
+  flaggedUsers: any[];
+  highRisk: number;
+  alerts: any[];
+  altsDetected: number;
+  recentAlerts: any[];
+}
+
+interface BotLogEntry {
+  level: string;
+  message: string;
+  timestamp: string;
+  source?: string;
+}
+
+interface PremiumRequest {
+  id: string;
+  userId: string;
+  username: string;
+  plan: string;
+  status: string;
+  createdAt: string;
+}
+
+interface PremiumCoupon {
+  code: string;
+  discount: number;
+  uses: number;
+  maxUses: number;
+  expiresAt: string;
+}
+
+interface PremiumPlan {
+  name: string;
+  price: number;
+  features: string[];
+  storeUrl?: string;
+}
+
+interface PremiumHistory {
+  action: string;
+  userId: string;
+  username: string;
+  plan?: string;
   timestamp: string;
 }
 
@@ -195,8 +257,8 @@ type SectionId =
   | "overview" | "servers" | "profile"
   | "modules" | "welcome" | "tickets" | "autorole" | "logs" | "protection"
   | "moderation" | "levels" | "economy" | "verification"
-  | "bot-control" | "global-bans" | "broadcast" | "ip-bans" | "staff"
-  | "analytics" | "premium-admin" | "jarvis";
+  | "bot-control" | "global-bans" | "broadcast" | "ip-bans" | "security"
+  | "staff" | "analytics" | "premium-admin" | "jarvis" | "bot-logs" | "terminal";
 
 interface NavItem {
   id: SectionId;
@@ -225,10 +287,13 @@ const NAV_ITEMS: NavItem[] = [
   { id: "global-bans", label: "Bans Globales", icon: Ban, ownerOnly: true, category: "owner" },
   { id: "broadcast", label: "Broadcast", icon: Megaphone, ownerOnly: true, category: "owner" },
   { id: "ip-bans", label: "IP Bans", icon: ShieldBan, ownerOnly: true, category: "owner" },
+  { id: "security", label: "Security", icon: ShieldCheck, ownerOnly: true, category: "owner" },
   { id: "staff", label: "Staff", icon: Users, ownerOnly: true, category: "owner" },
   { id: "analytics", label: "Analytics", icon: BarChart3, ownerOnly: true, category: "owner" },
   { id: "premium-admin", label: "Premium Admin", icon: Crown, ownerOnly: true, category: "owner" },
   { id: "jarvis", label: "JARVIS AI", icon: Sparkles, ownerOnly: true, category: "owner" },
+  { id: "terminal", label: "Terminal", icon: Terminal, ownerOnly: true, category: "owner" },
+  { id: "bot-logs", label: "Bot Logs", icon: FileText, ownerOnly: true, category: "owner" },
 ];
 
 const MODULES = [
@@ -248,6 +313,13 @@ const PREMIUM_PLANS = [
   { name: "Sharingan", price: "$4.99/mes", features: ["5 servidores", "10 comandos premium", "Soporte prioritario"], color: "#ED4245" },
   { name: "Mangekyo", price: "$9.99/mes", features: ["15 servidores", "25 comandos premium", "Soporte VIP", "JARVIS acceso"], color: "#7C3AED" },
   { name: "Rinnegan", price: "$19.99/mes", features: ["Ilimitado", "Todos los comandos", "Soporte 24/7", "JARVIS completo", "API acceso"], color: "#5865F2" },
+];
+
+const TICKET_BUTTON_COLORS = [
+  { value: "Primary", label: "Blue", hex: "#5865F2" },
+  { value: "Secondary", label: "Gray", hex: "#99AAB5" },
+  { value: "Success", label: "Green", hex: "#57F287" },
+  { value: "Danger", label: "Red", hex: "#ED4245" },
 ];
 
 const CHANNEL_SELECT_CLASSES = "w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50 appearance-none";
@@ -292,6 +364,8 @@ export default function BotDashboardPage() {
   const [jarvisInput, setJarvisInput] = useState("");
   const [jarvisLoading, setJarvisLoading] = useState(false);
   const [jarvisMetrics, setJarvisMetrics] = useState<any>(null);
+  const [jarvisModel, setJarvisModel] = useState("llama-3.3-70b");
+  const [jarvisMode, setJarvisMode] = useState<"professional" | "stark">("professional");
   const jarvisRef = useRef<HTMLDivElement>(null);
 
   const [welcomeConfig, setWelcomeConfig] = useState({
@@ -312,12 +386,12 @@ export default function BotDashboardPage() {
     antiAlt: { enabled: false, minAgeDays: 7 },
     antiNuke: {
       enabled: false,
-      channels: { threshold: 3, action: "timeout" as "timeout" | "kick" | "ban" },
-      roles: { threshold: 2, action: "timeout" as "timeout" | "kick" | "ban" },
-      emojis: { threshold: 5, action: "timeout" as "timeout" | "kick" | "ban" },
-      bans: { threshold: 3, action: "timeout" as "timeout" | "kick" | "ban" },
-      kicks: { threshold: 3, action: "timeout" as "timeout" | "kick" | "ban" },
-      webhooks: { threshold: 3, action: "timeout" as "timeout" | "kick" | "ban" },
+      channels: { threshold: 3, action: "remove_roles" as string },
+      roles: { threshold: 2, action: "remove_roles" as string },
+      emojis: { threshold: 5, action: "timeout" as string },
+      bans: { threshold: 3, action: "timeout" as string },
+      kicks: { threshold: 3, action: "timeout" as string },
+      webhooks: { threshold: 3, action: "timeout" as string },
     },
     autoMod: {
       enabled: false, logChannel: "",
@@ -339,14 +413,16 @@ export default function BotDashboardPage() {
     startingBalance: 100, workReward: 100, workCooldown: 3600,
     dailyReward: 500, dailyCooldown: 86400,
     robEnabled: true, maxRobPercent: 20, slotsEnabled: true,
+    slotsMultiplier: 2, slotsMinBet: 10, slotsMaxBet: 1000,
   });
   const [ticketConfig, setTicketConfig] = useState({
     channel: "", title: "", description: "", color: "#5865F2", image: "",
     supportRole: "", logChannel: "", category: "", prefix: "TICKET-",
     maxTickets: 5, pingOnCreate: true, dmTranscript: true,
-    buttonEmoji: "🎫", buttonLabel: "Crear Ticket", buttonColor: "#5865F2",
-    buttonDescription: "", welcomeMessage: "",
   });
+  const [ticketButtons, setTicketButtons] = useState<TicketButton[]>([
+    { id: "1", emoji: "🎫", label: "Soporte General", buttonId: "support_general", color: "Primary", description: "Soporte general del servidor", welcomeMessage: "Hola, bienvenido al soporte. ¿En qué podemos ayudarte?" },
+  ]);
   const [verifyConfig, setVerifyConfig] = useState({
     enabled: false, channel: "", message: "", roleId: "",
   });
@@ -361,12 +437,34 @@ export default function BotDashboardPage() {
   });
   const [globalBanForm, setGlobalBanForm] = useState({ userId: "", reason: "" });
   const [ipBanForm, setIpBanForm] = useState({ ip: "", reason: "" });
-  const [ipLookup, setIpLookup] = useState("");
+  const [ipLookupUserId, setIpLookupUserId] = useState("");
+  const [ipLookupIp, setIpLookupIp] = useState("");
+  const [ipLookupResults, setIpLookupResults] = useState<any>(null);
   const [staffForm, setStaffForm] = useState({ userId: "", rank: "moderator", note: "" });
   const [premiumCodeTier, setPremiumCodeTier] = useState("Sharingan");
   const [redeemCode, setRedeemCode] = useState("");
-
   const [premiumGrantForm, setPremiumGrantForm] = useState({ userId: "", tier: "Sharingan" });
+
+  const [securityData, setSecurityData] = useState<SecurityData | null>(null);
+  const [staffLogs, setStaffLogs] = useState<any[]>([]);
+  const [botLogs, setBotLogs] = useState<BotLogEntry[]>([]);
+  const [botLogsAutoRefresh, setBotLogsAutoRefresh] = useState(false);
+  const [securityGuildId, setSecurityGuildId] = useState("");
+
+  const [premiumRequests, setPremiumRequests] = useState<PremiumRequest[]>([]);
+  const [premiumHistory, setPremiumHistory] = useState<PremiumHistory[]>([]);
+  const [premiumServers, setPremiumServers] = useState<any[]>([]);
+  const [premiumPlansConfig, setPremiumPlansConfig] = useState<PremiumPlan[]>([]);
+  const [premiumStoreUrl, setPremiumStoreUrl] = useState("");
+  const [premiumBlacklist, setPremiumBlacklist] = useState<any[]>([]);
+  const [premiumBlacklistForm, setPremiumBlacklistForm] = useState("");
+  const [premiumCoupons, setPremiumCoupons] = useState<PremiumCoupon[]>([]);
+  const [premiumCouponForm, setPremiumCouponForm] = useState({ code: "", discount: 10, maxUses: 100, expiresAt: "" });
+  const [premiumForceExpireId, setPremiumForceExpireId] = useState("");
+  const [premiumGiveAllIds, setPremiumGiveAllIds] = useState("");
+  const [premiumGiveAllPlan, setPremiumGiveAllPlan] = useState("Sharingan");
+  const [premiumGiveAllDays, setPremiumGiveAllDays] = useState(30);
+  const [premiumAdminTab, setPremiumAdminTab] = useState("users");
 
   const [guildSubTab, setGuildSubTab] = useState("modules");
 
@@ -468,6 +566,20 @@ export default function BotDashboardPage() {
     }
   }, [jarvisMessages]);
 
+  useEffect(() => {
+    if (activeSection !== "bot-logs" || !botLogsAutoRefresh) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch("/api/bot/proxy/logs");
+        if (res.ok) {
+          const d = await res.json();
+          setBotLogs(Array.isArray(d) ? d : d.logs || []);
+        }
+      } catch {}
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [activeSection, botLogsAutoRefresh]);
+
   const loadGuildConfig = async (guildId: string) => {
     try {
       const res = await fetch(`/api/bot/proxy/guild/${guildId}`);
@@ -484,6 +596,7 @@ export default function BotDashboardPage() {
         if (data.economy) setEconomyConfig((prev) => ({ ...prev, ...data.economy }));
         if (data.tickets) setTicketConfig((prev) => ({ ...prev, ...data.tickets }));
         if (data.verification) setVerifyConfig((prev) => ({ ...prev, ...data.verification }));
+        if (data.ticketButtons) setTicketButtons(data.ticketButtons);
       }
     } catch {}
   };
@@ -670,10 +783,21 @@ export default function BotDashboardPage() {
     try {
       const res = await fetch(`/api/bot/proxy/guild/${selectedGuild.id}/tickets/setup`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(ticketConfig),
+        body: JSON.stringify({ ...ticketConfig, buttons: ticketButtons }),
       });
       if (res.ok) showToast("Tickets configurados", "success");
     } catch { showToast("Error al configurar", "error"); }
+  };
+
+  const saveTicketConfig = async () => {
+    if (!selectedGuild) return;
+    try {
+      const res = await fetch(`/api/bot/proxy/guild/${selectedGuild.id}/tickets/config`, {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...ticketConfig, buttons: ticketButtons }),
+      });
+      if (res.ok) showToast("Configuración de tickets guardada", "success");
+    } catch { showToast("Error al guardar", "error"); }
   };
 
   const publishTicketPanel = async () => {
@@ -681,16 +805,37 @@ export default function BotDashboardPage() {
     try {
       const res = await fetch(`/api/bot/proxy/guild/${selectedGuild.id}/tickets/panel`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(ticketConfig),
+        body: JSON.stringify({ ...ticketConfig, buttons: ticketButtons }),
       });
       if (res.ok) showToast("Panel de tickets publicado", "success");
     } catch { showToast("Error al publicar", "error"); }
   };
 
+  const addTicketCategory = async (catName: string) => {
+    if (!selectedGuild) return;
+    try {
+      const res = await fetch(`/api/bot/proxy/guild/${selectedGuild.id}/tickets/category`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: catName }),
+      });
+      if (res.ok) showToast("Categoría añadida", "success");
+    } catch { showToast("Error al añadir categoría", "error"); }
+  };
+
+  const removeTicketCategory = async (catId: string) => {
+    if (!selectedGuild) return;
+    try {
+      const res = await fetch(`/api/bot/proxy/guild/${selectedGuild.id}/tickets/category/${catId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) showToast("Categoría eliminada", "success");
+    } catch { showToast("Error al eliminar", "error"); }
+  };
+
   const saveVerification = async () => {
     if (!selectedGuild) return;
     try {
-      const res = await fetch(`/api/bot/proxy/verify/setup`, {
+      const res = await fetch("/api/bot/proxy/verify/setup", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(verifyConfig),
       });
@@ -701,7 +846,7 @@ export default function BotDashboardPage() {
   const removeVerification = async () => {
     if (!selectedGuild) return;
     try {
-      const res = await fetch(`/api/bot/proxy/verify/remove`, {
+      const res = await fetch("/api/bot/proxy/verify/remove", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ guildId: selectedGuild.id }),
       });
@@ -821,6 +966,22 @@ export default function BotDashboardPage() {
     } catch { showToast("Error al eliminar", "error"); }
   };
 
+  const lookupUserIps = async () => {
+    if (!ipLookupUserId) return;
+    try {
+      const res = await fetch(`/api/bot/proxy/ipregistry/${ipLookupUserId}`);
+      if (res.ok) setIpLookupResults(await res.json());
+    } catch { showToast("Error al buscar IPs", "error"); }
+  };
+
+  const lookupIpAccounts = async () => {
+    if (!ipLookupIp) return;
+    try {
+      const res = await fetch(`/api/bot/proxy/ipregistry/ip/${ipLookupIp}`);
+      if (res.ok) setIpLookupResults(await res.json());
+    } catch { showToast("Error al buscar por IP", "error"); }
+  };
+
   const addStaff = async () => {
     if (!staffForm.userId) return;
     try {
@@ -848,6 +1009,16 @@ export default function BotDashboardPage() {
         showToast("Staff eliminado", "success");
       }
     } catch { showToast("Error al eliminar", "error"); }
+  };
+
+  const loadStaffLogs = async () => {
+    try {
+      const res = await fetch("/api/bot/proxy/staff/logs");
+      if (res.ok) {
+        const d = await res.json();
+        setStaffLogs(Array.isArray(d) ? d : d.logs || []);
+      }
+    } catch {}
   };
 
   const grantPremium = async () => {
@@ -880,6 +1051,35 @@ export default function BotDashboardPage() {
         showToast("Premium revocado", "success");
       }
     } catch { showToast("Error al revocar", "error"); }
+  };
+
+  const forceExpirePremium = async () => {
+    if (!premiumForceExpireId) return;
+    try {
+      const res = await fetch("/api/bot/proxy/premium/forceexpire", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: premiumForceExpireId }),
+      });
+      if (res.ok) {
+        showToast("Premium expirado forzadamente", "success");
+        setPremiumForceExpireId("");
+      }
+    } catch { showToast("Error al expirar", "error"); }
+  };
+
+  const giveAllPremium = async () => {
+    const ids = premiumGiveAllIds.split(",").map((s) => s.trim()).filter(Boolean);
+    if (ids.length === 0) return;
+    try {
+      const res = await fetch("/api/bot/proxy/premium/giveall", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userIds: ids, plan: premiumGiveAllPlan, days: premiumGiveAllDays }),
+      });
+      if (res.ok) {
+        showToast(`Premium concedido a ${ids.length} usuarios`, "success");
+        setPremiumGiveAllIds("");
+      }
+    } catch { showToast("Error al dar premium", "error"); }
   };
 
   const generatePremiumCode = async () => {
@@ -915,6 +1115,163 @@ export default function BotDashboardPage() {
     } catch { showToast("Error al canjear", "error"); }
   };
 
+  const loadPremiumRequests = async () => {
+    try {
+      const res = await fetch("/api/bot/proxy/premium/requests");
+      if (res.ok) {
+        const d = await res.json();
+        setPremiumRequests(Array.isArray(d) ? d : d.requests || []);
+      }
+    } catch {}
+  };
+
+  const approvePremiumRequest = async (reqId: string) => {
+    try {
+      const res = await fetch(`/api/bot/proxy/premium/request/${reqId}/approve`, { method: "POST" });
+      if (res.ok) {
+        showToast("Solicitud aprobada", "success");
+        loadPremiumRequests();
+      }
+    } catch { showToast("Error al aprobar", "error"); }
+  };
+
+  const denyPremiumRequest = async (reqId: string) => {
+    try {
+      const res = await fetch(`/api/bot/proxy/premium/request/${reqId}/deny`, { method: "POST" });
+      if (res.ok) {
+        showToast("Solicitud denegada", "success");
+        loadPremiumRequests();
+      }
+    } catch { showToast("Error al denegar", "error"); }
+  };
+
+  const loadPremiumHistory = async () => {
+    try {
+      const res = await fetch("/api/bot/proxy/premium/history");
+      if (res.ok) {
+        const d = await res.json();
+        setPremiumHistory(Array.isArray(d) ? d : d.history || []);
+      }
+    } catch {}
+  };
+
+  const loadPremiumServers = async () => {
+    try {
+      const res = await fetch("/api/bot/proxy/premium/servers");
+      if (res.ok) {
+        const d = await res.json();
+        setPremiumServers(Array.isArray(d) ? d : d.servers || []);
+      }
+    } catch {}
+  };
+
+  const loadPremiumPlans = async () => {
+    try {
+      const res = await fetch("/api/bot/proxy/premium/plans");
+      if (res.ok) {
+        const d = await res.json();
+        setPremiumPlansConfig(Array.isArray(d) ? d : d.plans || []);
+      }
+    } catch {}
+  };
+
+  const savePremiumStoreUrl = async () => {
+    try {
+      const res = await fetch("/api/bot/proxy/premium/plans/storeurl", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeUrl: premiumStoreUrl }),
+      });
+      if (res.ok) showToast("URL de tienda guardada", "success");
+    } catch { showToast("Error al guardar", "error"); }
+  };
+
+  const loadPremiumBlacklist = async () => {
+    try {
+      const res = await fetch("/api/bot/proxy/premium/blacklist");
+      if (res.ok) {
+        const d = await res.json();
+        setPremiumBlacklist(Array.isArray(d) ? d : d.blacklist || []);
+      }
+    } catch {}
+  };
+
+  const addPremiumBlacklist = async () => {
+    if (!premiumBlacklistForm) return;
+    try {
+      const res = await fetch("/api/bot/proxy/premium/blacklist/add", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: premiumBlacklistForm }),
+      });
+      if (res.ok) {
+        showToast("Añadido a blacklist", "success");
+        setPremiumBlacklistForm("");
+        loadPremiumBlacklist();
+      }
+    } catch { showToast("Error al añadir", "error"); }
+  };
+
+  const removePremiumBlacklist = async (userId: string) => {
+    try {
+      const res = await fetch(`/api/bot/proxy/premium/blacklist/${userId}`, { method: "DELETE" });
+      if (res.ok) {
+        setPremiumBlacklist((prev) => prev.filter((b: any) => b.userId !== userId));
+        showToast("Eliminado de blacklist", "success");
+      }
+    } catch { showToast("Error al eliminar", "error"); }
+  };
+
+  const loadPremiumCoupons = async () => {
+    try {
+      const res = await fetch("/api/bot/proxy/premium/coupons");
+      if (res.ok) {
+        const d = await res.json();
+        setPremiumCoupons(Array.isArray(d) ? d : d.coupons || []);
+      }
+    } catch {}
+  };
+
+  const createPremiumCoupon = async () => {
+    try {
+      const res = await fetch("/api/bot/proxy/premium/coupons/create", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(premiumCouponForm),
+      });
+      if (res.ok) {
+        showToast("Cupón creado", "success");
+        setPremiumCouponForm({ code: "", discount: 10, maxUses: 100, expiresAt: "" });
+        loadPremiumCoupons();
+      }
+    } catch { showToast("Error al crear cupón", "error"); }
+  };
+
+  const deletePremiumCoupon = async (code: string) => {
+    try {
+      const res = await fetch(`/api/bot/proxy/premium/coupons/${code}`, { method: "DELETE" });
+      if (res.ok) {
+        setPremiumCoupons((prev) => prev.filter((c) => c.code !== code));
+        showToast("Cupón eliminado", "success");
+      }
+    } catch { showToast("Error al eliminar", "error"); }
+  };
+
+  const loadPremiumAdminData = useCallback(async (tab: string) => {
+    if (tab === "requests") loadPremiumRequests();
+    else if (tab === "history") loadPremiumHistory();
+    else if (tab === "servers") loadPremiumServers();
+    else if (tab === "plans") loadPremiumPlans();
+    else if (tab === "blacklist") loadPremiumBlacklist();
+    else if (tab === "coupons") loadPremiumCoupons();
+  }, []);
+
+  const fetchSecurityData = async () => {
+    const gid = securityGuildId || selectedGuild?.id;
+    if (!gid) return;
+    try {
+      const res = await fetch(`/api/bot/proxy/security/${gid}`);
+      if (res.ok) setSecurityData(await res.json());
+    } catch { showToast("Error al cargar seguridad", "error"); }
+  };
+
   const sendJarvisMessage = async () => {
     if (!jarvisInput.trim() || jarvisLoading) return;
     const userMsg: JarvisMessage = { role: "user", content: jarvisInput.trim(), timestamp: new Date().toISOString() };
@@ -924,7 +1281,7 @@ export default function BotDashboardPage() {
     try {
       const res = await fetch("/api/bot/proxy/jarvis/chat", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMsg.content }),
+        body: JSON.stringify({ message: userMsg.content, model: jarvisModel, mode: jarvisMode }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -951,6 +1308,32 @@ export default function BotDashboardPage() {
         setJarvisMessages((prev) => [...prev, {
           role: "assistant", content: data.response || data.message || "Acción ejecutada", timestamp: new Date().toISOString(),
         }]);
+      }
+    } catch {}
+  };
+
+  const clearJarvisChat = () => {
+    setJarvisMessages([]);
+  };
+
+  const exportJarvisChat = () => {
+    const content = jarvisMessages.map((m) => `[${m.role}] ${m.content}`).join("\n\n");
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `jarvis-chat-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast("Conversación exportada", "success");
+  };
+
+  const loadBotLogs = async () => {
+    try {
+      const res = await fetch("/api/bot/proxy/logs");
+      if (res.ok) {
+        const d = await res.json();
+        setBotLogs(Array.isArray(d) ? d : d.logs || []);
       }
     } catch {}
   };
@@ -1503,10 +1886,28 @@ export default function BotDashboardPage() {
                       <input type="url" value={welcomeConfig.image} onChange={(e) => setWelcomeConfig((p) => ({ ...p, image: e.target.value }))}
                         placeholder="https://..." className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50" />
                     </div>
-                    <div className="text-xs text-gray-600">Variables: {"{user}"} {"{server}"} {"{membercount}"}</div>
+                    <div className="text-xs text-gray-600">Variables: {"{user}"} {"{server}"} {"{membercount}"} {"{usertag}"}</div>
                     <button onClick={saveWelcome} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] transition-colors text-sm font-semibold text-white">
                       <Save size={14} /> Guardar
                     </button>
+                  </div>
+
+                  <div className="mt-6 p-4 rounded-xl bg-[#5865F2]/5 border border-[#5865F2]/20">
+                    <div className="text-xs text-gray-500 mb-2 font-semibold">Vista Previa del Embed</div>
+                    <div className="rounded-xl overflow-hidden border border-white/10">
+                      <div className="h-2" style={{ backgroundColor: welcomeConfig.color }} />
+                      <div className="p-4 bg-[#2F3136]">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-8 h-8 rounded-full bg-[#5865F2]/30" />
+                          <div>
+                            <div className="text-sm font-semibold text-[#5865F2]">{selectedGuild?.name || "Server"}</div>
+                            <div className="text-xs text-gray-500">Hoy a las 00:00</div>
+                          </div>
+                        </div>
+                        <div className="text-sm font-bold text-white mb-1">{welcomeConfig.title || "¡Bienvenido!"}</div>
+                        <div className="text-sm text-gray-300">{welcomeConfig.message || "Mensaje de bienvenida..."}</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1554,6 +1955,17 @@ export default function BotDashboardPage() {
                     <button onClick={saveGoodbye} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] transition-colors text-sm font-semibold text-white">
                       <Save size={14} /> Guardar
                     </button>
+                  </div>
+
+                  <div className="mt-6 p-4 rounded-xl bg-[#ED4245]/5 border border-[#ED4245]/20">
+                    <div className="text-xs text-gray-500 mb-2 font-semibold">Vista Previa del Embed</div>
+                    <div className="rounded-xl overflow-hidden border border-white/10">
+                      <div className="h-2" style={{ backgroundColor: goodbyeConfig.color }} />
+                      <div className="p-4 bg-[#2F3136]">
+                        <div className="text-sm font-bold text-white mb-1">{goodbyeConfig.title || "¡Adiós!"}</div>
+                        <div className="text-sm text-gray-300">{goodbyeConfig.message || "Mensaje de despedida..."}</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1665,36 +2077,82 @@ export default function BotDashboardPage() {
 
                 <div className="space-y-6">
                   <div className="glass rounded-2xl p-6">
-                    <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Hash size={18} className="text-[#EB459E]" /> Button Builder</h3>
+                    <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Hash size={18} className="text-[#EB459E]" /> Button Builder ({ticketButtons.length}/5)</h3>
                     <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-sm text-gray-400 mb-2 block">Emoji</label>
-                          <input type="text" value={ticketConfig.buttonEmoji} onChange={(e) => setTicketConfig((p) => ({ ...p, buttonEmoji: e.target.value }))}
-                            className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50" />
+                      {ticketButtons.map((btn, idx) => (
+                        <div key={btn.id} className="p-4 rounded-xl bg-white/5 border border-white/10">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-semibold text-white">Botón {idx + 1}</span>
+                            <button onClick={() => setTicketButtons((prev) => prev.filter((_, i) => i !== idx))}
+                              className="p-1 rounded-lg hover:bg-white/10 text-gray-500 hover:text-red-400 transition-colors">
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs text-gray-500 mb-1 block">Emoji</label>
+                              <input type="text" value={btn.emoji} onChange={(e) => {
+                                const newBtns = [...ticketButtons];
+                                newBtns[idx] = { ...newBtns[idx], emoji: e.target.value };
+                                setTicketButtons(newBtns);
+                              }} className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none focus:border-[#5865F2]/50" />
+                            </div>
+                            <div>
+                              <label className="text-xs text-gray-500 mb-1 block">Label</label>
+                              <input type="text" value={btn.label} onChange={(e) => {
+                                const newBtns = [...ticketButtons];
+                                newBtns[idx] = { ...newBtns[idx], label: e.target.value };
+                                setTicketButtons(newBtns);
+                              }} className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none focus:border-[#5865F2]/50" />
+                            </div>
+                            <div>
+                              <label className="text-xs text-gray-500 mb-1 block">ID Único</label>
+                              <input type="text" value={btn.buttonId} onChange={(e) => {
+                                const newBtns = [...ticketButtons];
+                                newBtns[idx] = { ...newBtns[idx], buttonId: e.target.value };
+                                setTicketButtons(newBtns);
+                              }} className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none focus:border-[#5865F2]/50 font-mono" />
+                            </div>
+                            <div>
+                              <label className="text-xs text-gray-500 mb-1 block">Color</label>
+                              <select value={btn.color} onChange={(e) => {
+                                const newBtns = [...ticketButtons];
+                                newBtns[idx] = { ...newBtns[idx], color: e.target.value };
+                                setTicketButtons(newBtns);
+                              }} className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none focus:border-[#5865F2]/50 appearance-none">
+                                {TICKET_BUTTON_COLORS.map((c) => (
+                                  <option key={c.value} value={c.value}>{c.label} ({c.hex})</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                          <div className="mt-3">
+                            <label className="text-xs text-gray-500 mb-1 block">Descripción</label>
+                            <input type="text" value={btn.description} onChange={(e) => {
+                              const newBtns = [...ticketButtons];
+                              newBtns[idx] = { ...newBtns[idx], description: e.target.value };
+                              setTicketButtons(newBtns);
+                            }} className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none focus:border-[#5865F2]/50" />
+                          </div>
+                          <div className="mt-3">
+                            <label className="text-xs text-gray-500 mb-1 block">Mensaje de Bienvenida</label>
+                            <textarea value={btn.welcomeMessage} onChange={(e) => {
+                              const newBtns = [...ticketButtons];
+                              newBtns[idx] = { ...newBtns[idx], welcomeMessage: e.target.value };
+                              setTicketButtons(newBtns);
+                            }} rows={2} className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none focus:border-[#5865F2]/50 resize-none" />
+                          </div>
                         </div>
-                        <div>
-                          <label className="text-sm text-gray-400 mb-2 block">Color</label>
-                          <input type="color" value={ticketConfig.buttonColor} onChange={(e) => setTicketConfig((p) => ({ ...p, buttonColor: e.target.value }))}
-                            className="w-12 h-10 rounded-lg bg-transparent cursor-pointer" />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-sm text-gray-400 mb-2 block">Label</label>
-                        <input type="text" value={ticketConfig.buttonLabel} onChange={(e) => setTicketConfig((p) => ({ ...p, buttonLabel: e.target.value }))}
-                          placeholder="Crear Ticket" className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50" />
-                      </div>
-                      <div>
-                        <label className="text-sm text-gray-400 mb-2 block">Descripción del Botón</label>
-                        <input type="text" value={ticketConfig.buttonDescription} onChange={(e) => setTicketConfig((p) => ({ ...p, buttonDescription: e.target.value }))}
-                          placeholder="Haz clic para crear un ticket" className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50" />
-                      </div>
-                      <div>
-                        <label className="text-sm text-gray-400 mb-2 block">Mensaje de Bienvenida</label>
-                        <textarea value={ticketConfig.welcomeMessage} onChange={(e) => setTicketConfig((p) => ({ ...p, welcomeMessage: e.target.value }))}
-                          placeholder="Hola, ¿en qué podemos ayudarte?" rows={2}
-                          className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50 resize-none" />
-                      </div>
+                      ))}
+                      {ticketButtons.length < 5 && (
+                        <button onClick={() => setTicketButtons((prev) => [...prev, {
+                          id: String(Date.now()), emoji: "🎫", label: "Nuevo Ticket", buttonId: `btn_${Date.now()}`,
+                          color: "Primary", description: "", welcomeMessage: "",
+                        }])}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-white/10 hover:border-[#5865F2]/30 transition-colors text-sm text-gray-400 hover:text-white">
+                          <Plus size={14} /> Añadir Botón
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -1722,6 +2180,23 @@ export default function BotDashboardPage() {
                       className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#57F287] hover:bg-[#45b865] transition-colors text-sm font-semibold text-white">
                       <Send size={14} /> Publicar Panel
                     </button>
+                  </div>
+
+                  <div className="glass rounded-2xl p-6">
+                    <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Palette size={18} className="text-[#5865F2]" /> Vista Previa</h3>
+                    <div className="rounded-xl overflow-hidden border border-white/10">
+                      <div className="h-2" style={{ backgroundColor: ticketConfig.color }} />
+                      <div className="p-4 bg-[#2F3136]">
+                        <div className="text-sm font-bold text-white mb-1">{ticketConfig.title || "Soporte"}</div>
+                        <div className="text-xs text-gray-300 mb-3">{ticketConfig.description || "Haz clic en el botón para crear un ticket"}</div>
+                        {ticketButtons.map((btn) => (
+                          <div key={btn.id} className="flex items-center gap-2 mb-2 p-2 rounded-lg bg-white/5">
+                            <span>{btn.emoji}</span>
+                            <span className="text-xs text-white font-semibold">{btn.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1823,7 +2298,7 @@ export default function BotDashboardPage() {
                           onToggle={() => setProtectionConfig((p) => ({ ...p, antiRaid: { ...p.antiRaid, enabled: !p.antiRaid.enabled } }))} />
                       </div>
                       <div>
-                        <label className="text-sm text-gray-400 mb-2 block">Umbral (miembros/seg)</label>
+                        <label className="text-sm text-gray-400 mb-2 block">Umbral (miembros/10s)</label>
                         <input type="number" value={protectionConfig.antiRaid.threshold}
                           onChange={(e) => setProtectionConfig((p) => ({ ...p, antiRaid: { ...p.antiRaid, threshold: parseInt(e.target.value) || 5 } }))}
                           min={1} className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50" />
@@ -1915,9 +2390,20 @@ export default function BotDashboardPage() {
                                   ...p, antiNuke: { ...p.antiNuke, [sub]: { ...(p.antiNuke as any)[sub], action: e.target.value } },
                                 }))}
                                 className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none focus:border-[#5865F2]/50 appearance-none">
-                                <option value="timeout">Timeout</option>
-                                <option value="kick">Kick</option>
-                                <option value="ban">Ban</option>
+                                {(sub === "channels" || sub === "roles") ? (
+                                  <>
+                                    <option value="remove_roles">Quitar roles</option>
+                                    <option value="kick">Kick</option>
+                                    <option value="ban">Ban</option>
+                                    <option value="lockdown">Lockdown</option>
+                                  </>
+                                ) : (
+                                  <>
+                                    <option value="remove_roles">Quitar roles</option>
+                                    <option value="kick">Kick</option>
+                                    <option value="ban">Ban</option>
+                                  </>
+                                )}
                               </select>
                             </div>
                           </div>
@@ -1979,7 +2465,7 @@ export default function BotDashboardPage() {
                         <label className="text-sm text-gray-400 mb-2 block">Palabras (una por línea)</label>
                         <textarea value={protectionConfig.wordFilter.words}
                           onChange={(e) => setProtectionConfig((p) => ({ ...p, wordFilter: { ...p.wordFilter, words: e.target.value } }))}
-                          placeholder="palabra1&#10;palabra2&#10;palabra3" rows={4}
+                          placeholder={"palabra1\npalabra2\npalabra3"} rows={4}
                           className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50 resize-none font-mono" />
                       </div>
                       <div>
@@ -2036,16 +2522,14 @@ export default function BotDashboardPage() {
                         <label className="text-sm text-gray-400 mb-2 block">Duración</label>
                         <select value={modAction.duration} onChange={(e) => setModAction((p) => ({ ...p, duration: e.target.value }))}
                           className={CHANNEL_SELECT_CLASSES}>
-                          <option value="1m">1 minuto</option>
                           <option value="5m">5 minutos</option>
                           <option value="10m">10 minutos</option>
+                          <option value="30m">30 minutos</option>
                           <option value="1h">1 hora</option>
                           <option value="6h">6 horas</option>
                           <option value="12h">12 horas</option>
                           <option value="1d">1 día</option>
                           <option value="7d">7 días</option>
-                          <option value="14d">14 días</option>
-                          <option value="30d">30 días</option>
                         </select>
                       </div>
                       <div>
@@ -2092,7 +2576,7 @@ export default function BotDashboardPage() {
                             {c.username || c.userId || "N/A"}
                           </div>
                           <div className="text-xs text-gray-500">
-                            {c.reason || "Sin razón"} · {c.timestamp ? formatDate(c.timestamp) : "—"}
+                            {c.reason || "Sin razón"} · {c.moderatorId ? `Mod: ${c.moderatorId}` : ""} · {c.timestamp ? formatDate(c.timestamp) : "—"}
                           </div>
                         </div>
                       </div>
@@ -2149,11 +2633,10 @@ export default function BotDashboardPage() {
                         <select value={levelsConfig.multiplier}
                           onChange={(e) => setLevelsConfig((p) => ({ ...p, multiplier: e.target.value }))}
                           className={CHANNEL_SELECT_CLASSES}>
-                          <option value="0.5x">0.5x</option>
                           <option value="1x">1x (Normal)</option>
+                          <option value="1.5x">1.5x</option>
                           <option value="2x">2x</option>
                           <option value="3x">3x</option>
-                          <option value="5x">5x</option>
                         </select>
                       </div>
                       <div>
@@ -2178,7 +2661,16 @@ export default function BotDashboardPage() {
                     <div className="space-y-3">
                       {levelsConfig.rewards.map((r, i) => (
                         <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-                          <div className="text-sm font-bold text-white w-12">Lv.{r.level}</div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-gray-500">Lv.</span>
+                            <input type="number" value={r.level}
+                              onChange={(e) => {
+                                const newRewards = [...levelsConfig.rewards];
+                                newRewards[i].level = parseInt(e.target.value) || 1;
+                                setLevelsConfig((p) => ({ ...p, rewards: newRewards }));
+                              }}
+                              min={1} className="w-14 px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50 text-center" />
+                          </div>
                           <div className="flex-1">
                             <select value={r.roleId}
                               onChange={(e) => {
@@ -2199,7 +2691,7 @@ export default function BotDashboardPage() {
                           </button>
                         </div>
                       ))}
-                      <button onClick={() => setLevelsConfig((p) => ({ ...p, rewards: [...p.rewards, { level: p.rewards.length + 5, roleId: "" }] }))}
+                      <button onClick={() => setLevelsConfig((p) => ({ ...p, rewards: [...p.rewards, { level: (p.rewards[p.rewards.length - 1]?.level || 0) + 5, roleId: "" }] }))}
                         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-white/10 hover:border-[#5865F2]/30 transition-colors text-sm text-gray-400 hover:text-white">
                         <Plus size={14} /> Añadir Recompensa
                       </button>
@@ -2332,6 +2824,26 @@ export default function BotDashboardPage() {
                         <Toggle enabled={economyConfig.slotsEnabled}
                           onToggle={() => setEconomyConfig((p) => ({ ...p, slotsEnabled: !p.slotsEnabled }))} />
                       </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <label className="text-xs text-gray-500 mb-1 block">Multiplier</label>
+                          <input type="number" value={economyConfig.slotsMultiplier}
+                            onChange={(e) => setEconomyConfig((p) => ({ ...p, slotsMultiplier: parseInt(e.target.value) || 2 }))}
+                            min={1} className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none focus:border-[#5865F2]/50" />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-500 mb-1 block">Min Bet</label>
+                          <input type="number" value={economyConfig.slotsMinBet}
+                            onChange={(e) => setEconomyConfig((p) => ({ ...p, slotsMinBet: parseInt(e.target.value) || 10 }))}
+                            min={1} className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none focus:border-[#5865F2]/50" />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-500 mb-1 block">Max Bet</label>
+                          <input type="number" value={economyConfig.slotsMaxBet}
+                            onChange={(e) => setEconomyConfig((p) => ({ ...p, slotsMaxBet: parseInt(e.target.value) || 1000 }))}
+                            min={1} className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none focus:border-[#5865F2]/50" />
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -2454,8 +2966,25 @@ export default function BotDashboardPage() {
 
               {stats && (
                 <div className="glass rounded-2xl p-6 mb-6">
-                  <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Cpu size={18} className="text-[#57F287]" /> Memoria</h3>
-                  <div className="text-2xl font-bold text-white">{formatMemory(stats.memory)}</div>
+                  <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Cpu size={18} className="text-[#57F287]" /> Detalles del Sistema</h3>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="p-4 rounded-xl bg-white/5">
+                      <div className="text-xs text-gray-500">Memoria</div>
+                      <div className="text-lg font-bold text-white">{formatMemory(stats.memory)}</div>
+                    </div>
+                    <div className="p-4 rounded-xl bg-white/5">
+                      <div className="text-xs text-gray-500">Node.js</div>
+                      <div className="text-lg font-bold text-white">{stats.node || "—"}</div>
+                    </div>
+                    <div className="p-4 rounded-xl bg-white/5">
+                      <div className="text-xs text-gray-500">Heap Used</div>
+                      <div className="text-lg font-bold text-white">{stats.heapUsed ? `${stats.heapUsed}MB` : "—"}</div>
+                    </div>
+                    <div className="p-4 rounded-xl bg-white/5">
+                      <div className="text-xs text-gray-500">RSS</div>
+                      <div className="text-lg font-bold text-white">{stats.rss ? `${stats.rss}MB` : "—"}</div>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -2579,22 +3108,37 @@ export default function BotDashboardPage() {
                   </div>
 
                   <div className="glass rounded-2xl p-6">
-                    <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Search size={18} className="text-[#5865F2]" /> Lookup</h3>
-                    <div className="flex gap-3">
-                      <input type="text" value={ipLookup} onChange={(e) => setIpLookup(e.target.value)}
-                        placeholder="ID de usuario..." className="flex-1 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50" />
-                      <button onClick={() => {
-                          if (ipLookup) showToast("Buscando IP del usuario...", "info");
-                        }}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] transition-colors text-sm font-semibold text-white">
-                        <Search size={14} /> Lookup
-                      </button>
+                    <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Search size={18} className="text-[#5865F2]" /> Lookup de IPs</h3>
+                    <p className="text-xs text-gray-500 mb-3">Busca las IPs asociadas a un usuario, o los usuarios asociados a una IP.</p>
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        <input type="text" value={ipLookupUserId} onChange={(e) => setIpLookupUserId(e.target.value)}
+                          placeholder="ID de usuario..." className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none focus:border-[#5865F2]/50" />
+                        <button onClick={lookupUserIps} disabled={!ipLookupUserId}
+                          className="flex items-center gap-1 px-3 py-2 rounded-lg bg-[#5865F2] hover:bg-[#4752c4] transition-colors text-xs font-semibold text-white disabled:opacity-50">
+                          <Search size={12} /> IPs
+                        </button>
+                      </div>
+                      <div className="flex gap-2">
+                        <input type="text" value={ipLookupIp} onChange={(e) => setIpLookupIp(e.target.value)}
+                          placeholder="Dirección IP..." className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none focus:border-[#5865F2]/50 font-mono" />
+                        <button onClick={lookupIpAccounts} disabled={!ipLookupIp}
+                          className="flex items-center gap-1 px-3 py-2 rounded-lg bg-[#7C3AED] hover:bg-[#6328c4] transition-colors text-xs font-semibold text-white disabled:opacity-50">
+                          <Search size={12} /> Cuentas
+                        </button>
+                      </div>
                     </div>
+                    {ipLookupResults && (
+                      <div className="mt-3 p-3 rounded-lg bg-white/5 border border-white/10">
+                        <pre className="text-xs text-gray-300 overflow-x-auto whitespace-pre-wrap">{JSON.stringify(ipLookupResults, null, 2)}</pre>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 <div className="glass rounded-2xl p-6">
                   <h3 className="font-bold text-white mb-4 flex items-center gap-2"><ShieldBan size={18} className="text-[#ED4245]" /> IPs Baneadas ({ipBans.length})</h3>
+                  <div className="text-xs text-gray-500 mb-3">Las IPs baneadas bloquean el acceso a la verificación y al bot.</div>
                   <div className="space-y-2 max-h-96 overflow-y-auto">
                     {ipBans.length > 0 ? ipBans.map((ban) => (
                       <div key={ban.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
@@ -2612,6 +3156,85 @@ export default function BotDashboardPage() {
                   </div>
                 </div>
               </div>
+            </motion.div>
+          )}
+
+          {/* ==================== SECURITY (Owner) ==================== */}
+          {activeSection === "security" && isOwner && (
+            <motion.div key="security" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <h1 className="text-2xl font-black mb-6">
+                <span className="bg-gradient-to-r from-[#7C3AED] to-[#ED4245] bg-clip-text text-transparent">Security</span>
+              </h1>
+
+              <div className="glass rounded-2xl p-6 mb-6 max-w-xl">
+                <div className="flex gap-3">
+                  <input type="text" value={securityGuildId} onChange={(e) => setSecurityGuildId(e.target.value)}
+                    placeholder={selectedGuild ? `ID: ${selectedGuild.id}` : "Guild ID..."}
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50" />
+                  <button onClick={fetchSecurityData}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] transition-colors text-sm font-semibold text-white">
+                    <ShieldCheck size={14} /> Cargar
+                  </button>
+                </div>
+              </div>
+
+              {securityData ? (
+                <>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    {[
+                      { label: "Usuarios Flagged", value: securityData.flaggedUsers?.length || 0, color: "#ED4245", icon: AlertTriangle },
+                      { label: "Alto Riesgo", value: securityData.highRisk || 0, color: "#FEE75C", icon: ShieldAlert },
+                      { label: "Alertas", value: securityData.alerts?.length || 0, color: "#5865F2", icon: Bug },
+                      { label: "Alts Detectados", value: securityData.altsDetected || 0, color: "#EB459E", icon: Bot },
+                    ].map((item) => (
+                      <div key={item.label} className="glass rounded-xl p-5">
+                        <div className="inline-flex p-2 rounded-lg mb-2" style={{ backgroundColor: `${item.color}15`, color: item.color }}>
+                          <item.icon size={18} />
+                        </div>
+                        <div className="text-2xl font-black text-white">{item.value}</div>
+                        <div className="text-xs text-gray-500">{item.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="glass rounded-2xl p-6">
+                      <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Bug size={18} className="text-[#ED4245]" /> Alertas Recientes</h3>
+                      <div className="space-y-2 max-h-80 overflow-y-auto">
+                        {securityData.recentAlerts?.length > 0 ? securityData.recentAlerts.map((alert: any, i: number) => (
+                          <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                            <AlertTriangle size={14} className="text-yellow-400 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm text-white">{alert.message || alert.type || "Alerta"}</div>
+                              <div className="text-xs text-gray-500">{alert.timestamp ? formatDate(alert.timestamp) : "—"}</div>
+                            </div>
+                          </div>
+                        )) : <p className="text-sm text-gray-500 text-center py-4">Sin alertas recientes</p>}
+                      </div>
+                    </div>
+
+                    <div className="glass rounded-2xl p-6">
+                      <h3 className="font-bold text-white mb-4 flex items-center gap-2"><ShieldAlert size={18} className="text-[#EB459E]" /> Top Usuarios Flagged</h3>
+                      <div className="space-y-2 max-h-80 overflow-y-auto">
+                        {securityData.flaggedUsers?.length > 0 ? securityData.flaggedUsers.map((fu: any, i: number) => (
+                          <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                            <span className="text-xs font-bold text-gray-600 w-6">#{i + 1}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm text-white">{fu.username || fu.userId || "N/A"}</div>
+                              <div className="text-xs text-gray-500">{fu.reason || "Sin razón"} · Riesgo: {fu.risk || "—"}</div>
+                            </div>
+                          </div>
+                        )) : <p className="text-sm text-gray-500 text-center py-4">Sin usuarios flagged</p>}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="glass rounded-2xl p-12 text-center">
+                  <ShieldCheck size={48} className="text-gray-700 mx-auto mb-4" />
+                  <p className="text-gray-500 mb-2">Ingresa un Guild ID para cargar datos de seguridad.</p>
+                </div>
+              )}
             </motion.div>
           )}
 
@@ -2652,24 +3275,45 @@ export default function BotDashboardPage() {
                   </div>
                 </div>
 
-                <div className="glass rounded-2xl p-6">
-                  <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Users size={18} className="text-[#7C3AED]" /> Staff ({staffList.length})</h3>
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {staffList.length > 0 ? staffList.map((member) => (
-                      <div key={member.id || member.userId} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-                        <UserCog size={14} className="text-[#5865F2] flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm text-white truncate">{member.username || member.userId}</div>
-                          <div className="text-xs text-gray-500">
-                            {member.rank || member.role} {member.note ? `· ${member.note}` : ""} · {formatDate(member.addedAt)}
+                <div className="space-y-6">
+                  <div className="glass rounded-2xl p-6">
+                    <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Users size={18} className="text-[#7C3AED]" /> Staff ({staffList.length})</h3>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {staffList.length > 0 ? staffList.map((member) => (
+                        <div key={member.id || member.userId} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                          <UserCog size={14} className="text-[#5865F2] flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm text-white truncate">{member.username || member.userId}</div>
+                            <div className="text-xs text-gray-500">
+                              {member.rank || member.role} {member.note ? `· ${member.note}` : ""} · {formatDate(member.addedAt)}
+                            </div>
                           </div>
+                          <button onClick={() => removeStaff(member.userId || member.id)}
+                            className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-red-400 transition-colors">
+                            <Trash2 size={14} />
+                          </button>
                         </div>
-                        <button onClick={() => removeStaff(member.userId || member.id)}
-                          className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-red-400 transition-colors">
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    )) : <p className="text-sm text-gray-500 text-center py-4">Sin staff registrado</p>}
+                      )) : <p className="text-sm text-gray-500 text-center py-4">Sin staff registrado</p>}
+                    </div>
+                  </div>
+
+                  <div className="glass rounded-2xl p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold text-white flex items-center gap-2"><ScrollText size={18} className="text-[#5865F2]" /> Auditoría de Staff</h3>
+                      <button onClick={loadStaffLogs}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-gray-400 hover:text-white transition-colors">
+                        <RefreshCw size={12} /> Cargar
+                      </button>
+                    </div>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {staffLogs.length > 0 ? staffLogs.map((log: any, i: number) => (
+                        <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-white/5">
+                          <div className="text-xs text-gray-500">{log.action || "—"}</div>
+                          <div className="text-xs text-white">{log.userId || "—"}</div>
+                          <div className="text-xs text-gray-600 ml-auto">{log.timestamp ? formatDate(log.timestamp) : ""}</div>
+                        </div>
+                      )) : <p className="text-sm text-gray-500 text-center py-2">Sin registros</p>}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2734,8 +3378,54 @@ export default function BotDashboardPage() {
                 <span className="bg-gradient-to-r from-[#7C3AED] to-[#FEE75C] bg-clip-text text-transparent">Premium Admin</span>
               </h1>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+                {[
+                  { id: "users", label: "Usuarios" },
+                  { id: "grant", label: "Conceder" },
+                  { id: "codes", label: "Códigos" },
+                  { id: "requests", label: "Solicitudes" },
+                  { id: "history", label: "Historial" },
+                  { id: "servers", label: "Servidores" },
+                  { id: "plans", label: "Planes" },
+                  { id: "blacklist", label: "Blacklist" },
+                  { id: "coupons", label: "Cupones" },
+                  { id: "forceexpire", label: "Force Expire" },
+                  { id: "giveall", label: "Give All" },
+                ].map((tab) => (
+                  <button key={tab.id} onClick={() => { setPremiumAdminTab(tab.id); loadPremiumAdminData(tab.id); }}
+                    className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                      premiumAdminTab === tab.id ? "bg-[#7C3AED]/20 text-[#7C3AED]" : "bg-white/5 text-gray-400 hover:text-white"
+                    }`}>
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {premiumAdminTab === "users" && (
                 <div className="glass rounded-2xl p-6">
+                  <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Users size={18} className="text-[#EB459E]" /> Usuarios Premium ({premiumUsers.length})</h3>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {premiumUsers.length > 0 ? premiumUsers.map((pu) => (
+                      <div key={pu.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                        <div className={`w-2 h-2 rounded-full ${pu.active ? "bg-green-400" : "bg-gray-500"}`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm text-white truncate">{pu.username}</div>
+                          <div className="text-xs text-gray-500">{pu.tier || pu.plan} · {pu.expiresAt ? formatDate(pu.expiresAt) : "N/A"}</div>
+                        </div>
+                        {pu.active && (
+                          <button onClick={() => revokePremium(pu.id)}
+                            className="px-3 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 transition-colors text-xs font-semibold text-red-400">
+                            Revocar
+                          </button>
+                        )}
+                      </div>
+                    )) : <p className="text-sm text-gray-500 text-center py-4">Sin usuarios premium</p>}
+                  </div>
+                </div>
+              )}
+
+              {premiumAdminTab === "grant" && (
+                <div className="glass rounded-2xl p-6 max-w-xl">
                   <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Crown size={18} className="text-[#FEE75C]" /> Conceder Premium</h3>
                   <div className="space-y-4">
                     <div>
@@ -2754,75 +3444,284 @@ export default function BotDashboardPage() {
                         <option value="Rinnegan">Rinnegan</option>
                       </select>
                     </div>
-                    <div className="flex gap-3">
-                      <button onClick={grantPremium} disabled={!premiumGrantForm.userId}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#57F287] hover:bg-[#45b865] transition-colors text-sm font-semibold text-white disabled:opacity-50">
-                        <Gift size={14} /> Conceder
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="glass rounded-2xl p-6">
-                  <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Code size={18} className="text-[#57F287]" /> Generar Código</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm text-gray-400 mb-2 block">Tier</label>
-                      <select value={premiumCodeTier} onChange={(e) => setPremiumCodeTier(e.target.value)}
-                        className={CHANNEL_SELECT_CLASSES}>
-                        <option value="Sharingan">Sharingan</option>
-                        <option value="Mangekyo">Mangekyo</option>
-                        <option value="Rinnegan">Rinnegan</option>
-                      </select>
-                    </div>
-                    <button onClick={generatePremiumCode}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] transition-colors text-sm font-semibold text-white">
-                      <Plus size={14} /> Generar Código
+                    <button onClick={grantPremium} disabled={!premiumGrantForm.userId}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#57F287] hover:bg-[#45b865] transition-colors text-sm font-semibold text-white disabled:opacity-50">
+                      <Gift size={14} /> Conceder
                     </button>
                   </div>
                 </div>
-              </div>
+              )}
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="glass rounded-2xl p-6">
-                  <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Users size={18} className="text-[#EB459E]" /> Usuarios Premium ({premiumUsers.length})</h3>
-                  <div className="space-y-2 max-h-80 overflow-y-auto">
-                    {premiumUsers.length > 0 ? premiumUsers.map((pu) => (
-                      <div key={pu.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-                        <div className={`w-2 h-2 rounded-full ${pu.active ? "bg-green-400" : "bg-gray-500"}`} />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm text-white truncate">{pu.username}</div>
-                          <div className="text-xs text-gray-500">{pu.tier || pu.plan} · {pu.expiresAt ? formatDate(pu.expiresAt) : "N/A"}</div>
-                        </div>
-                        {pu.active && (
-                          <button onClick={() => revokePremium(pu.id)}
-                            className="px-3 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 transition-colors text-xs font-semibold text-red-400">
-                            Revocar
+              {premiumAdminTab === "codes" && (
+                <div className="space-y-6">
+                  <div className="glass rounded-2xl p-6 max-w-xl">
+                    <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Code size={18} className="text-[#57F287]" /> Generar Código</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm text-gray-400 mb-2 block">Tier</label>
+                        <select value={premiumCodeTier} onChange={(e) => setPremiumCodeTier(e.target.value)}
+                          className={CHANNEL_SELECT_CLASSES}>
+                          <option value="Sharingan">Sharingan</option>
+                          <option value="Mangekyo">Mangekyo</option>
+                          <option value="Rinnegan">Rinnegan</option>
+                        </select>
+                      </div>
+                      <button onClick={generatePremiumCode}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] transition-colors text-sm font-semibold text-white">
+                        <Plus size={14} /> Generar Código
+                      </button>
+                    </div>
+                  </div>
+                  <div className="glass rounded-2xl p-6">
+                    <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Key size={18} className="text-[#57F287]" /> Códigos ({premiumCodes.length})</h3>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {premiumCodes.length > 0 ? premiumCodes.map((pc) => (
+                        <div key={pc.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                          <code className="px-2 py-1 rounded-lg bg-[#57F287]/10 text-[#57F287] text-sm font-mono">{pc.code}</code>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs text-gray-500">{pc.tier} · {pc.uses}/{pc.maxUses} usos</div>
+                          </div>
+                          <button onClick={() => { navigator.clipboard.writeText(pc.code); showToast("Código copiado", "success"); }}
+                            className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition-colors">
+                            <Copy size={14} />
                           </button>
+                        </div>
+                      )) : <p className="text-sm text-gray-500 text-center py-4">Sin códigos generados</p>}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {premiumAdminTab === "requests" && (
+                <div className="glass rounded-2xl p-6">
+                  <h3 className="font-bold text-white mb-4 flex items-center gap-2"><MessageCircle size={18} className="text-[#5865F2]" /> Solicitudes Pendientes</h3>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {premiumRequests.length > 0 ? premiumRequests.map((req) => (
+                      <div key={req.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm text-white">{req.username} ({req.userId})</div>
+                          <div className="text-xs text-gray-500">{req.plan} · {req.status} · {formatDate(req.createdAt)}</div>
+                        </div>
+                        {req.status === "pending" && (
+                          <div className="flex gap-2">
+                            <button onClick={() => approvePremiumRequest(req.id)}
+                              className="px-3 py-1 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-xs font-semibold text-green-400">
+                              Aprobar
+                            </button>
+                            <button onClick={() => denyPremiumRequest(req.id)}
+                              className="px-3 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-xs font-semibold text-red-400">
+                              Denegar
+                            </button>
+                          </div>
                         )}
                       </div>
-                    )) : <p className="text-sm text-gray-500 text-center py-4">Sin usuarios premium</p>}
+                    )) : <p className="text-sm text-gray-500 text-center py-4">Sin solicitudes</p>}
                   </div>
                 </div>
+              )}
 
+              {premiumAdminTab === "history" && (
                 <div className="glass rounded-2xl p-6">
-                  <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Key size={18} className="text-[#57F287]" /> Códigos Premium ({premiumCodes.length})</h3>
-                  <div className="space-y-2 max-h-80 overflow-y-auto">
-                    {premiumCodes.length > 0 ? premiumCodes.map((pc) => (
-                      <div key={pc.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-                        <code className="px-2 py-1 rounded-lg bg-[#57F287]/10 text-[#57F287] text-sm font-mono">{pc.code}</code>
+                  <h3 className="font-bold text-white mb-4 flex items-center gap-2"><ScrollText size={18} className="text-[#7C3AED]" /> Historial</h3>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {premiumHistory.length > 0 ? premiumHistory.map((h, i) => (
+                      <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                        <div className={`px-2 py-0.5 rounded text-xs font-bold ${
+                          h.action === "grant" ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
+                        }`}>{h.action}</div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-xs text-gray-500">{pc.tier} · {pc.uses}/{pc.maxUses} usos</div>
+                          <div className="text-sm text-white">{h.username} ({h.userId})</div>
+                          <div className="text-xs text-gray-500">{h.plan || "—"} · {formatDate(h.timestamp)}</div>
                         </div>
-                        <button onClick={() => { navigator.clipboard.writeText(pc.code); showToast("Código copiado", "success"); }}
-                          className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition-colors">
-                          <Copy size={14} />
-                        </button>
                       </div>
-                    )) : <p className="text-sm text-gray-500 text-center py-4">Sin códigos generados</p>}
+                    )) : <p className="text-sm text-gray-500 text-center py-4">Sin historial</p>}
                   </div>
                 </div>
-              </div>
+              )}
+
+              {premiumAdminTab === "servers" && (
+                <div className="glass rounded-2xl p-6">
+                  <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Server size={18} className="text-[#5865F2]" /> Servidores con Premium</h3>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {premiumServers.length > 0 ? premiumServers.map((s: any, i: number) => (
+                      <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                        <Server size={14} className="text-[#5865F2] flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm text-white">{s.name || s.id}</div>
+                          <div className="text-xs text-gray-500">{s.plan || "—"} · {s.members || 0} miembros</div>
+                        </div>
+                      </div>
+                    )) : <p className="text-sm text-gray-500 text-center py-4">Sin servidores con premium</p>}
+                  </div>
+                </div>
+              )}
+
+              {premiumAdminTab === "plans" && (
+                <div className="glass rounded-2xl p-6 max-w-xl">
+                  <h3 className="font-bold text-white mb-4 flex items-center gap-2"><CreditCard size={18} className="text-[#FEE75C]" /> Configurar Planes</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm text-gray-400 mb-2 block">URL de Tienda</label>
+                      <input type="url" value={premiumStoreUrl} onChange={(e) => setPremiumStoreUrl(e.target.value)}
+                        placeholder="https://..." className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50" />
+                    </div>
+                    <button onClick={savePremiumStoreUrl}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] transition-colors text-sm font-semibold text-white">
+                      <Save size={14} /> Guardar URL
+                    </button>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                      {PREMIUM_PLANS.map((plan) => (
+                        <div key={plan.name} className="p-4 rounded-xl bg-white/5 border border-white/10">
+                          <div className="text-lg font-bold" style={{ color: plan.color }}>{plan.name}</div>
+                          <div className="text-sm text-white font-semibold">{plan.price}</div>
+                          <div className="mt-2 space-y-1">
+                            {plan.features.map((f, i) => (
+                              <div key={i} className="flex items-center gap-1 text-xs text-gray-400">
+                                <CheckCircle size={10} className="text-green-400" /> {f}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {premiumAdminTab === "blacklist" && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="glass rounded-2xl p-6">
+                    <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Ban size={18} className="text-[#ED4245]" /> Añadir a Blacklist</h3>
+                    <div className="flex gap-3">
+                      <input type="text" value={premiumBlacklistForm} onChange={(e) => setPremiumBlacklistForm(e.target.value)}
+                        placeholder="ID de usuario..." className="flex-1 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50" />
+                      <button onClick={addPremiumBlacklist} disabled={!premiumBlacklistForm}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#ED4245] hover:bg-[#c03537] transition-colors text-sm font-semibold text-white disabled:opacity-50">
+                        <Plus size={14} /> Añadir
+                      </button>
+                    </div>
+                  </div>
+                  <div className="glass rounded-2xl p-6">
+                    <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Ban size={18} className="text-[#ED4245]" /> Blacklist ({premiumBlacklist.length})</h3>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {premiumBlacklist.length > 0 ? premiumBlacklist.map((bl: any, i: number) => (
+                        <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                          <Ban size={14} className="text-red-400 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm text-white">{bl.username || bl.userId || "—"}</div>
+                            <div className="text-xs text-gray-500">{bl.reason || "Sin razón"}</div>
+                          </div>
+                          <button onClick={() => removePremiumBlacklist(bl.userId)}
+                            className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-red-400 transition-colors">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      )) : <p className="text-sm text-gray-500 text-center py-4">Sin usuarios en blacklist</p>}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {premiumAdminTab === "coupons" && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="glass rounded-2xl p-6">
+                    <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Gift size={18} className="text-[#57F287]" /> Crear Cupón</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm text-gray-400 mb-2 block">Código</label>
+                        <input type="text" value={premiumCouponForm.code} onChange={(e) => setPremiumCouponForm((p) => ({ ...p, code: e.target.value }))}
+                          placeholder="DESCUENTO20" className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50 font-mono" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm text-gray-400 mb-2 block">Descuento %</label>
+                          <input type="number" value={premiumCouponForm.discount}
+                            onChange={(e) => setPremiumCouponForm((p) => ({ ...p, discount: parseInt(e.target.value) || 10 }))}
+                            min={1} max={100} className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50" />
+                        </div>
+                        <div>
+                          <label className="text-sm text-gray-400 mb-2 block">Máx. Usos</label>
+                          <input type="number" value={premiumCouponForm.maxUses}
+                            onChange={(e) => setPremiumCouponForm((p) => ({ ...p, maxUses: parseInt(e.target.value) || 100 }))}
+                            min={1} className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50" />
+                        </div>
+                      </div>
+                      <button onClick={createPremiumCoupon} disabled={!premiumCouponForm.code}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#57F287] hover:bg-[#45b865] transition-colors text-sm font-semibold text-white disabled:opacity-50">
+                        <Plus size={14} /> Crear Cupón
+                      </button>
+                    </div>
+                  </div>
+                  <div className="glass rounded-2xl p-6">
+                    <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Gift size={18} className="text-[#57F287]" /> Cupones ({premiumCoupons.length})</h3>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {premiumCoupons.length > 0 ? premiumCoupons.map((c) => (
+                        <div key={c.code} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                          <code className="px-2 py-1 rounded-lg bg-[#57F287]/10 text-[#57F287] text-sm font-mono">{c.code}</code>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs text-gray-500">{c.discount}% · {c.uses}/{c.maxUses} usos</div>
+                          </div>
+                          <button onClick={() => deletePremiumCoupon(c.code)}
+                            className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-red-400 transition-colors">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      )) : <p className="text-sm text-gray-500 text-center py-4">Sin cupones</p>}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {premiumAdminTab === "forceexpire" && (
+                <div className="glass rounded-2xl p-6 max-w-xl">
+                  <h3 className="font-bold text-white mb-4 flex items-center gap-2"><AlertTriangle size={18} className="text-[#ED4245]" /> Forzar Expiración</h3>
+                  <p className="text-sm text-gray-400 mb-4">Expira el premium de un usuario inmediatamente.</p>
+                  <div className="flex gap-3">
+                    <input type="text" value={premiumForceExpireId} onChange={(e) => setPremiumForceExpireId(e.target.value)}
+                      placeholder="ID de usuario..." className="flex-1 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50" />
+                    <button onClick={forceExpirePremium} disabled={!premiumForceExpireId}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#ED4245] hover:bg-[#c03537] transition-colors text-sm font-semibold text-white disabled:opacity-50">
+                      <Ban size={14} /> Expirar
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {premiumAdminTab === "giveall" && (
+                <div className="glass rounded-2xl p-6 max-w-xl">
+                  <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Gift size={18} className="text-[#FEE75C]" /> Dar Premium a Todos</h3>
+                  <p className="text-sm text-gray-400 mb-4">Concede premium a múltiples usuarios a la vez.</p>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm text-gray-400 mb-2 block">IDs de Usuario (separados por coma)</label>
+                      <textarea value={premiumGiveAllIds} onChange={(e) => setPremiumGiveAllIds(e.target.value)}
+                        placeholder="123456789, 987654321, ..." rows={3}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50 resize-none font-mono" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm text-gray-400 mb-2 block">Plan</label>
+                        <select value={premiumGiveAllPlan} onChange={(e) => setPremiumGiveAllPlan(e.target.value)}
+                          className={CHANNEL_SELECT_CLASSES}>
+                          <option value="Sharingan">Sharingan</option>
+                          <option value="Mangekyo">Mangekyo</option>
+                          <option value="Rinnegan">Rinnegan</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-sm text-gray-400 mb-2 block">Días</label>
+                        <input type="number" value={premiumGiveAllDays}
+                          onChange={(e) => setPremiumGiveAllDays(parseInt(e.target.value) || 30)}
+                          min={1} className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50" />
+                      </div>
+                    </div>
+                    <button onClick={giveAllPremium} disabled={!premiumGiveAllIds.trim()}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE75C] hover:bg-[#e0c83a] transition-colors text-sm font-semibold text-black disabled:opacity-50">
+                      <Gift size={14} /> Dar Premium a Todos
+                    </button>
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
@@ -2835,11 +3734,46 @@ export default function BotDashboardPage() {
 
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <div className="lg:col-span-3 glass rounded-2xl p-6 flex flex-col h-[600px]">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-[#7C3AED]/20 flex items-center justify-center">
-                      <Sparkles size={16} className="text-[#7C3AED]" />
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-[#7C3AED]/20 flex items-center justify-center">
+                        <Sparkles size={16} className="text-[#7C3AED]" />
+                      </div>
+                      <h3 className="font-bold text-white">JARVIS AI</h3>
+                      <span className="text-xs text-gray-500">{jarvisMessages.length} mensajes</span>
                     </div>
-                    <h3 className="font-bold text-white">JARVIS AI</h3>
+                    <div className="flex items-center gap-2">
+                      <button onClick={exportJarvisChat} disabled={jarvisMessages.length === 0}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-gray-400 hover:text-white transition-colors disabled:opacity-50">
+                        <FileText size={12} /> Exportar
+                      </button>
+                      <button onClick={clearJarvisChat} disabled={jarvisMessages.length === 0}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-gray-400 hover:text-red-400 transition-colors disabled:opacity-50">
+                        <Trash2 size={12} /> Limpiar
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-gray-500">Modelo:</label>
+                      <select value={jarvisModel} onChange={(e) => setJarvisModel(e.target.value)}
+                        className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none focus:border-[#5865F2]/50 appearance-none">
+                        <option value="llama-3.3-70b">LLaMA 3.3 70B</option>
+                        <option value="mixtral-8x7b">Mixtral 8x7B</option>
+                        <option value="gemma-2-9b">Gemma 2 9B</option>
+                        <option value="llama-3.1-8b">LLaMA 3.1 8B</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-gray-500">Modo:</label>
+                      <button onClick={() => setJarvisMode((p) => p === "professional" ? "stark" : "professional")}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                          jarvisMode === "stark" ? "bg-[#ED4245]/20 text-[#ED4245]" : "bg-[#5865F2]/20 text-[#5865F2]"
+                        }`}>
+                        {jarvisMode === "stark" ? "Stark (Iron Man)" : "Professional"}
+                      </button>
+                    </div>
                   </div>
 
                   <div ref={jarvisRef} className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
@@ -2847,6 +3781,7 @@ export default function BotDashboardPage() {
                       <div className="flex flex-col items-center justify-center h-full text-center">
                         <Sparkles size={48} className="text-[#7C3AED]/30 mb-4" />
                         <p className="text-gray-500 text-sm">Escribe un mensaje para empezar a chatear con JARVIS</p>
+                        <p className="text-gray-600 text-xs mt-1">Modo actual: {jarvisMode === "stark" ? "Stark" : "Professional"}</p>
                       </div>
                     )}
                     {jarvisMessages.map((msg, i) => (
@@ -2855,7 +3790,12 @@ export default function BotDashboardPage() {
                           msg.role === "user"
                             ? "bg-[#5865F2] text-white rounded-br-md"
                             : "bg-white/5 text-gray-300 rounded-bl-md"
-                        }`}>{msg.content}</div>
+                        }`}>
+                          {msg.content}
+                          <div className={`text-[10px] mt-1 ${msg.role === "user" ? "text-blue-200" : "text-gray-600"}`}>
+                            {new Date(msg.timestamp).toLocaleTimeString("es-ES")}
+                          </div>
+                        </div>
                       </div>
                     ))}
                     {jarvisLoading && (
@@ -2887,11 +3827,24 @@ export default function BotDashboardPage() {
                   <div className="glass rounded-2xl p-6">
                     <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Activity size={18} className="text-[#57F287]" /> Métricas</h3>
                     {jarvisMetrics ? (
-                      <div className="space-y-3">
-                        {Object.entries(jarvisMetrics).map(([key, value]) => (
+                      <div className="space-y-2">
+                        {[
+                          { key: "servers", label: "Servidores" },
+                          { key: "users", label: "Usuarios" },
+                          { key: "ping", label: "Ping" },
+                          { key: "uptime", label: "Uptime" },
+                          { key: "premium", label: "Premium" },
+                          { key: "staff", label: "Staff" },
+                          { key: "ram", label: "RAM" },
+                          { key: "blacklist", label: "Blacklist" },
+                          { key: "economy", label: "Economía" },
+                          { key: "topServers", label: "Top Servidores" },
+                        ].map(({ key, label }) => (
                           <div key={key} className="flex items-center justify-between p-2 rounded-lg bg-white/5">
-                            <span className="text-xs text-gray-500">{key}</span>
-                            <span className="text-sm text-white font-semibold">{typeof value === "number" ? value.toLocaleString() : String(value)}</span>
+                            <span className="text-xs text-gray-500">{label}</span>
+                            <span className="text-sm text-white font-semibold">
+                              {jarvisMetrics[key] !== undefined ? (typeof jarvisMetrics[key] === "number" ? jarvisMetrics[key].toLocaleString() : String(jarvisMetrics[key])) : "—"}
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -2907,6 +3860,7 @@ export default function BotDashboardPage() {
                         { label: "Ver logs del bot", icon: Terminal, color: "#57F287", action: "logs" },
                         { label: "Reiniciar bot", icon: RefreshCw, color: "#FEE75C", action: "restart" },
                         { label: "Estado de PM2", icon: Monitor, color: "#5865F2", action: "pm2" },
+                        { label: "Log de errores", icon: AlertTriangle, color: "#ED4245", action: "errorlog" },
                         { label: "Ver estadísticas", icon: BarChart3, color: "#7C3AED", action: "stats" },
                       ].map(({ label, icon: Icon, color, action }) => (
                         <button key={action}
@@ -2918,6 +3872,82 @@ export default function BotDashboardPage() {
                       ))}
                     </div>
                   </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ==================== TERMINAL (Owner) ==================== */}
+          {activeSection === "terminal" && isOwner && (
+            <motion.div key="terminal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <h1 className="text-2xl font-black mb-6">
+                <span className="bg-gradient-to-r from-[#7C3AED] to-[#57F287] bg-clip-text text-transparent">Terminal</span>
+              </h1>
+              <div className="glass rounded-2xl p-6">
+                <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Terminal size={18} className="text-[#57F287]" /> Terminal del Bot</h3>
+                <p className="text-sm text-gray-400 mb-4">Accede a la terminal del bot para ejecutar comandos en vivo.</p>
+                <div className="rounded-xl overflow-hidden border border-white/10 bg-black min-h-[500px]">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border-b border-white/10">
+                    <div className="w-3 h-3 rounded-full bg-red-500" />
+                    <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                    <div className="w-3 h-3 rounded-full bg-green-500" />
+                    <span className="text-xs text-gray-500 ml-2">Terminal</span>
+                  </div>
+                  <div className="p-4">
+                    <div className="text-sm text-green-400 font-mono mb-2">$ Bot Terminal Access</div>
+                    <div className="text-sm text-gray-400 font-mono mb-4">Para acceder a la terminal completa, utiliza SSH o el panel de administración del servidor.</div>
+                    <a href={SUPPORT_SERVER} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#5865F2]/20 hover:bg-[#5865F2]/30 transition-colors text-sm text-[#5865F2]">
+                      <ExternalLink size={14} /> Solicitar acceso al terminal
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ==================== BOT LOGS (Owner) ==================== */}
+          {activeSection === "bot-logs" && isOwner && (
+            <motion.div key="bot-logs" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <h1 className="text-2xl font-black mb-6">
+                <span className="bg-gradient-to-r from-[#7C3AED] to-[#5865F2] bg-clip-text text-transparent">Bot Logs</span>
+              </h1>
+
+              <div className="glass rounded-2xl p-6 mb-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <h3 className="font-bold text-white flex items-center gap-2"><FileText size={18} className="text-[#5865F2]" /> Últimas 100 entradas ({botLogs.length})</h3>
+                    <div className="flex items-center gap-2">
+                      <Toggle enabled={botLogsAutoRefresh} onToggle={() => setBotLogsAutoRefresh((p) => !p)} />
+                      <span className="text-xs text-gray-500">Auto-refresh</span>
+                    </div>
+                  </div>
+                  <button onClick={loadBotLogs}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-sm text-gray-400 hover:text-white">
+                    <RefreshCw size={14} /> Cargar
+                  </button>
+                </div>
+              </div>
+
+              <div className="glass rounded-2xl p-6">
+                <div className="space-y-1 max-h-[600px] overflow-y-auto font-mono text-xs">
+                  {botLogs.length > 0 ? botLogs.map((log, i) => (
+                    <div key={i} className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/5">
+                      <span className={`flex-shrink-0 w-14 text-right ${
+                        log.level === "error" ? "text-red-400" :
+                        log.level === "warn" ? "text-yellow-400" :
+                        log.level === "info" ? "text-blue-400" :
+                        "text-gray-500"
+                      }`}>
+                        [{log.level?.toUpperCase() || "LOG"}]
+                      </span>
+                      <span className="text-gray-600 flex-shrink-0 w-36">{log.timestamp ? formatDate(log.timestamp) : "—"}</span>
+                      {log.source && <span className="text-[#7C3AED] flex-shrink-0">[{log.source}]</span>}
+                      <span className="text-gray-300 break-all">{log.message}</span>
+                    </div>
+                  )) : (
+                    <p className="text-sm text-gray-500 text-center py-8 font-sans">Haz clic en &quot;Cargar&quot; para obtener los logs del bot.</p>
+                  )}
                 </div>
               </div>
             </motion.div>
