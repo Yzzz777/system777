@@ -138,18 +138,12 @@ export default function BotDashboardPage() {
   useEffect(() => {
     (async () => {
       try {
-        const [statsRes, meRes] = await Promise.all([
+        const [statsRes, guildsRes] = await Promise.all([
           fetch("/api/bot/proxy/public/stats").then(r => r.json()).catch(() => null),
-          fetch("/api/bot/proxy/me").then(r => r.json()).catch(() => null),
+          fetch("/api/bot/guilds").then(r => r.json()).catch(() => null),
         ]);
         if (statsRes) setStats(statsRes);
-        if (meRes?.guilds) {
-          setGuilds(meRes.guilds);
-          setOwnerData(meRes);
-        } else {
-          const guildsRes = await fetch("/api/bot/proxy/public/guilds").then(r => r.json()).catch(() => null);
-          if (guildsRes) setGuilds(Array.isArray(guildsRes) ? guildsRes : []);
-        }
+        if (guildsRes) setGuilds(Array.isArray(guildsRes) ? guildsRes : []);
       } catch {}
       setLoading(false);
     })();
