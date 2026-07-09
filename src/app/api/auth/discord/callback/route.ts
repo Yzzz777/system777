@@ -57,6 +57,7 @@ export async function GET(req: NextRequest) {
       discriminator: user.discriminator,
       email: user.email,
       accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
       expiresAt: Date.now() + tokens.expires_in * 1000,
     };
 
@@ -68,7 +69,7 @@ export async function GET(req: NextRequest) {
       httpOnly: true,
       secure: true,
       sameSite: "lax",
-      maxAge: tokens.expires_in,
+      maxAge: 30 * 24 * 60 * 60,
     });
 
     return response;
