@@ -187,7 +187,7 @@ export default function BotDashboardPage() {
   const loadGuild = useCallback(async (guildId: string) => {
     setSelectedServer(guildId);
     setActiveTab("inicio");
-    const data = await api(`guild/${guildId}`);
+    const data = await api(`public/guild/${guildId}`);
     if (data?.ok) {
       setGuildConfig(data.config || {});
       setChannels(data.channels || []);
@@ -202,7 +202,8 @@ export default function BotDashboardPage() {
   }, [activeTab, isOwner, api]);
 
   const saveConfig = useCallback(async (path: string, body: any) => {
-    const res = await api(path, { method: "POST", body: JSON.stringify(body) });
+    const publicPath = path.replace(/guild\/([^/]+)/, 'public/guild/$1');
+    const res = await api(publicPath, { method: "POST", body: JSON.stringify(body) });
     if (res?.ok !== false) {
       showToast("Guardado correctamente", "success");
       if (selectedServer) loadGuild(selectedServer);
