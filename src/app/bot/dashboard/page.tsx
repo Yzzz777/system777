@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -105,12 +105,32 @@ function Toggle({ checked, onChange, label, onSave }: { checked: boolean; onChan
 }
 
 function SelectInput({ value, onChange, options, label }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; label: string }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = options.find(o => o.value === value);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
   return (
-    <div>
+    <div ref={ref} className="relative">
       <label className="block text-xs text-gray-500 mb-1.5">{label}</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50">
-        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
+      <button type="button" onClick={() => setOpen(!open)} className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white text-sm flex items-center justify-between hover:border-[#5865F2]/30 transition-all">
+        <span className={selected?.value ? "text-white" : "text-gray-500"}>{selected?.label || "Seleccionar..."}</span>
+        <svg className={`w-4 h-4 text-gray-500 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-2 w-full rounded-xl border border-white/10 shadow-2xl max-h-64 overflow-y-auto" style={{ background: "#1a1a2e" }}>
+          {options.map((o) => (
+            <button key={o.value} type="button" onClick={() => { onChange(o.value); setOpen(false); }} className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[#5865F2]/15 transition-colors ${value === o.value ? "text-[#5865F2] bg-[#5865F2]/10" : "text-gray-300"}`}>
+              {o.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -446,15 +466,15 @@ export default function BotDashboardPage() {
                   <h3 className="font-bold text-white">Agregar Staff</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <input value={hierarchyForm.userId} onChange={(e) => setHierarchyForm({ ...hierarchyForm, userId: e.target.value })} placeholder="User ID" className="px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm" />
-                    <select value={hierarchyForm.rank} onChange={(e) => setHierarchyForm({ ...hierarchyForm, rank: e.target.value })} className="px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm">
-                      <option value="trial_staff">🔰 Trial Staff</option>
-                      <option value="ticket_staff">🎫 Ticket Staff</option>
-                      <option value="support">💬 Support</option>
-                      <option value="moderator">🔨 Moderator</option>
-                      <option value="admin">🛡️ Admin</option>
-                      <option value="developer">⚙️ Developer</option>
-                      <option value="co_owner">💠 Co-Owner</option>
-                    </select>
+                    <SelectInput value={hierarchyForm.rank} onChange={(v) => setHierarchyForm({ ...hierarchyForm, rank: v })} label="Rango" options={[
+                      { value: "trial_staff", label: "🔰 Trial Staff" },
+                      { value: "ticket_staff", label: "🎫 Ticket Staff" },
+                      { value: "support", label: "💬 Support" },
+                      { value: "moderator", label: "🔨 Moderator" },
+                      { value: "admin", label: "🛡️ Admin" },
+                      { value: "developer", label: "⚙️ Developer" },
+                      { value: "co_owner", label: "💠 Co-Owner" },
+                    ]} />
                     <input value={hierarchyForm.note} onChange={(e) => setHierarchyForm({ ...hierarchyForm, note: e.target.value })} placeholder="Nota (opcional)" className="px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm" />
                   </div>
                   <button onClick={async () => { const r = await api("staff/add", { method: "POST", body: JSON.stringify(hierarchyForm) }); if (r?.ok !== false) { showToast("Staff agregado", "success"); const s = await api("staff"); if (s?.members) setHierarchy(Object.values(s.members)); } else showToast(r?.msg || "Error", "error"); }} className="px-4 py-2 rounded-xl bg-[#5865F2] text-white text-sm font-bold hover:bg-[#4752c4]">Agregar</button>
@@ -488,10 +508,10 @@ export default function BotDashboardPage() {
               <div className="glass rounded-2xl p-6 space-y-4">
                 <h3 className="font-bold text-white">Enviar Mensaje como Bot</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <select value={botMsgTarget} onChange={(e) => setBotMsgTarget(e.target.value)} className="px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm">
-                    <option value="all">Todos los servidores</option>
-                    {guilds.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
-                  </select>
+                  <SelectInput value={botMsgTarget} onChange={setBotMsgTarget} label="Destinatario" options={[
+                    { value: "all", label: "📢 Todos los servidores" },
+                    ...guilds.map((g: any) => ({ value: g.id, label: `🏠 ${g.name}` })),
+                  ]} />
                   <input value={botMsgInput} onChange={(e) => setBotMsgInput(e.target.value)} placeholder="Mensaje para enviar..." className="px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm" />
                 </div>
                 <div className="flex gap-2">
