@@ -31,6 +31,7 @@ export async function GET(req: NextRequest) {
         role: sessionData.role || "STUDENT",
         username: sessionData.username,
       },
+      accessToken: sessionData.accessToken || null,
       expires: new Date(sessionData.expiresAt).toISOString(),
     });
   } catch {

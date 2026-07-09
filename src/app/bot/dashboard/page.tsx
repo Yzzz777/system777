@@ -65,12 +65,12 @@ function Toast({ message, type, onClose }: { message: string; type: "success" | 
   );
 }
 
-function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+function Toggle({ checked, onChange, label, onSave }: { checked: boolean; onChange: (v: boolean) => void; label: string; onSave?: () => void }) {
   return (
-    <label className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.05] transition-colors cursor-pointer">
-      <span className="text-sm text-gray-300">{label}</span>
-      <div onClick={() => onChange(!checked)} className={`relative w-11 h-6 rounded-full transition-colors ${checked ? "bg-[#5865F2]" : "bg-white/10"}`}>
-        <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${checked ? "translate-x-5" : ""}`} />
+    <label className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] hover:bg-[#5865F2]/5 transition-all cursor-pointer group" onClick={() => { onChange(!checked); if (onSave) setTimeout(onSave, 100); }}>
+      <span className="text-sm text-gray-300 group-hover:text-white transition-colors">{label}</span>
+      <div className={`relative w-11 h-6 rounded-full transition-all duration-300 ${checked ? "bg-[#5865F2] shadow-lg shadow-[#5865F2]/30" : "bg-white/10"}`}>
+        <motion.div animate={{ x: checked ? 20 : 0 }} transition={{ type: "spring", stiffness: 500, damping: 30 }} className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md" />
       </div>
     </label>
   );
@@ -317,6 +317,8 @@ export default function BotDashboardPage() {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
         <div className="p-6 max-w-5xl mx-auto">
+          <AnimatePresence mode="wait">
+          <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
           {activeTab === "inicio" && (
             <div className="space-y-6">
               <div className="rounded-2xl p-6" style={{ background: "linear-gradient(135deg, #5865F220, #7C3AED20)", border: "1px solid rgba(88,101,242,0.2)" }}>
@@ -397,6 +399,8 @@ export default function BotDashboardPage() {
           {activeTab === "premiumadmin" && <PremiumAdminSection api={api} />}
           {activeTab === "jarvis" && <JarvisSection api={api} stats={stats} />}
           {activeTab === "botlogs" && <BotLogsSection api={api} />}
+          </motion.div>
+          </AnimatePresence>
         </div>
       </main>
     </div>
@@ -417,19 +421,25 @@ function ModulesSection({ config, saveConfig }: { config: any; saveConfig: any }
     { id: "autorole", label: "AutoRole", icon: "🎭", cat: "Comunidad" },
     { id: "logs", label: "Logs", icon: "📜", cat: "Administración" },
   ];
+  const toggleModule = (id: string, value: boolean) => {
+    const updated = { ...modules, [id]: value };
+    setModules(updated);
+    saveConfig(`guild/${config?.id || ""}/modules`, { modules: updated });
+  };
   return (
-    <div className="space-y-6">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
       <div>
         <h2 className="text-xl font-black text-white mb-1">⚡ Control de Módulos</h2>
         <p className="text-sm text-gray-500">Activa o desactiva funciones del bot en este servidor.</p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {moduleList.map((m) => (
-          <Toggle key={m.id} checked={!!modules[m.id]} onChange={(v) => setModules({ ...modules, [m.id]: v })} label={`${m.icon} ${m.label}`} />
+        {moduleList.map((m, i) => (
+          <motion.div key={m.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}>
+            <Toggle checked={!!modules[m.id]} onChange={(v) => toggleModule(m.id, v)} label={`${m.icon} ${m.label}`} />
+          </motion.div>
         ))}
       </div>
-      <button onClick={() => saveConfig(`guild/${config?.id || ""}/modules`, { modules })} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#5865F2] text-white text-sm font-semibold hover:bg-[#4752c4] transition-colors"><Save size={14} /> Guardar Cambios</button>
-    </div>
+    </motion.div>
   );
 }
 
@@ -437,7 +447,7 @@ function WelcomeSection({ config, channels, saveConfig }: { config: any; channel
   const [welcome, setWelcome] = useState(config?.welcome || { enabled: false, channel: "", title: "", message: "", color: "#5865F2", image: "" });
   const [goodbye, setGoodbye] = useState(config?.goodbye || { enabled: false, channel: "", message: "" });
   return (
-    <div className="space-y-8">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-8">
       <div>
         <h2 className="text-xl font-black text-white mb-1">👋 Bienvenida / Despedida</h2>
         <p className="text-sm text-gray-500">Mensajes automáticos cuando alguien entra o sale.</p>
@@ -466,7 +476,7 @@ function WelcomeSection({ config, channels, saveConfig }: { config: any; channel
         </div>
         <button onClick={() => saveConfig(`guild/${config?.id || ""}/goodbye`, goodbye)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#5865F2] text-white text-sm font-semibold hover:bg-[#4752c4]"><Save size={14} /> Guardar Despedida</button>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -533,7 +543,7 @@ function LogsSection({ config, channels, saveConfig }: any) {
     { key: "voice", label: "Voz" },
   ];
   return (
-    <div className="space-y-6">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
       <div><h2 className="text-xl font-black text-white mb-1">📜 Logs del Servidor</h2><p className="text-sm text-gray-500">Define qué canales reciben los eventos.</p></div>
       <div className="glass rounded-2xl p-6 space-y-4">
         {logTypes.map((lt) => (
@@ -541,7 +551,7 @@ function LogsSection({ config, channels, saveConfig }: any) {
         ))}
         <button onClick={() => saveConfig(`guild/${config?.id || ""}/logs`, logs)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#5865F2] text-white text-sm font-semibold hover:bg-[#4752c4]"><Save size={14} /> Guardar</button>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
