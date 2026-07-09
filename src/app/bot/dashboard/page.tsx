@@ -19,11 +19,13 @@ import {
 
 const BOT_INVITE = "https://discord.com/oauth2/authorize?client_id=1502804306125132057&permissions=8&scope=bot%20applications.commands";
 const SUPPORT_SERVER = "https://discord.gg/system777";
+const OWNER_IDS = ["1376047332709240884", "1376047332709240884"];
 
-const NAV_ITEMS = [
+const OWNER_NAV = [
   { category: "General", items: [
     { id: "inicio", label: "Inicio", icon: Home },
     { id: "modules", label: "Módulos", icon: Settings },
+    { id: "hierarchy", label: "Jerarquía", icon: UserCog },
   ]},
   { category: "Mensajería", items: [
     { id: "welcome", label: "Bienvenida / Despedida", icon: MessageSquare },
@@ -44,6 +46,7 @@ const NAV_ITEMS = [
   ]},
   { category: "Owner", items: [
     { id: "botcontrol", label: "Control del Bot", icon: Power },
+    { id: "botmessages", label: "Mensajes del Bot", icon: MessageSquare },
     { id: "globalbans", label: "Bans Globales", icon: Ban },
     { id: "broadcast", label: "Broadcast", icon: Megaphone },
     { id: "ipbans", label: "IP Bans", icon: Globe },
@@ -52,6 +55,31 @@ const NAV_ITEMS = [
     { id: "premiumadmin", label: "Premium Admin", icon: Crown },
     { id: "jarvis", label: "JARVIS AI", icon: Bot },
     { id: "botlogs", label: "Bot Logs", icon: Terminal },
+  ]},
+];
+
+const MEMBER_NAV = [
+  { category: "General", items: [
+    { id: "inicio", label: "Inicio", icon: Home },
+    { id: "modules", label: "Módulos", icon: Settings },
+    { id: "hierarchy", label: "Mi Jerarquía", icon: UserCog },
+  ]},
+  { category: "Mensajería", items: [
+    { id: "welcome", label: "Bienvenida / Despedida", icon: MessageSquare },
+    { id: "autorole", label: "Roles", icon: UserCheck },
+    { id: "logs", label: "Logs del Servidor", icon: ScrollText },
+  ]},
+  { category: "Soporte", items: [
+    { id: "tickets", label: "Tickets", icon: Ticket },
+    { id: "verification", label: "Verificación", icon: Lock },
+  ]},
+  { category: "Engagement", items: [
+    { id: "levels", label: "Niveles & XP", icon: BarChart3 },
+    { id: "economy", label: "Economía", icon: Coins },
+  ]},
+  { category: "Seguridad", items: [
+    { id: "protection", label: "Protección", icon: Shield },
+    { id: "moderation", label: "Moderación", icon: ShieldBan },
   ]},
 ];
 
@@ -119,6 +147,13 @@ export default function BotDashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
   const [ownerData, setOwnerData] = useState<any>(null);
+  const [hierarchy, setHierarchy] = useState<any[]>([]);
+  const [hierarchyForm, setHierarchyForm] = useState({ userId: "", rank: "moderator", note: "" });
+  const [botMessages, setBotMessages] = useState<any[]>([]);
+  const [botMsgInput, setBotMsgInput] = useState("");
+  const [botMsgTarget, setBotMsgTarget] = useState("all");
+
+  const isOwner = OWNER_IDS.includes((session?.user as any)?.id || session?.user?.name || "");
 
   const showToast = useCallback((message: string, type: "success" | "error" | "info" = "info") => {
     setToast({ message, type });
@@ -159,6 +194,12 @@ export default function BotDashboardPage() {
       setRoles(data.roles || []);
     }
   }, [api]);
+
+  useEffect(() => {
+    if (activeTab === "hierarchy" && isOwner) {
+      api("staff").then((s: any) => { if (s?.members) setHierarchy(Object.values(s.members)); }).catch(() => {});
+    }
+  }, [activeTab, isOwner, api]);
 
   const saveConfig = useCallback(async (path: string, body: any) => {
     const res = await api(path, { method: "POST", body: JSON.stringify(body) });
@@ -241,9 +282,12 @@ export default function BotDashboardPage() {
                   <div className="min-w-0 flex-1">
                     <div className="font-bold text-white truncate">{guild.name}</div>
                     <div className="text-xs text-gray-500 flex items-center gap-1 mt-1"><Users size={10} /> {guild.members?.toLocaleString()} Miembros</div>
+                    {guild.inBot && <div className="text-xs text-[#57F287] mt-1">✅ Bot activo</div>}
+                    {!guild.inBot && <div className="text-xs text-gray-600 mt-1">⚠️ Bot no está en este servidor</div>}
+                    {!guild.isAdmin && <div className="text-xs text-yellow-500/70 mt-1">👁️ Solo lectura</div>}
                   </div>
                 </div>
-                <button className="w-full py-2.5 rounded-xl bg-[#5865F2]/10 text-[#5865F2] text-sm font-semibold hover:bg-[#5865F2]/20 transition-colors">Abrir</button>
+                <button disabled={!guild.inBot} className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-colors ${guild.inBot ? "bg-[#5865F2]/10 text-[#5865F2] hover:bg-[#5865F2]/20" : "bg-white/5 text-gray-600 cursor-not-allowed"}`}>{guild.inBot ? (guild.isAdmin ? "Configurar" : "Ver") : "Invitar Bot"}</button>
               </motion.div>
             ))}
           </div>
@@ -281,7 +325,7 @@ export default function BotDashboardPage() {
         </div>
 
         <nav className="flex-1 overflow-y-auto py-2 px-2">
-          {NAV_ITEMS.map((section) => (
+          {(isOwner ? OWNER_NAV : MEMBER_NAV).map((section) => (
             <div key={section.category} className="mb-3">
               {sidebarOpen && <div className="px-3 py-1.5 text-xs font-semibold text-gray-600 uppercase">{section.category}</div>}
               {section.items.map((item) => (
@@ -393,6 +437,84 @@ export default function BotDashboardPage() {
           {activeTab === "premiumadmin" && <PremiumAdminSection api={api} />}
           {activeTab === "jarvis" && <JarvisSection api={api} stats={stats} />}
           {activeTab === "botlogs" && <BotLogsSection api={api} />}
+          {activeTab === "hierarchy" && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-black text-white">{isOwner ? "Jerarquía del Staff" : "Mi Jerarquía"}</h2>
+              {isOwner && (
+                <div className="glass rounded-2xl p-6 space-y-4">
+                  <h3 className="font-bold text-white">Agregar Staff</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <input value={hierarchyForm.userId} onChange={(e) => setHierarchyForm({ ...hierarchyForm, userId: e.target.value })} placeholder="User ID" className="px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm" />
+                    <select value={hierarchyForm.rank} onChange={(e) => setHierarchyForm({ ...hierarchyForm, rank: e.target.value })} className="px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm">
+                      <option value="trial_staff">🔰 Trial Staff</option>
+                      <option value="ticket_staff">🎫 Ticket Staff</option>
+                      <option value="support">💬 Support</option>
+                      <option value="moderator">🔨 Moderator</option>
+                      <option value="admin">🛡️ Admin</option>
+                      <option value="developer">⚙️ Developer</option>
+                      <option value="co_owner">💠 Co-Owner</option>
+                    </select>
+                    <input value={hierarchyForm.note} onChange={(e) => setHierarchyForm({ ...hierarchyForm, note: e.target.value })} placeholder="Nota (opcional)" className="px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm" />
+                  </div>
+                  <button onClick={async () => { const r = await api("staff/add", { method: "POST", body: JSON.stringify(hierarchyForm) }); if (r?.ok !== false) { showToast("Staff agregado", "success"); const s = await api("staff"); if (s?.members) setHierarchy(Object.values(s.members)); } else showToast(r?.msg || "Error", "error"); }} className="px-4 py-2 rounded-xl bg-[#5865F2] text-white text-sm font-bold hover:bg-[#4752c4]">Agregar</button>
+                </div>
+              )}
+              <div className="glass rounded-2xl overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead><tr className="border-b border-white/5"><th className="text-left px-4 py-3 text-gray-500">Miembro</th><th className="text-left px-4 py-3 text-gray-500">Rango</th><th className="text-left px-4 py-3 text-gray-500">Desde</th>{isOwner && <th className="text-left px-4 py-3 text-gray-500">Acciones</th>}</tr></thead>
+                  <tbody>
+                    {hierarchy.map((m: any) => {
+                      const ranks: Record<string, { icon: string; label: string; color: string }> = { owner: { icon: "👑", label: "Owner", color: "#FFD700" }, co_owner: { icon: "💠", label: "Co-Owner", color: "#FF8C00" }, developer: { icon: "⚙️", label: "Developer", color: "#9B59B6" }, admin: { icon: "🛡️", label: "Admin", color: "#E74C3C" }, moderator: { icon: "🔨", label: "Moderator", color: "#3498DB" }, support: { icon: "💬", label: "Support", color: "#2ECC71" }, premium_manager: { icon: "💎", label: "Premium Manager", color: "#F1C40F" }, ticket_staff: { icon: "🎫", label: "Ticket Staff", color: "#1ABC9C" }, trial_staff: { icon: "🔰", label: "Trial Staff", color: "#95A5A6" } };
+                      const r = ranks[m.rank] || { icon: "?", label: m.rank, color: "#666" };
+                      return (
+                        <tr key={m.userId} className="border-b border-white/5 hover:bg-white/[0.02]">
+                          <td className="px-4 py-3 text-white">{m.userId}</td>
+                          <td className="px-4 py-3"><span style={{ color: r.color }}>{r.icon} {r.label}</span></td>
+                          <td className="px-4 py-3 text-gray-500">{m.addedAt ? new Date(m.addedAt).toLocaleDateString() : "-"}</td>
+                          {isOwner && <td className="px-4 py-3"><button onClick={async () => { await api(`staff/${m.userId}`, { method: "DELETE" }); const s = await api("staff"); if (s?.members) setHierarchy(Object.values(s.members)); }} className="text-red-400 hover:text-red-300 text-xs">Remover</button></td>}
+                        </tr>
+                      );
+                    })}
+                    {hierarchy.length === 0 && <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-500">Sin staff asignado</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          {activeTab === "botmessages" && isOwner && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-black text-white">Mensajes del Bot</h2>
+              <div className="glass rounded-2xl p-6 space-y-4">
+                <h3 className="font-bold text-white">Enviar Mensaje como Bot</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <select value={botMsgTarget} onChange={(e) => setBotMsgTarget(e.target.value)} className="px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm">
+                    <option value="all">Todos los servidores</option>
+                    {guilds.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
+                  </select>
+                  <input value={botMsgInput} onChange={(e) => setBotMsgInput(e.target.value)} placeholder="Mensaje para enviar..." className="px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm" />
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={async () => { if (!botMsgInput) return; const r = await api("broadcast", { method: "POST", body: JSON.stringify({ message: botMsgInput, target: botMsgTarget }) }); if (r?.ok !== false) { showToast("Mensaje enviado", "success"); setBotMsgInput(""); setBotMessages([{ text: botMsgInput, target: botMsgTarget, ts: Date.now() }, ...botMessages]); } else showToast(r?.msg || "Error", "error"); }} className="px-4 py-2 rounded-xl bg-[#5865F2] text-white text-sm font-bold hover:bg-[#4752c4]"><Send size={14} className="inline mr-1" /> Enviar</button>
+                </div>
+              </div>
+              <div className="glass rounded-2xl p-6">
+                <h3 className="font-bold text-white mb-4">Historial de Mensajes</h3>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {botMessages.map((m: any, i: number) => (
+                    <div key={i} className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Bot size={14} className="text-[#5865F2]" />
+                        <span className="text-xs text-gray-500">{m.target === "all" ? "Todos los servidores" : guilds.find((g: any) => g.id === m.target)?.name || m.target}</span>
+                        <span className="text-xs text-gray-600">{new Date(m.ts).toLocaleTimeString()}</span>
+                      </div>
+                      <p className="text-sm text-gray-300">{m.text}</p>
+                    </div>
+                  ))}
+                  {botMessages.length === 0 && <p className="text-gray-500 text-sm text-center py-4">Sin mensajes enviados aún</p>}
+                </div>
+              </div>
+            </div>
+          )}
           </motion.div>
           </AnimatePresence>
         </div>

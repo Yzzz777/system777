@@ -55,17 +55,16 @@ export async function GET() {
     if (userGuilds.length > 0) {
       const ADMIN = 0x8;
       const merged = userGuilds
-        .filter((g) => (parseInt(g.permissions) & ADMIN) === ADMIN)
         .map((g) => {
-          const bot = botGuilds.find((b) => b.id === g.id);
-          return {
-            id: g.id,
-            name: g.name,
-            icon: g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : null,
-            members: bot?.members ?? 0,
-            inBot: botGuildIds.has(g.id),
-            isAdmin: true,
-          };
+        const bot = botGuilds.find((b) => b.id === g.id);
+        return {
+          id: g.id,
+          name: g.name,
+          icon: g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : null,
+          members: bot?.members ?? 0,
+          inBot: botGuildIds.has(g.id),
+          isAdmin: (parseInt(g.permissions) & ADMIN) === ADMIN,
+        };
         })
         .sort((a, b) => (b.inBot ? 1 : 0) - (a.inBot ? 1 : 0));
       return NextResponse.json(merged);
