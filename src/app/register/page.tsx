@@ -2,11 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Terminal, Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -33,10 +31,9 @@ export default function RegisterPage() {
       });
       const loginData = await loginRes.json();
       if (loginData.error) {
-        router.push("/login");
+        window.location.href = "/login";
       } else {
-        router.push("/dashboard");
-        router.refresh();
+        window.location.href = "/dashboard";
       }
     } catch { setError("Algo salió mal"); setLoading(false); }
   };

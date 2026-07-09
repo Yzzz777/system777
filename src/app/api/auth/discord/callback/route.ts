@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "edge";
 
@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code");
 
   if (!code) {
-    return Response.redirect(new URL("/login?error=no_code", req.url));
+    return NextResponse.redirect(new URL("/login?error=no_code", req.url));
   }
 
   const clientId = process.env.DISCORD_CLIENT_ID;
@@ -14,11 +14,10 @@ export async function GET(req: NextRequest) {
   const redirectUri = "https://jrsystem7777.com/api/auth/discord/callback";
 
   if (!clientId || !clientSecret) {
-    return Response.redirect(new URL("/login?error=config", req.url));
+    return NextResponse.redirect(new URL("/login?error=config", req.url));
   }
 
   try {
-    // Exchange code for tokens
     const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -32,23 +31,24 @@ export async function GET(req: NextRequest) {
     });
 
     if (!tokenRes.ok) {
-      return Response.redirect(new URL("/login?error=token_exchange", req.url));
+      const errText = await tokenRes.text();
+      console.error("Discord token exchange failed:", tokenRes.status, errText);
+      return NextResponse.redirect(new URL("/login?error=token_exchange", req.url));
     }
 
     const tokens = await tokenRes.json();
 
-    // Get user info
     const userRes = await fetch("https://discord.com/api/users/@me", {
       headers: { Authorization: `Bearer ${tokens.access_token}` },
     });
 
     if (!userRes.ok) {
-      return Response.redirect(new URL("/login?error=user_fetch", req.url));
+      console.error("Discord user fetch failed:", userRes.status);
+      return NextResponse.redirect(new URL("/login?error=user_fetch", req.url));
     }
 
     const user = await userRes.json();
 
-    // Create JWT token (simple base64 for now)
     const sessionData = {
       id: user.id,
       username: user.username,
@@ -62,16 +62,18 @@ export async function GET(req: NextRequest) {
 
     const jwt = btoa(JSON.stringify(sessionData));
 
-    // Set cookie and redirect
-    const response = Response.redirect(new URL("/bot/dashboard", req.url));
-    response.headers.set(
-      "Set-Cookie",
-      `system777_session=${jwt}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${tokens.expires_in}`
-    );
+    const response = NextResponse.redirect(new URL("/bot/dashboard", req.url));
+    response.cookies.set("system777_session", jwt, {
+      path: "/",
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      maxAge: tokens.expires_in,
+    });
 
     return response;
   } catch (error) {
     console.error("Discord OAuth error:", error);
-    return Response.redirect(new URL("/login?error=internal", req.url));
+    return NextResponse.redirect(new URL("/login?error=internal", req.url));
   }
 }

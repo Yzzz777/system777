@@ -1,16 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { Terminal, Eye, EyeOff, Loader2 } from "lucide-react";
 
+const errorMessages: Record<string, string> = {
+  internal: "Error interno con Discord. Intenta de nuevo.",
+  no_code: "No se recibió código de Discord.",
+  config: "Error de configuración de Discord.",
+  token_exchange: "Error al autenticar con Discord.",
+  user_fetch: "Error al obtener datos de Discord.",
+};
+
 export default function LoginPage() {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({ email: "", password: "" });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get("error");
+    if (err && errorMessages[err]) {
+      setError(errorMessages[err]);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,13 +39,12 @@ export default function LoginPage() {
       const data = await res.json();
       if (data.error) {
         setError(data.error);
+        setLoading(false);
       } else {
-        router.push("/dashboard");
-        router.refresh();
+        window.location.href = "/dashboard";
       }
     } catch {
       setError("Algo salió mal");
-    } finally {
       setLoading(false);
     }
   };
