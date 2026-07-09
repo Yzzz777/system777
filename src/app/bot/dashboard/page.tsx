@@ -418,7 +418,7 @@ export default function BotDashboardPage() {
           )}
 
           {activeTab === "tickets" && (
-            <TicketsSection config={guildConfig} channels={channelOptions} roles={roleOptions} categories={catOptions} saveConfig={saveConfig} api={api} guildId={selectedServer!} />
+            <TicketsSection config={guildConfig} channels={channelOptions} roles={roleOptions} categories={catOptions} saveConfig={saveConfig} api={api} guildId={selectedServer!} showToast={showToast} />
           )}
 
           {activeTab === "autorole" && (
@@ -446,12 +446,12 @@ export default function BotDashboardPage() {
           )}
 
           {activeTab === "verification" && (
-            <VerificationSection config={guildConfig} channels={channelOptions} roles={roleOptions} saveConfig={saveConfig} api={api} guildId={selectedServer!} />
+            <VerificationSection config={guildConfig} channels={channelOptions} roles={roleOptions} saveConfig={saveConfig} api={api} guildId={selectedServer!} showToast={showToast} />
           )}
 
           {activeTab === "botcontrol" && <BotControlSection api={api} stats={stats} />}
           {activeTab === "globalbans" && <GlobalBansSection api={api} />}
-          {activeTab === "broadcast" && <BroadcastSection api={api} />}
+          {activeTab === "broadcast" && <BroadcastSection api={api} showToast={showToast} />}
           {activeTab === "ipbans" && <IPBansSection api={api} />}
           {activeTab === "staff" && <StaffSection api={api} />}
           {activeTab === "analytics" && <AnalyticsSection api={api} />}
@@ -617,12 +617,12 @@ function WelcomeSection({ config, channels, saveConfig }: { config: any; channel
   );
 }
 
-function TicketsSection({ config, channels, roles, categories, saveConfig, api, guildId }: any) {
+function TicketsSection({ config, channels, roles, categories, saveConfig, api, guildId, showToast }: any) {
   const [ticketCfg, setTicketCfg] = useState(config?.tickets || { channelId: "", supportRoleId: "", logChannelId: "", categoryId: "", title: "Soporte", description: "Selecciona el tipo de ticket.", color: "#5865F2", prefix: "ticket", maxTickets: 3, pingRole: false, dmTranscript: true, welcomeMsg: "" });
   const [ticketCategories, setTicketCategories] = useState<any[]>(config?.ticketCategories || []);
   const publishPanel = async () => {
-    const res = await api(`guild/${guildId}/tickets/panel`, { method: "POST" });
-    if (res?.ok) { /* toast */ } else { /* toast error */ }
+    const res = await api(`public/guild/${guildId}/tickets/panel`, { method: "POST" });
+    if (res?.ok) { showToast(res.msg || "Panel publicado", "success"); } else { showToast(res?.msg || "Error al publicar", "error"); }
   };
   return (
     <div className="space-y-6">
@@ -887,10 +887,16 @@ function EconomySection({ config, saveConfig, api, guildId }: any) {
   );
 }
 
-function VerificationSection({ config, channels, roles, saveConfig, api, guildId }: any) {
+function VerificationSection({ config, channels, roles, saveConfig, api, guildId, showToast }: any) {
   const [verifyCfg, setVerifyCfg] = useState(config?.verifyCfg || { active: false, channelId: "", roleId: "", customMsg: "" });
-  const setupVerify = async () => { await api("verify/setup", { method: "POST", body: JSON.stringify({ guildId, channelId: verifyCfg.channelId, roleId: verifyCfg.roleId, customMsg: verifyCfg.customMsg }) }); };
-  const removeVerify = async () => { await api("verify/remove", { method: "POST", body: JSON.stringify({ guildId }) }); };
+  const setupVerify = async () => { 
+    const res = await api(`public/guild/${guildId}/verify/setup`, { method: "POST", body: JSON.stringify({ channelId: verifyCfg.channelId, roleId: verifyCfg.roleId, customMsg: verifyCfg.customMsg }) }); 
+    if (res?.ok) { showToast(res.msg || "Verificación publicada", "success"); } else { showToast(res?.msg || "Error", "error"); }
+  };
+  const removeVerify = async () => { 
+    const res = await api(`public/guild/${guildId}/verify/remove`, { method: "POST" }); 
+    if (res?.ok) { showToast("Verificación desactivada", "success"); } else { showToast(res?.msg || "Error", "error"); }
+  };
   return (
     <div className="space-y-6">
       <div><h2 className="text-xl font-black text-white mb-1">🔐 Verificación</h2><p className="text-sm text-gray-500">Canal de verificación con IP tracking.</p></div>
@@ -962,9 +968,13 @@ function GlobalBansSection({ api }: { api: any }) {
   );
 }
 
-function BroadcastSection({ api }: { api: any }) {
+function BroadcastSection({ api, showToast }: { api: any; showToast: any }) {
   const [msg, setMsg] = useState("");
-  const send = async () => { await api("broadcast", { method: "POST", body: JSON.stringify({ message: msg }) }); setMsg(""); };
+  const send = async () => { 
+    if (!msg.trim()) return;
+    const res = await api("public/broadcast", { method: "POST", body: JSON.stringify({ message: msg }) }); 
+    if (res?.ok) { setMsg(""); } 
+  };
   return (
     <div className="space-y-6">
       <div><h2 className="text-xl font-black text-white mb-1">📢 Broadcast</h2><p className="text-sm text-gray-500">Envía un mensaje a todos los servidores.</p></div>
