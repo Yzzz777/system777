@@ -8,6 +8,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ path
   const { path } = await params;
   const apiPath = path.join("/");
   const url = new URL(req.url);
+
+  if (!BOT_URL) {
+    return NextResponse.json({ error: "BOT_API_URL no configurado" }, { status: 500 });
+  }
+
   const targetUrl = `${BOT_URL}/api/${apiPath}${url.search}`;
 
   try {
@@ -23,7 +28,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ path
       } catch {}
     }
 
-    const res = await fetch(targetUrl, { headers, signal: AbortSignal.timeout(10000) });
+    const res = await fetch(targetUrl, { headers, signal: AbortSignal.timeout(15000) });
     const data = await res.text();
 
     return new NextResponse(data, {
@@ -31,7 +36,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ path
       headers: { "Content-Type": "application/json" },
     });
   } catch (err) {
-    return NextResponse.json({ error: "Bot no disponible", details: String(err) }, { status: 502 });
+    console.error("Proxy error:", targetUrl, err);
+    return NextResponse.json({ error: "Bot no disponible", targetUrl, details: String(err) }, { status: 502 });
   }
 }
 
