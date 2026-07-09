@@ -66,7 +66,7 @@ function formatMemory(mb: string): string {
 }
 
 export default function BotDashboardPage() {
-  const [session, setSession] = useState<{ id: string; username: string; global_name: string; avatar: string; email: string; accessToken: string } | null>(null);
+  const [session, setSession] = useState<{ id: string; username: string; global_name: string; avatar: string | null; email: string; accessToken: string } | null>(null);
   const [stats, setStats] = useState<BotStats | null>(null);
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,16 +75,27 @@ export default function BotDashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    const match = document.cookie.match(/system777_session=([^;]+)/);
-    if (match) {
-      try {
-        const data = JSON.parse(atob(match[1]));
-        if (!data.expiresAt || Date.now() <= data.expiresAt) {
-          setSession(data);
+    fetch("/api/auth/session")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && data.user) {
+          let avatarHash: string | null = null;
+          if (data.user.image && data.user.image.includes("discordapp.com")) {
+            const parts = data.user.image.split("/");
+            avatarHash = parts[parts.length - 1]?.replace(".png", "") || null;
+          }
+          setSession({
+            id: data.user.id,
+            username: data.user.username || data.user.name,
+            global_name: data.user.name,
+            avatar: avatarHash,
+            email: data.user.email,
+            accessToken: "",
+          });
         }
-      } catch {}
-    }
-    setLoading(false);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
