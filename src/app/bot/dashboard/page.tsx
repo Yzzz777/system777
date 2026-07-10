@@ -211,7 +211,9 @@ export default function BotDashboardPage() {
     setActiveTab("inicio");
     const data = await api(`public/guild/${guildId}`);
     if (data?.ok) {
-      setGuildConfig(data.config || {});
+      const cfg = data.config || {};
+      if (data.ticketConfig) cfg.tickets = data.ticketConfig;
+      setGuildConfig(cfg);
       setChannels(data.channels || []);
       setRoles(data.roles || []);
     }
@@ -621,8 +623,22 @@ function WelcomeSection({ config, channels, saveConfig }: { config: any; channel
 }
 
 function TicketsSection({ config, channels, roles, categories, saveConfig, api, guildId, showToast }: any) {
-  const [ticketCfg, setTicketCfg] = useState(config?.tickets || { channelId: "", supportRoleId: "", logChannelId: "", categoryId: "", title: "Soporte", description: "Selecciona el tipo de ticket.", color: "#5865F2", prefix: "ticket", maxTickets: 3, pingRole: false, dmTranscript: true, welcomeMsg: "" });
-  const [ticketCategories, setTicketCategories] = useState<any[]>(config?.ticketCategories || []);
+  const tc = config?.tickets || {};
+  const [ticketCfg, setTicketCfg] = useState({
+    channelId: tc.panelChannel || "",
+    supportRoleId: tc.supportRole || "",
+    logChannelId: tc.logChannel || "",
+    categoryId: tc.ticketCategory || "",
+    title: tc.panelTitle || "Soporte",
+    description: tc.panelDescription || tc.panelDesc || "Selecciona el tipo de ticket.",
+    color: tc.panelColor || "#5865F2",
+    prefix: tc.prefix || "ticket",
+    maxTickets: tc.maxPerUser || 3,
+    pingRole: tc.pingRole || false,
+    dmTranscript: tc.dmTranscript !== false,
+    welcomeMsg: tc.welcomeMessage || "",
+  });
+  const [ticketCategories, setTicketCategories] = useState<any[]>(tc.categories || []);
   const publishPanel = async () => {
     const res = await api(`public/guild/${guildId}/tickets/panel`, { method: "POST" });
     if (res?.ok) { showToast(res.msg || "Panel publicado", "success"); } else { showToast(res?.msg || "Error al publicar", "error"); }
