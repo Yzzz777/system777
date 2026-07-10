@@ -14,7 +14,7 @@ import {
   Code, Hash, ShieldBan, Flame, Bug, Palette, CheckCircle, AlertTriangle,
   Link2, Filter, AtSign, Repeat, CreditCard, Key, Wrench, Monitor,
   Ticket, Smile, ShieldAlert, UserCheck, Globe, Eye, EyeOff, Clock,
-  Volume2, Home, Play, Pause,
+  Volume2, Home, Play, Pause, Bell,
 } from "lucide-react";
 
 const BOT_INVITE = "https://discord.com/oauth2/authorize?client_id=1502804306125132057&permissions=8&scope=bot%20applications.commands";
@@ -39,6 +39,7 @@ const OWNER_NAV = [
   { category: "Engagement", items: [
     { id: "levels", label: "Niveles & XP", icon: BarChart3 },
     { id: "economy", label: "Economía", icon: Coins },
+    { id: "notifications", label: "Notificaciones", icon: Bell },
   ]},
   { category: "Seguridad", items: [
     { id: "protection", label: "Protección", icon: Shield },
@@ -76,6 +77,7 @@ const MEMBER_NAV = [
   { category: "Engagement", items: [
     { id: "levels", label: "Niveles & XP", icon: BarChart3 },
     { id: "economy", label: "Economía", icon: Coins },
+    { id: "notifications", label: "Notificaciones", icon: Bell },
   ]},
   { category: "Seguridad", items: [
     { id: "protection", label: "Protección", icon: Shield },
@@ -458,6 +460,7 @@ export default function BotDashboardPage() {
           {activeTab === "premiumadmin" && <PremiumAdminSection api={api} />}
           {activeTab === "jarvis" && <JarvisSection api={api} stats={stats} />}
           {activeTab === "botlogs" && <BotLogsSection api={api} />}
+          {activeTab === "notifications" && <NotificationsSection api={api} channels={channelOptions} roles={roleOptions} guildId={selectedServer!} showToast={showToast} />}
           {activeTab === "hierarchy" && (
             <div className="space-y-6">
               <h2 className="text-2xl font-black text-white">{isOwner ? "Jerarquía del Staff" : "Mi Jerarquía"}</h2>
@@ -1216,6 +1219,155 @@ function BotLogsSection({ api }: { api: any }) {
           <div key={i} className="py-0.5">{typeof l === "string" ? l : JSON.stringify(l)}</div>
         ))}
         {logs.length === 0 && <div className="text-center text-gray-600 py-20">Sin logs</div>}
+      </div>
+    </div>
+  );
+}
+
+function NotificationsSection({ api, channels, roles, guildId, showToast }: any) {
+  const [notifs, setNotifs] = useState<any>({ youtube: [], kick: [], tiktok: [] });
+  const [history, setHistory] = useState<any[]>([]);
+  const [tab, setTab] = useState("youtube");
+  const [ytForm, setYtForm] = useState({ channelId: "", discordChannelId: "", roleId: "", message: "", color: "#FF0000" });
+  const [kickForm, setKickForm] = useState({ username: "", discordChannelId: "", roleId: "", message: "", color: "#53FC18" });
+  const [ttForm, setTtForm] = useState({ username: "", discordChannelId: "", roleId: "", message: "", color: "#000000" });
+
+  useEffect(() => {
+    api("notifications").then((d: any) => {
+      if (d?.config) setNotifs(d.config);
+      if (d?.history) setHistory(d.history);
+    });
+  }, [api]);
+
+  const addYouTube = async () => {
+    if (!ytForm.channelId || !ytForm.discordChannelId) return showToast("Canal ID y canal Discord requeridos", "error");
+    const res = await api("notifications/youtube", { method: "POST", body: JSON.stringify({ ...ytForm, guildId }) });
+    if (res?.ok) { showToast("YouTube notificación agregada", "success"); setYtForm({ channelId: "", discordChannelId: "", roleId: "", message: "", color: "#FF0000" }); const d = await api("notifications"); if (d?.config) setNotifs(d.config); }
+  };
+  const removeYouTube = async (id: string) => {
+    await api(`notifications/youtube/${id}`, { method: "DELETE" });
+    const d = await api("notifications"); if (d?.config) setNotifs(d.config);
+  };
+  const addKick = async () => {
+    if (!kickForm.username || !kickForm.discordChannelId) return showToast("Username y canal Discord requeridos", "error");
+    const res = await api("notifications/kick", { method: "POST", body: JSON.stringify({ ...kickForm, guildId }) });
+    if (res?.ok) { showToast("Kick notificación agregada", "success"); setKickForm({ username: "", discordChannelId: "", roleId: "", message: "", color: "#53FC18" }); const d = await api("notifications"); if (d?.config) setNotifs(d.config); }
+  };
+  const removeKick = async (id: string) => {
+    await api(`notifications/kick/${id}`, { method: "DELETE" });
+    const d = await api("notifications"); if (d?.config) setNotifs(d.config);
+  };
+  const addTikTok = async () => {
+    if (!ttForm.username || !ttForm.discordChannelId) return showToast("Username y canal Discord requeridos", "error");
+    const res = await api("notifications/tiktok", { method: "POST", body: JSON.stringify({ ...ttForm, guildId }) });
+    if (res?.ok) { showToast("TikTok notificación agregada", "success"); setTtForm({ username: "", discordChannelId: "", roleId: "", message: "", color: "#000000" }); const d = await api("notifications"); if (d?.config) setNotifs(d.config); }
+  };
+  const removeTikTok = async (id: string) => {
+    await api(`notifications/tiktok/${id}`, { method: "DELETE" });
+    const d = await api("notifications"); if (d?.config) setNotifs(d.config);
+  };
+  const checkNow = async () => { await api("notifications/check", { method: "POST" }); showToast("Check completado", "success"); };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div><h2 className="text-xl font-black text-white mb-1">🔔 Notificaciones de Streamers</h2><p className="text-sm text-gray-500">Notifica cuando haya contenido nuevo en YouTube, Kick o TikTok.</p></div>
+        <button onClick={checkNow} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#5865F2]/10 text-[#5865F2] text-sm font-semibold hover:bg-[#5865F2]/20"><RefreshCw size={14} /> Verificar Ahora</button>
+      </div>
+
+      <div className="flex gap-2">
+        {[{ id: "youtube", label: "YouTube", color: "#FF0000" }, { id: "kick", label: "Kick", color: "#53FC18" }, { id: "tiktok", label: "TikTok", color: "#000000" }].map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${tab === t.id ? "text-white" : "text-gray-400 hover:text-white"}`} style={tab === t.id ? { background: t.color + "20", color: t.color } : { background: "rgba(255,255,255,0.03)" }}>{t.label}</button>
+        ))}
+      </div>
+
+      {tab === "youtube" && (
+        <div className="glass rounded-2xl p-6 space-y-4">
+          <h3 className="font-bold text-white">Agregar Canal de YouTube</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <TextInput value={ytForm.channelId} onChange={(v: string) => setYtForm({ ...ytForm, channelId: v })} label="Channel ID de YouTube" placeholder="UC-lHJZR3Gqxm24_Vd_AJ5Yw" />
+            <SelectInput value={ytForm.discordChannelId} onChange={(v: string) => setYtForm({ ...ytForm, discordChannelId: v })} options={channels} label="Canal Discord" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <SelectInput value={ytForm.roleId} onChange={(v: string) => setYtForm({ ...ytForm, roleId: v })} options={roles} label="Rol a Ping (opcional)" />
+            <TextInput value={ytForm.color} onChange={(v: string) => setYtForm({ ...ytForm, color: v })} label="Color" placeholder="#FF0000" />
+          </div>
+          <TextInput value={ytForm.message} onChange={(v: string) => setYtForm({ ...ytForm, message: v })} label="Mensaje (opcional)" placeholder="Nuevo video: {video} — {url}" />
+          <button onClick={addYouTube} className="px-6 py-2.5 rounded-xl bg-[#FF0000] text-white text-sm font-semibold hover:bg-[#CC0000]"><Plus size={14} className="inline mr-1" /> Agregar</button>
+          <div className="space-y-2">
+            {(notifs.youtube || []).map((s: any) => (
+              <div key={s.channelId} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02]">
+                <span className="text-sm text-white">📺 {s.channelId}</span>
+                <button onClick={() => removeYouTube(s.channelId)} className="text-red-400 hover:text-red-300 text-xs"><Trash2 size={12} /></button>
+              </div>
+            ))}
+            {(!notifs.youtube || notifs.youtube.length === 0) && <p className="text-gray-600 text-sm">Sin canales de YouTube configurados</p>}
+          </div>
+        </div>
+      )}
+
+      {tab === "kick" && (
+        <div className="glass rounded-2xl p-6 space-y-4">
+          <h3 className="font-bold text-white">Agregar Canal de Kick</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <TextInput value={kickForm.username} onChange={(v: string) => setKickForm({ ...kickForm, username: v })} label="Username de Kick" placeholder="xqc" />
+            <SelectInput value={kickForm.discordChannelId} onChange={(v: string) => setKickForm({ ...kickForm, discordChannelId: v })} options={channels} label="Canal Discord" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <SelectInput value={kickForm.roleId} onChange={(v: string) => setKickForm({ ...kickForm, roleId: v })} options={roles} label="Rol a Ping (opcional)" />
+            <TextInput value={kickForm.color} onChange={(v: string) => setKickForm({ ...kickForm, color: v })} label="Color" placeholder="#53FC18" />
+          </div>
+          <TextInput value={kickForm.message} onChange={(v: string) => setKickForm({ ...kickForm, message: v })} label="Mensaje (opcional)" placeholder="{user} está en directo: {title}" />
+          <button onClick={addKick} className="px-6 py-2.5 rounded-xl bg-[#53FC18] text-black text-sm font-semibold hover:bg-[#45E015]"><Plus size={14} className="inline mr-1" /> Agregar</button>
+          <div className="space-y-2">
+            {(notifs.kick || []).map((s: any) => (
+              <div key={s.username} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02]">
+                <span className="text-sm text-white">🎮 {s.username} {s.isLive && <span className="text-[#53FC18]">🔴 EN DIRECTO</span>}</span>
+                <button onClick={() => removeKick(s.username)} className="text-red-400 hover:text-red-300 text-xs"><Trash2 size={12} /></button>
+              </div>
+            ))}
+            {(!notifs.kick || notifs.kick.length === 0) && <p className="text-gray-600 text-sm">Sin canales de Kick configurados</p>}
+          </div>
+        </div>
+      )}
+
+      {tab === "tiktok" && (
+        <div className="glass rounded-2xl p-6 space-y-4">
+          <h3 className="font-bold text-white">Agregar Canal de TikTok</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <TextInput value={ttForm.username} onChange={(v: string) => setTtForm({ ...ttForm, username: v })} label="Username de TikTok" placeholder="@usuario" />
+            <SelectInput value={ttForm.discordChannelId} onChange={(v: string) => setTtForm({ ...ttForm, discordChannelId: v })} options={channels} label="Canal Discord" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <SelectInput value={ttForm.roleId} onChange={(v: string) => setTtForm({ ...ttForm, roleId: v })} options={roles} label="Rol a Ping (opcional)" />
+            <TextInput value={ttForm.color} onChange={(v: string) => setTtForm({ ...ttForm, color: v })} label="Color" placeholder="#000000" />
+          </div>
+          <TextInput value={ttForm.message} onChange={(v: string) => setTtForm({ ...ttForm, message: v })} label="Mensaje (opcional)" placeholder="{user} subió: {video}" />
+          <button onClick={addTikTok} className="px-6 py-2.5 rounded-xl bg-black text-white text-sm font-semibold hover:bg-gray-800"><Plus size={14} className="inline mr-1" /> Agregar</button>
+          <div className="space-y-2">
+            {(notifs.tiktok || []).map((s: any) => (
+              <div key={s.username} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02]">
+                <span className="text-sm text-white">🎵 {s.username}</span>
+                <button onClick={() => removeTikTok(s.username)} className="text-red-400 hover:text-red-300 text-xs"><Trash2 size={12} /></button>
+              </div>
+            ))}
+            {(!notifs.tiktok || notifs.tiktok.length === 0) && <p className="text-gray-600 text-sm">Sin canales de TikTok configurados</p>}
+          </div>
+        </div>
+      )}
+
+      <div className="glass rounded-2xl p-6">
+        <h3 className="font-bold text-white mb-4">📜 Historial de Notificaciones</h3>
+        <div className="space-y-2 max-h-64 overflow-y-auto">
+          {history.map((h: any, i: number) => (
+            <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02]">
+              <span className={`text-xs px-2 py-0.5 rounded-full ${h.type === "youtube" ? "bg-[#FF0000]/20 text-[#FF0000]" : h.type === "kick" ? "bg-[#53FC18]/20 text-[#53FC18]" : "bg-white/10 text-white"}`}>{h.type}</span>
+              <span className="text-sm text-gray-300 truncate">{h.title || h.username || h.channel}</span>
+              <span className="text-xs text-gray-600 ml-auto">{h.ts ? new Date(h.ts).toLocaleTimeString() : ""}</span>
+            </div>
+          ))}
+          {history.length === 0 && <p className="text-gray-600 text-sm text-center py-4">Sin notificaciones enviadas aún</p>}
+        </div>
       </div>
     </div>
   );
