@@ -209,13 +209,16 @@ export default function BotDashboardPage() {
   const loadGuild = useCallback(async (guildId: string) => {
     setSelectedServer(guildId);
     setActiveTab("inicio");
-    const data = await api(`public/guild/${guildId}`);
-    if (data?.ok) {
-      const cfg = data.config || {};
-      if (data.ticketConfig) cfg.tickets = data.ticketConfig;
+    const [guildData, ticketData] = await Promise.all([
+      api(`public/guild/${guildId}`),
+      api(`public/ticket/${guildId}`),
+    ]);
+    if (guildData?.ok) {
+      const cfg = guildData.config || {};
+      if (ticketData?.config) cfg.tickets = ticketData.config;
       setGuildConfig(cfg);
-      setChannels(data.channels || []);
-      setRoles(data.roles || []);
+      setChannels(guildData.channels || []);
+      setRoles(guildData.roles || []);
     }
   }, [api]);
 
