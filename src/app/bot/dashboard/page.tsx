@@ -12,9 +12,9 @@ import {
   RefreshCw, Power, Trash2, Plus, Save, Send, Copy, X, Menu, Zap, Lock,
   ScrollText, Award, Gift, Ban, Sparkles, Layout, Megaphone, UserCog,
   Code, Hash, ShieldBan, Flame, Bug, Palette, CheckCircle, AlertTriangle,
-  Link2, Filter, AtSign, Repeat, CreditCard, Key, Wrench, Monitor,
+  FolderOpen, FileText, Star, Link2, Filter, AtSign, Repeat, CreditCard, Key, Wrench, Monitor,
   Ticket, Smile, ShieldAlert, UserCheck, Globe, Eye, EyeOff, Clock,
-  Volume2, Home, Play, Pause, Bell,
+  Volume2, Home, Play, Pause, Bell, ChevronDown,
 } from "lucide-react";
 
 const BOT_INVITE = "https://discord.com/oauth2/authorize?client_id=1502804306125132057&permissions=8&scope=bot%20applications.commands";
@@ -26,6 +26,8 @@ const OWNER_NAV = [
     { id: "inicio", label: "Inicio", icon: Home },
     { id: "modules", label: "Módulos", icon: Settings },
     { id: "hierarchy", label: "Jerarquía", icon: UserCog },
+    { id: "activitylogs", label: "Logs de Actividad", icon: ScrollText },
+    { id: "roleperms", label: "Permisos Roles", icon: Shield },
   ]},
   { category: "Mensajería", items: [
     { id: "welcome", label: "Bienvenida / Despedida", icon: MessageSquare },
@@ -57,6 +59,12 @@ const OWNER_NAV = [
     { id: "jarvis", label: "JARVIS AI", icon: Bot },
     { id: "botlogs", label: "Bot Logs", icon: Terminal },
   ]},
+  { category: "Herramientas", items: [
+    { id: "webhooks", label: "Webhooks", icon: Link2 },
+    { id: "slowmode", label: "Slowmode", icon: Clock },
+    { id: "roles", label: "Gestión Roles", icon: UserCog },
+    { id: "channels", label: "Canales", icon: Hash },
+  ]},
 ];
 
 const MEMBER_NAV = [
@@ -64,6 +72,8 @@ const MEMBER_NAV = [
     { id: "inicio", label: "Inicio", icon: Home },
     { id: "modules", label: "Módulos", icon: Settings },
     { id: "hierarchy", label: "Mi Jerarquía", icon: UserCog },
+    { id: "activitylogs", label: "Logs de Actividad", icon: ScrollText },
+    { id: "roleperms", label: "Permisos Roles", icon: Shield },
   ]},
   { category: "Mensajería", items: [
     { id: "welcome", label: "Bienvenida / Despedida", icon: MessageSquare },
@@ -96,8 +106,12 @@ function Toast({ message, type, onClose }: { message: string; type: "success" | 
 }
 
 function Toggle({ checked, onChange, label, onSave }: { checked: boolean; onChange: (v: boolean) => void; label: string; onSave?: () => void }) {
+  const doToggle = () => {
+    onChange(!checked);
+    if (onSave) setTimeout(onSave, 200);
+  };
   return (
-    <label className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] hover:bg-[#5865F2]/5 transition-all cursor-pointer group" onClick={() => { onChange(!checked); if (onSave) setTimeout(onSave, 100); }}>
+    <label className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] hover:bg-[#5865F2]/5 transition-all cursor-pointer group" onClick={doToggle}>
       <span className="text-sm text-gray-300 group-hover:text-white transition-colors">{label}</span>
       <div className={`relative w-11 h-6 rounded-full transition-all duration-300 ${checked ? "bg-[#5865F2] shadow-lg shadow-[#5865F2]/30" : "bg-white/10"}`}>
         <motion.div animate={{ x: checked ? 20 : 0 }} transition={{ type: "spring", stiffness: 500, damping: 30 }} className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md" />
@@ -174,6 +188,20 @@ export default function BotDashboardPage() {
   const [botMessages, setBotMessages] = useState<any[]>([]);
   const [botMsgInput, setBotMsgInput] = useState("");
   const [botMsgTarget, setBotMsgTarget] = useState("all");
+  const [botMsgChannel, setBotMsgChannel] = useState("");
+  const [botMsgEmbed, setBotMsgEmbed] = useState(false);
+  const [botMsgEmbedTitle, setBotMsgEmbedTitle] = useState("");
+  const [botMsgEmbedColor, setBotMsgEmbedColor] = useState("#5865F2");
+  const [botMsgEmbedAuthor, setBotMsgEmbedAuthor] = useState("");
+  const [botMsgEmbedFooter, setBotMsgEmbedFooter] = useState("");
+  const [botMsgEmbedImage, setBotMsgEmbedImage] = useState("");
+  const [botMsgMention, setBotMsgMention] = useState(false);
+  const [botMsgMentionHere, setBotMsgMentionHere] = useState(false);
+  const [webhookChannel, setWebhookChannel] = useState("");
+  const [webhookName, setWebhookName] = useState("");
+  const [webhookAvatar, setWebhookAvatar] = useState("");
+  const [slowmodeChannel, setSlowmodeChannel] = useState("");
+  const [slowmodeDuration, setSlowmodeDuration] = useState(0);
 
   const isOwner = OWNER_IDS.includes((session?.user as any)?.id || session?.user?.name || "");
 
@@ -215,6 +243,8 @@ export default function BotDashboardPage() {
     ]);
     if (guildData?.ok) {
       const cfg = guildData.config || {};
+      cfg.id = guildId;
+      cfg.guild = guildData.guild;
       if (ticketData?.config) cfg.tickets = ticketData.config;
       setGuildConfig(cfg);
       setChannels(guildData.channels || []);
@@ -233,11 +263,10 @@ export default function BotDashboardPage() {
     const res = await api(publicPath, { method: "POST", body: JSON.stringify(body) });
     if (res?.ok !== false) {
       showToast("Guardado correctamente", "success");
-      if (selectedServer) loadGuild(selectedServer);
     } else {
       showToast(res?.msg || "Error al guardar", "error");
     }
-  }, [api, showToast, selectedServer, loadGuild]);
+  }, [api, showToast]);
 
   const filteredGuilds = guilds.filter((g: any) => !searchQuery || g.name?.toLowerCase().includes(searchQuery.toLowerCase()));
 
@@ -340,7 +369,7 @@ export default function BotDashboardPage() {
       <AnimatePresence>{toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}</AnimatePresence>
 
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? "w-64" : "w-16"} flex-shrink-0 transition-all duration-300 flex flex-col border-r border-white/5`} style={{ background: "#141428" }}>
+      <aside className={`${sidebarOpen ? "w-64" : "w-16"} flex-shrink-0 transition-all duration-300 flex flex-col border-r border-white/5 overflow-hidden`} style={{ background: "#141428", height: "100vh", position: "sticky", top: 0 }}>
         <div className="p-4 border-b border-white/5">
           <div className="flex items-center gap-3">
             {selectedGuild?.icon ? (
@@ -381,7 +410,11 @@ export default function BotDashboardPage() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto relative" id="dashboard-main" style={{ height: "100vh" }}>
+        {/* Scroll arrows */}
+        <button onClick={() => document.getElementById('dashboard-main')?.scrollBy({ top: -400, behavior: 'smooth' })} className="fixed bottom-24 right-8 z-40 w-10 h-10 rounded-full bg-[#5865F2]/80 text-white flex items-center justify-center hover:bg-[#5865F2] transition-all shadow-lg hover:scale-110" title="Subir"><ChevronLeft size={20} className="rotate-[-90deg]" /></button>
+        <button onClick={() => document.getElementById('dashboard-main')?.scrollBy({ top: 400, behavior: 'smooth' })} className="fixed bottom-8 right-8 z-40 w-10 h-10 rounded-full bg-[#5865F2]/80 text-white flex items-center justify-center hover:bg-[#5865F2] transition-all shadow-lg hover:scale-110" title="Bajar"><ChevronRight size={20} className="rotate-[-90deg]" /></button>
+
         <div className="p-6 max-w-5xl mx-auto">
           <AnimatePresence mode="wait">
           <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
@@ -417,27 +450,27 @@ export default function BotDashboardPage() {
           )}
 
           {activeTab === "modules" && (
-            <ModulesSection config={guildConfig} saveConfig={saveConfig} />
+            <ModulesSection key={`modules-${selectedServer}`} config={guildConfig} saveConfig={saveConfig} />
           )}
 
           {activeTab === "welcome" && (
-            <WelcomeSection config={guildConfig} channels={channelOptions} saveConfig={saveConfig} />
+            <WelcomeSection key={`welcome-${selectedServer}`} config={guildConfig} channels={channelOptions} roles={roleOptions} saveConfig={saveConfig} guildId={selectedServer!} />
           )}
 
           {activeTab === "tickets" && (
-            <TicketsSection config={guildConfig} channels={channelOptions} roles={roleOptions} categories={catOptions} saveConfig={saveConfig} api={api} guildId={selectedServer!} showToast={showToast} />
+            <TicketsSection key={`tickets-${selectedServer}`} config={guildConfig} channels={channelOptions} roles={roleOptions} categories={catOptions} saveConfig={saveConfig} api={api} guildId={selectedServer!} showToast={showToast} />
           )}
 
           {activeTab === "autorole" && (
-            <AutoroleSection config={guildConfig} roles={roleOptions} saveConfig={saveConfig} />
+            <AutoroleSection key={`autorole-${selectedServer}`} config={guildConfig} roles={roleOptions} saveConfig={saveConfig} />
           )}
 
           {activeTab === "logs" && (
-            <LogsSection config={guildConfig} channels={channelOptions} saveConfig={saveConfig} />
+            <LogsSection key={`logs-${selectedServer}`} config={guildConfig} channels={channelOptions} saveConfig={saveConfig} />
           )}
 
           {activeTab === "protection" && (
-            <ProtectionSection config={guildConfig} channels={channelOptions} saveConfig={saveConfig} />
+            <ProtectionSection key={`protection-${selectedServer}`} config={guildConfig} channels={channelOptions} saveConfig={saveConfig} />
           )}
 
           {activeTab === "moderation" && (
@@ -445,15 +478,15 @@ export default function BotDashboardPage() {
           )}
 
           {activeTab === "levels" && (
-            <LevelsSection config={guildConfig} channels={channelOptions} roles={roleOptions} saveConfig={saveConfig} api={api} guildId={selectedServer!} />
+            <LevelsSection key={`levels-${selectedServer}`} config={guildConfig} channels={channelOptions} roles={roleOptions} saveConfig={saveConfig} api={api} guildId={selectedServer!} />
           )}
 
           {activeTab === "economy" && (
-            <EconomySection config={guildConfig} saveConfig={saveConfig} api={api} guildId={selectedServer!} />
+            <EconomySection key={`economy-${selectedServer}`} config={guildConfig} saveConfig={saveConfig} api={api} guildId={selectedServer!} />
           )}
 
           {activeTab === "verification" && (
-            <VerificationSection config={guildConfig} channels={channelOptions} roles={roleOptions} saveConfig={saveConfig} api={api} guildId={selectedServer!} showToast={showToast} />
+            <VerificationSection key={`verification-${selectedServer}`} config={guildConfig} channels={channelOptions} roles={roleOptions} saveConfig={saveConfig} api={api} guildId={selectedServer!} showToast={showToast} />
           )}
 
           {activeTab === "botcontrol" && <BotControlSection api={api} stats={stats} />}
@@ -466,6 +499,83 @@ export default function BotDashboardPage() {
           {activeTab === "jarvis" && <JarvisSection api={api} stats={stats} />}
           {activeTab === "botlogs" && <BotLogsSection api={api} />}
           {activeTab === "notifications" && <NotificationsSection api={api} channels={channelOptions} roles={roleOptions} guildId={selectedServer!} showToast={showToast} />}
+
+          {/* ── Logs de Actividad ── */}
+          {activeTab === "activitylogs" && (
+            <ActivityLogsSection api={api} guildId={selectedServer!} />
+          )}
+
+          {/* ── Permisos de Roles ── */}
+          {activeTab === "roleperms" && (
+            <RolePermsSection api={api} guildId={selectedServer!} roles={roles} showToast={showToast} />
+          )}
+
+          {/* ── Herramientas Discord ── */}
+          {activeTab === "webhooks" && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-black text-white">🔗 Webhooks</h2>
+              <div className="glass rounded-2xl p-6 space-y-4">
+                <h3 className="font-bold text-white">Crear Webhook</h3>
+                <SelectInput value={webhookChannel || ""} onChange={setWebhookChannel} options={channels} label="Canal destino" />
+                <TextInput value={webhookName} onChange={setWebhookName} label="Nombre" placeholder="Mi Webhook" />
+                <TextInput value={webhookAvatar} onChange={setWebhookAvatar} label="Avatar URL (opcional)" placeholder="https://..." />
+                <button onClick={async () => {
+                  if (!webhookChannel) return showToast("Selecciona un canal", "error");
+                  const r = await api(`public/guild/${selectedServer}/webhooks`, { method: "POST", body: JSON.stringify({ channelId: webhookChannel, name: webhookName || "System 777", avatar: webhookAvatar }) });
+                  if (r?.ok) { showToast("Webhook creado", "success"); setWebhookName(""); setWebhookAvatar(""); } else showToast(r?.msg || "Error", "error");
+                }} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#5865F2] text-white text-sm font-semibold hover:bg-[#4752c4]"><Save size={14} /> Crear Webhook</button>
+              </div>
+            </div>
+          )}
+          {activeTab === "slowmode" && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-black text-white">🕐 Slowmode</h2>
+              <div className="glass rounded-2xl p-6 space-y-4">
+                <h3 className="font-bold text-white">Configurar Slowmode</h3>
+                <SelectInput value={slowmodeChannel || ""} onChange={setSlowmodeChannel} options={channels} label="Canal" />
+                <SelectInput value={String(slowmodeDuration)} onChange={(v) => setSlowmodeDuration(parseInt(v))} label="Cooldown" options={[{ value: "0", label: "Desactivar" }, { value: "5", label: "5 segundos" }, { value: "10", label: "10 segundos" }, { value: "30", label: "30 segundos" }, { value: "60", label: "1 minuto" }, { value: "120", label: "2 minutos" }, { value: "300", label: "5 minutos" }, { value: "600", label: "10 minutos" }, { value: "1800", label: "30 minutos" }, { value: "3600", label: "1 hora" }]} />
+                <button onClick={async () => {
+                  if (!slowmodeChannel) return showToast("Selecciona un canal", "error");
+                  const r = await api(`public/guild/${selectedServer}/slowmode`, { method: "POST", body: JSON.stringify({ channelId: slowmodeChannel, duration: slowmodeDuration }) });
+                  if (r?.ok) showToast(`Slowmode ${slowmodeDuration > 0 ? `configurado a ${slowmodeDuration}s` : "desactivado"}`, "success"); else showToast(r?.msg || "Error", "error");
+                }} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#5865F2] text-white text-sm font-semibold hover:bg-[#4752c4]"><Save size={14} /> Aplicar</button>
+              </div>
+            </div>
+          )}
+          {activeTab === "roles" && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-black text-white">👥 Gestión de Roles</h2>
+              <div className="glass rounded-2xl p-6">
+                <h3 className="font-bold text-white mb-3">Roles del Servidor ({roles.length})</h3>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {roles.map((r: any) => (
+                    <div key={r.id} className="flex items-center gap-3 p-2 rounded-xl bg-white/[0.02]">
+                      <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: r.color || "#99aab5" }} />
+                      <span className="text-white text-sm flex-1">{r.name}</span>
+                      <span className="text-xs text-gray-500">{r.id}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          {activeTab === "channels" && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-black text-white">📢 Canales</h2>
+              <div className="glass rounded-2xl p-6">
+                <h3 className="font-bold text-white mb-3">Canales del Servidor ({channels.length})</h3>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {channels.map((c: any) => (
+                    <div key={c.id} className="flex items-center gap-3 p-2 rounded-xl bg-white/[0.02]">
+                      <Hash size={14} className="text-gray-500 flex-shrink-0" />
+                      <span className="text-white text-sm flex-1">{c.name}</span>
+                      <span className="text-xs text-gray-500">{c.type === 0 ? "Texto" : c.type === 2 ? "Voz" : c.type === 4 ? "Categoría" : "Otro"}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
           {activeTab === "hierarchy" && (
             <div className="space-y-6">
               <h2 className="text-2xl font-black text-white">{isOwner ? "Jerarquía del Staff" : "Mi Jerarquía"}</h2>
@@ -512,31 +622,104 @@ export default function BotDashboardPage() {
           )}
           {activeTab === "botmessages" && isOwner && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-black text-white">Mensajes del Bot</h2>
-              <div className="glass rounded-2xl p-6 space-y-4">
-                <h3 className="font-bold text-white">Enviar Mensaje como Bot</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <SelectInput value={botMsgTarget} onChange={setBotMsgTarget} label="Destinatario" options={[
-                    { value: "all", label: "📢 Todos los servidores" },
-                    ...guilds.map((g: any) => ({ value: g.id, label: `🏠 ${g.name}` })),
-                  ]} />
-                  <input value={botMsgInput} onChange={(e) => setBotMsgInput(e.target.value)} placeholder="Mensaje para enviar..." className="px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm" />
+              <div>
+                <h2 className="text-xl font-black text-white mb-1">📨 Anuncios y Mensajes</h2>
+                <p className="text-sm text-gray-500">Envía mensajes, anuncios y embeds a canales del servidor.</p>
+              </div>
+
+              {/* ── Preview en tiempo real ── */}
+              {(botMsgInput || botMsgEmbedTitle) && (
+                <div className="glass rounded-2xl p-4">
+                  <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">👁️ Vista Previa</h4>
+                  <div className="rounded-xl overflow-hidden" style={{ background: "#2b2d31" }}>
+                    <div className="p-1" style={{ background: botMsgEmbedColor || "#5865F2" }} />
+                    <div className="p-4">
+                      {botMsgEmbedTitle && <div className="font-bold text-white mb-1">{botMsgEmbedTitle}</div>}
+                      <div className="text-sm text-gray-300 whitespace-pre-wrap">{botMsgInput}</div>
+                      {botMsgMention && <div className="text-xs text-blue-400 mt-2">@everyone</div>}
+                      {botMsgMentionHere && <div className="text-xs text-blue-400 mt-2">@here</div>}
+                    </div>
+                  </div>
                 </div>
+              )}
+
+              <div className="glass rounded-2xl p-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <SelectInput value={selectedServer || ""} onChange={(v) => { setBotMsgChannel(""); loadGuild(v); }} label="Servidor" options={guilds.map((g: any) => ({ value: g.id, label: `🏠 ${g.name}` }))} />
+                  <SelectInput value={botMsgChannel || ""} onChange={setBotMsgChannel} label="Canal destino" options={[{ value: "", label: "Seleccionar canal..." }, ...channels.map((c: any) => ({ value: c.id, label: `# ${c.name}` }))]} />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <TextInput value={botMsgEmbedTitle} onChange={(v) => setBotMsgEmbedTitle(v)} label="Título del Embed" placeholder="📢 Anuncio Importante" />
+                  <TextInput value={botMsgEmbedColor} onChange={(v) => setBotMsgEmbedColor(v)} label="Color del Embed" placeholder="#5865F2" />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <TextInput value={botMsgEmbedAuthor} onChange={(v) => setBotMsgEmbedAuthor(v)} label="Autor del Embed" placeholder="Nombre del autor" />
+                  <TextInput value={botMsgEmbedFooter} onChange={(v) => setBotMsgEmbedFooter(v)} label="Footer del Embed" placeholder="Powered by System 777" />
+                </div>
+
+                <TextInput value={botMsgEmbedImage} onChange={(v) => setBotMsgEmbedImage(v)} label="Imagen del Embed (URL)" placeholder="https://..." />
+
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1.5">Mensaje</label>
+                  <textarea value={botMsgInput} onChange={(e) => setBotMsgInput(e.target.value)} placeholder="Escribe tu mensaje aquí...&#10;&#10;Variables: {user}, {server}, {membercount}&#10;Menciones: @rol, @everyone, @here&#10;Emojis: <:nombre:id> o <a:nombre:id>" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50 h-32 resize-none font-mono text-xs leading-relaxed" />
+                </div>
+
+                {/* ── Menciones de roles ── */}
+                <div className="border border-white/10 rounded-xl p-4 space-y-3">
+                  <h4 className="text-sm font-bold text-white">🏷️ Menciones de Roles</h4>
+                  <p className="text-xs text-gray-500">Selecciona los roles a mencionar en el mensaje.</p>
+                  <div className="flex flex-wrap gap-2">
+                    {roles.map((r: any) => (
+                      <button key={r.id} onClick={() => {
+                        const mention = `<@&${r.id}>`;
+                        if (botMsgInput.includes(mention)) {
+                          setBotMsgInput(botMsgInput.replace(mention, '').trim());
+                        } else {
+                          setBotMsgInput(botMsgInput + ' ' + mention);
+                        }
+                      }} className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${botMsgInput.includes(`<@&${r.id}>`) ? "bg-[#5865F2] text-white shadow-lg shadow-[#5865F2]/30" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}>
+                        @ {r.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── Menciones globales ── */}
+                <div className="flex gap-3">
+                  <Toggle checked={!!botMsgMention} onChange={(v) => setBotMsgMention(v)} label="@everyone" />
+                  <Toggle checked={!!botMsgMentionHere} onChange={(v) => setBotMsgMentionHere(v)} label="@here" />
+                </div>
+
                 <div className="flex gap-2">
-                  <button onClick={async () => { if (!botMsgInput) return; const r = await api("broadcast", { method: "POST", body: JSON.stringify({ message: botMsgInput, target: botMsgTarget }) }); if (r?.ok !== false) { showToast("Mensaje enviado", "success"); setBotMsgInput(""); setBotMessages([{ text: botMsgInput, target: botMsgTarget, ts: Date.now() }, ...botMessages]); } else showToast(r?.msg || "Error", "error"); }} className="px-4 py-2 rounded-xl bg-[#5865F2] text-white text-sm font-bold hover:bg-[#4752c4]"><Send size={14} className="inline mr-1" /> Enviar</button>
+                  <button onClick={async () => {
+                    if (!botMsgInput && !botMsgEmbedTitle) return showToast("Escribe un mensaje o título", "error");
+                    if (!botMsgChannel) return showToast("Selecciona un canal", "error");
+                    const body: any = { message: botMsgInput, channelId: botMsgChannel };
+                    if (botMsgEmbedTitle || botMsgEmbedColor) {
+                      body.embed = { title: botMsgEmbedTitle || undefined, color: botMsgEmbedColor || undefined, description: botMsgInput, author: botMsgEmbedAuthor || undefined, footer: botMsgEmbedFooter || undefined, image: botMsgEmbedImage || undefined };
+                    }
+                    if (botMsgMention) body.mention = "@everyone";
+                    if (botMsgMentionHere) body.mention = "@here";
+                    const r = await api(`public/guild/${selectedServer}/broadcast`, { method: "POST", body: JSON.stringify(body) });
+                    if (r?.ok) { showToast(r.msg || "✅ Mensaje enviado", "success"); setBotMsgInput(""); setBotMsgEmbedTitle(""); setBotMsgEmbedAuthor(""); setBotMsgEmbedFooter(""); setBotMsgEmbedImage(""); setBotMessages([{ text: botMsgInput, target: botMsgChannel, ts: Date.now() }, ...botMessages]); } else showToast(r?.msg || "Error", "error");
+                  }} className="px-6 py-2.5 rounded-xl bg-[#5865F2] text-white text-sm font-bold hover:bg-[#4752c4]"><Send size={14} className="inline mr-1" /> Enviar Mensaje</button>
                 </div>
               </div>
+
+              {/* ── Historial ── */}
               <div className="glass rounded-2xl p-6">
-                <h3 className="font-bold text-white mb-4">Historial de Mensajes</h3>
+                <h3 className="font-bold text-white mb-4">📋 Historial de Envíos</h3>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {botMessages.map((m: any, i: number) => (
                     <div key={i} className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
                       <div className="flex items-center gap-2 mb-1">
-                        <Bot size={14} className="text-[#5865F2]" />
-                        <span className="text-xs text-gray-500">{m.target === "all" ? "Todos los servidores" : guilds.find((g: any) => g.id === m.target)?.name || m.target}</span>
+                        <Send size={12} className="text-[#5865F2]" />
+                        <span className="text-xs text-gray-500">Canal: {channels.find((c: any) => c.id === m.target)?.name || m.target}</span>
                         <span className="text-xs text-gray-600">{new Date(m.ts).toLocaleTimeString()}</span>
                       </div>
-                      <p className="text-sm text-gray-300">{m.text}</p>
+                      <p className="text-sm text-gray-300 truncate">{m.text}</p>
                     </div>
                   ))}
                   {botMessages.length === 0 && <p className="text-gray-500 text-sm text-center py-4">Sin mensajes enviados aún</p>}
@@ -588,92 +771,553 @@ function ModulesSection({ config, saveConfig }: { config: any; saveConfig: any }
   );
 }
 
-function WelcomeSection({ config, channels, saveConfig }: { config: any; channels: any[]; saveConfig: any }) {
-  const [welcome, setWelcome] = useState(config?.welcome || { enabled: false, channel: "", title: "", message: "", color: "#5865F2", image: "" });
-  const [goodbye, setGoodbye] = useState(config?.goodbye || { enabled: false, channel: "", message: "" });
+function WelcomeSection({ config, channels, roles, saveConfig, guildId }: { config: any; channels: any[]; roles: any[]; saveConfig: any; guildId: string }) {
+  const w = config?.welcome || {};
+  const g = config?.goodbye || {};
+  const [welcome, setWelcome] = useState({
+    enabled: w.enabled || false, channel: w.channel || "", title: w.title || "Introducción",
+    message: w.message || "¡Hey! {user} Bienvenido/a a la comunidad oficial de **{server}**. 👋\n\n👉 Te recomendamos visitar los canales indicados a continuación para conocer las normas y mantenerte al tanto de toda la información del servidor.\n\n¡Esperamos que disfrutes tu estancia y formes parte de esta gran comunidad! 🥳🎉",
+    color: w.color || "#5865F2", image: w.image || "", thumbnail: w.thumbnail || "",
+    footer: w.footer || "", mentionRole: w.mentionRole || "", channelLinks: w.channelLinks || [],
+    dmMessage: w.dmMessage || "", dmEnabled: w.dmEnabled !== false,
+    autoRole: Array.isArray(w.autoRole) ? w.autoRole : (w.autoRole ? [w.autoRole] : []),
+  });
+  const [goodbye, setGoodbye] = useState({
+    enabled: g.enabled || false, channel: g.channel || "",
+    title: g.title || "¡Adiós!", message: g.message || "👋 **{user}** ha abandonado el servidor.\n¡Esperamos verte de nuevo!",
+    color: g.color || "#ED4245", image: g.image || "",
+  });
+  const [newChannelLink, setNewChannelLink] = useState({ channelId: "", label: "", emoji: "📢" });
+
+  const addChannelLink = () => {
+    if (!newChannelLink.channelId) return;
+    setWelcome({ ...welcome, channelLinks: [...welcome.channelLinks, { ...newChannelLink }] });
+    setNewChannelLink({ channelId: "", label: "", emoji: "📢" });
+  };
+  const removeChannelLink = (idx: number) => {
+    setWelcome({ ...welcome, channelLinks: welcome.channelLinks.filter((_: any, i: number) => i !== idx) });
+  };
+
+  const previewMessage = (msg: string) => {
+    return msg.replace(/\{user\}/g, '@Usuario').replace(/\{server\}/g, 'Mi Servidor').replace(/\{membercount\}/g, '150').replace(/\{servericon\}/g, '').replace(/\*\*(.*?)\*\*/g, '$1');
+  };
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-8">
       <div>
         <h2 className="text-xl font-black text-white mb-1">👋 Bienvenida / Despedida</h2>
-        <p className="text-sm text-gray-500">Mensajes automáticos cuando alguien entra o sale.</p>
+        <p className="text-sm text-gray-500">Mensajes automáticos estilo profesional con embeds, canales y más.</p>
       </div>
+
+      {/* ── WELCOME ── */}
       <div className="glass rounded-2xl p-6 space-y-4">
-        <h3 className="font-bold text-white">Bienvenida</h3>
-        <Toggle checked={!!welcome.enabled} onChange={(v) => setWelcome({ ...welcome, enabled: v })} label="Activar bienvenida" />
-        <SelectInput value={welcome.channel || ""} onChange={(v) => setWelcome({ ...welcome, channel: v })} options={channels} label="Canal" />
-        <TextInput value={welcome.title || ""} onChange={(v) => setWelcome({ ...welcome, title: v })} label="Título del embed" placeholder="¡Bienvenido!" />
-        <div>
-          <label className="block text-xs text-gray-500 mb-1.5">Mensaje</label>
-          <textarea value={welcome.message || ""} onChange={(e) => setWelcome({ ...welcome, message: e.target.value })} placeholder="¡Hola {user}! Bienvenido a {server}!" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50 h-24 resize-none" />
-          <p className="text-xs text-gray-600 mt-1">Variables: {'{user}'} {'{server}'} {'{membercount}'}</p>
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-white">🎉 Bienvenida</h3>
+          <Toggle checked={!!welcome.enabled} onChange={(v) => setWelcome({ ...welcome, enabled: v })} label="" />
         </div>
-        <TextInput value={welcome.color || ""} onChange={(v) => setWelcome({ ...welcome, color: v })} label="Color (hex)" placeholder="#5865F2" />
-        <TextInput value={welcome.image || ""} onChange={(v) => setWelcome({ ...welcome, image: v })} label="Imagen URL (opcional)" placeholder="https://..." />
-        <button onClick={() => saveConfig(`guild/${config?.id || ""}/welcome`, welcome)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#5865F2] text-white text-sm font-semibold hover:bg-[#4752c4]"><Save size={14} /> Guardar Bienvenida</button>
+        {welcome.enabled && (
+          <>
+            <SelectInput value={welcome.channel || ""} onChange={(v) => setWelcome({ ...welcome, channel: v })} options={channels} label="Canal de bienvenida" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <TextInput value={welcome.title || ""} onChange={(v) => setWelcome({ ...welcome, title: v })} label="Título del Embed" placeholder="Introducción" />
+              <TextInput value={welcome.color || ""} onChange={(v) => setWelcome({ ...welcome, color: v })} label="Color del Embed" placeholder="#5865F2" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1.5">Mensaje de bienvenida</label>
+              <textarea value={welcome.message || ""} onChange={(e) => setWelcome({ ...welcome, message: e.target.value })} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50 h-32 resize-none font-mono text-xs leading-relaxed" />
+              <p className="text-xs text-gray-600 mt-1">Variables: {'{user}'} {'{server}'} {'{membercount}'} {'{servericon}'} | Markdown: **negrita** *cursiva*</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <TextInput value={welcome.image || ""} onChange={(v) => setWelcome({ ...welcome, image: v })} label="Imagen Banner (abajo del embed)" placeholder="https://..." />
+              <TextInput value={welcome.thumbnail || ""} onChange={(v) => setWelcome({ ...welcome, thumbnail: v })} label="Thumbnail (esquina derecha)" placeholder="https://..." />
+            </div>
+            <TextInput value={welcome.footer || ""} onChange={(v) => setWelcome({ ...welcome, footer: v })} label="Footer del Embed" placeholder="Powered by System 777" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <SelectInput value={welcome.mentionRole || ""} onChange={(v) => setWelcome({ ...welcome, mentionRole: v })} options={[{ value: "", label: "Sin mención" }, ...roles]} label="Mencionar rol al entrar" />
+              <div className="border border-white/10 rounded-xl p-4 space-y-3">
+                <h4 className="text-sm font-bold text-white">🎭 Auto-roles al entrar</h4>
+                <p className="text-xs text-gray-500">Selecciona uno o más roles que se asignarán automáticamente al unirse.</p>
+                <div className="flex flex-wrap gap-2">
+                  {roles.map((r: any) => {
+                    const isSelected = (welcome.autoRole || []).includes(r.id);
+                    return (
+                      <button key={r.id} onClick={() => {
+                        const current = welcome.autoRole || [];
+                        const updated = isSelected ? current.filter((id: string) => id !== r.id) : [...current, r.id];
+                        setWelcome({ ...welcome, autoRole: updated });
+                      }} className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${isSelected ? "bg-[#57F287] text-white shadow-lg shadow-[#57F287]/30" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}>
+                        {isSelected ? "✓ " : ""}@ {r.name}
+                      </button>
+                    );
+                  })}
+                </div>
+                {(welcome.autoRole || []).length > 0 && (
+                  <div className="text-xs text-[#57F287]">
+                    {(welcome.autoRole || []).length} rol(es) seleccionado(s)
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ── Channel Links ── */}
+            <div className="border border-white/10 rounded-xl p-4 space-y-3">
+              <h4 className="text-sm font-bold text-white">🔗 Enlaces de Canales en el Mensaje</h4>
+              <p className="text-xs text-gray-500">Agrega canales que se mostrarán como botones en el embed de bienvenida.</p>
+              {welcome.channelLinks?.length > 0 && (
+                <div className="space-y-2">
+                  {welcome.channelLinks.map((link: any, idx: number) => (
+                    <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-white/[0.02]">
+                      <span>{link.emoji || "📢"}</span>
+                      <span className="text-white text-sm flex-1">#{channels.find((c: any) => c.id === link.channelId)?.name || link.channelId} · {link.label}</span>
+                      <button onClick={() => removeChannelLink(idx)} className="text-red-400 hover:text-red-300 text-xs">✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                <TextInput value={newChannelLink.emoji} onChange={(v) => setNewChannelLink({ ...newChannelLink, emoji: v })} label="Emoji" placeholder="📢" />
+                <SelectInput value={newChannelLink.channelId} onChange={(v) => setNewChannelLink({ ...newChannelLink, channelId: v })} options={channels} label="Canal" />
+                <TextInput value={newChannelLink.label} onChange={(v) => setNewChannelLink({ ...newChannelLink, label: v })} label="Etiqueta" placeholder="Reglas" />
+                <div className="flex items-end"><button onClick={addChannelLink} className="w-full px-4 py-2.5 rounded-xl bg-[#57F287]/10 text-[#57F287] text-sm font-semibold hover:bg-[#57F287]/20"><Plus size={14} className="inline" /> Agregar</button></div>
+              </div>
+            </div>
+
+            {/* ── DM Welcome ── */}
+            <div className="border border-white/10 rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold text-white">📩 Mensaje DM de Bienvenida</h4>
+                <Toggle checked={!!welcome.dmEnabled} onChange={(v) => setWelcome({ ...welcome, dmEnabled: v })} label="" />
+              </div>
+              {welcome.dmEnabled && (
+                <textarea value={welcome.dmMessage || ""} onChange={(e) => setWelcome({ ...welcome, dmMessage: e.target.value })} placeholder="¡Hola {user}! Bienvenido a {server}..." className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none h-20 resize-none" />
+              )}
+            </div>
+
+            {/* ── Preview ── */}
+            <div className="border border-white/10 rounded-xl p-4 space-y-2">
+              <h4 className="text-sm font-bold text-white">👁️ Vista Previa</h4>
+              <div className="rounded-xl overflow-hidden" style={{ background: "#2b2d31" }}>
+                <div className="p-1 rounded-t-xl" style={{ background: welcome.color || "#5865F2" }} />
+                <div className="p-4">
+                  {welcome.title && <div className="font-bold text-white mb-2">{welcome.title}</div>}
+                  <div className="text-sm text-gray-300 whitespace-pre-wrap">{previewMessage(welcome.message || "")}</div>
+                  {welcome.channelLinks?.length > 0 && (
+                    <div className="mt-3 space-y-1">
+                      {welcome.channelLinks.map((link: any, idx: number) => (
+                        <div key={idx} className="flex items-center gap-2 text-sm">
+                          <span>{link.emoji}</span>
+                          <span className="text-[#00aff4]">#canal</span>
+                          <span className="text-gray-400">·</span>
+                          <span className="text-white">{link.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {welcome.footer && <div className="text-xs text-gray-500 mt-3 pt-2 border-t border-white/5">{welcome.footer}</div>}
+                </div>
+              </div>
+            </div>
+
+            <button onClick={() => saveConfig(`guild/${guildId}/welcome`, welcome)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#5865F2] text-white text-sm font-semibold hover:bg-[#4752c4]"><Save size={14} /> Guardar Bienvenida</button>
+          </>
+        )}
       </div>
+
+      {/* ── GOODBYE ── */}
       <div className="glass rounded-2xl p-6 space-y-4">
-        <h3 className="font-bold text-white">Despedida</h3>
-        <Toggle checked={!!goodbye.enabled} onChange={(v) => setGoodbye({ ...goodbye, enabled: v })} label="Activar despedida" />
-        <SelectInput value={goodbye.channel || ""} onChange={(v) => setGoodbye({ ...goodbye, channel: v })} options={channels} label="Canal" />
-        <div>
-          <label className="block text-xs text-gray-500 mb-1.5">Mensaje</label>
-          <textarea value={goodbye.message || ""} onChange={(e) => setGoodbye({ ...goodbye, message: e.target.value })} placeholder="¡Adiós {user}!" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50 h-24 resize-none" />
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-white">👋 Despedida</h3>
+          <Toggle checked={!!goodbye.enabled} onChange={(v) => setGoodbye({ ...goodbye, enabled: v })} label="" />
         </div>
-        <button onClick={() => saveConfig(`guild/${config?.id || ""}/goodbye`, goodbye)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#5865F2] text-white text-sm font-semibold hover:bg-[#4752c4]"><Save size={14} /> Guardar Despedida</button>
+        {goodbye.enabled && (
+          <>
+            <SelectInput value={goodbye.channel || ""} onChange={(v) => setGoodbye({ ...goodbye, channel: v })} options={channels} label="Canal de despedida" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <TextInput value={goodbye.title || ""} onChange={(v) => setGoodbye({ ...goodbye, title: v })} label="Título" placeholder="¡Adiós!" />
+              <TextInput value={goodbye.color || ""} onChange={(v) => setGoodbye({ ...goodbye, color: v })} label="Color" placeholder="#ED4245" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1.5">Mensaje de despedida</label>
+              <textarea value={goodbye.message || ""} onChange={(e) => setGoodbye({ ...goodbye, message: e.target.value })} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none h-20 resize-none" />
+            </div>
+            <TextInput value={goodbye.image || ""} onChange={(v) => setGoodbye({ ...goodbye, image: v })} label="Imagen (opcional)" placeholder="https://..." />
+            <button onClick={() => saveConfig(`guild/${guildId}/goodbye`, goodbye)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#5865F2] text-white text-sm font-semibold hover:bg-[#4752c4]"><Save size={14} /> Guardar Despedida</button>
+          </>
+        )}
       </div>
     </motion.div>
   );
 }
 
 function TicketsSection({ config, channels, roles, categories, saveConfig, api, guildId, showToast }: any) {
-  const tc = config?.tickets || {};
-  const [ticketCfg, setTicketCfg] = useState({
-    channelId: tc.panelChannel || "",
-    supportRoleId: tc.supportRole || "",
-    logChannelId: tc.logChannel || "",
-    categoryId: tc.ticketCategory || "",
-    title: tc.panelTitle || "Soporte",
-    description: tc.panelDescription || tc.panelDesc || "Selecciona el tipo de ticket.",
-    color: tc.panelColor || "#5865F2",
-    prefix: tc.prefix || "ticket",
-    maxTickets: tc.maxPerUser || 3,
-    pingRole: tc.pingRole || false,
-    dmTranscript: tc.dmTranscript !== false,
-    welcomeMsg: tc.welcomeMessage || "",
-  });
+  const tc = config?.tickets || config?.ticketConfig || {};
+  const [activeTicketTab, setActiveTicketTab] = useState("panel");
   const [ticketCategories, setTicketCategories] = useState<any[]>(tc.categories || []);
-  const publishPanel = async () => {
-    const res = await api(`public/guild/${guildId}/tickets/panel`, { method: "POST" });
-    if (res?.ok) { showToast(res.msg || "Panel publicado", "success"); } else { showToast(res?.msg || "Error al publicar", "error"); }
+  const [ticketStats, setTicketStats] = useState<any>(null);
+  const [editingCat, setEditingCat] = useState<any>(null);
+  const [showCatForm, setShowCatForm] = useState(false);
+  const [catForm, setCatForm] = useState({
+    id: "", label: "", emoji: "🎫", description: "", color: "#5865F2", priority: "low", status: "active",
+    staffRole: "", allowedRoles: [] as string[], blockedRoles: [] as string[],
+    channelCategoryId: "", logChannel: "", transcriptChannel: "", notificationChannel: "",
+    autoMessage: "", businessHours: "", estimatedResponseTime: "", welcomeMsg: "", style: undefined as number | undefined,
+    sortOrder: 0,
+  });
+  const [ticketCfg, setTicketCfg] = useState({
+    panelChannel: tc.panelChannel || "", supportRole: tc.supportRole || "", logChannel: tc.logChannel || "",
+    ticketCategory: tc.ticketCategory || "", panelTitle: tc.panelTitle || "Soporte",
+    panelDesc: tc.panelDesc || tc.panelDescription || "Selecciona el tipo de ticket.", panelColor: tc.panelColor || "#5865F2",
+    panelImage: tc.panelImage || "",
+    channelPrefix: tc.channelPrefix || "ticket", maxPerUser: tc.maxPerUser || 3, ping: tc.ping !== false,
+    dmTranscript: tc.dmTranscript !== false, welcomeMessage: tc.welcomeMessage || "",
+    ratingEnabled: tc.ratingEnabled !== false, ratingRequired: tc.ratingRequired === true,
+    ratingLogChannel: tc.ratingLogChannel || "", ratingMessage: tc.ratingMessage || "",
+    panelMessageId: tc.panelMessageId || "",
+    autoCloseEnabled: tc.autoCloseEnabled || false,
+    autoCloseMinutes: tc.autoCloseMinutes || 1440,
+    autoCloseMessage: tc.autoCloseMessage || "Este ticket se cerrará por inactividad.",
+  });
+
+  const [formFields, setFormFields] = useState<Record<string, {label: string; type: string; required: boolean}[]>>(tc.formFields || {});
+  const [selectedFormCat, setSelectedFormCat] = useState("");
+  const [newField, setNewField] = useState({label: "", type: "short_text", required: false});
+
+  const [ticketLogs, setTicketLogs] = useState<any[]>([]);
+  const [logsFilter, setLogsFilter] = useState("all");
+  const [logsPage, setLogsPage] = useState(1);
+  const [logsAutoRefresh, setLogsAutoRefresh] = useState(false);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const LOGS_PER_PAGE = 15;
+
+  useEffect(() => {
+    if (activeTicketTab === "stats") {
+      api(`public/ticket/${guildId}/stats`).then((s: any) => { if (s?.stats) setTicketStats(s.stats); }).catch(() => {});
+    }
+    if (activeTicketTab === "logs") {
+      loadLogs();
+    }
+  }, [activeTicketTab, api, guildId]);
+
+  useEffect(() => {
+    if (!logsAutoRefresh || activeTicketTab !== "logs") return;
+    const i = setInterval(loadLogs, 5000);
+    return () => clearInterval(i);
+  }, [logsAutoRefresh, activeTicketTab]);
+
+  const loadLogs = async () => {
+    setLogsLoading(true);
+    try {
+      const res = await api(`guild/${guildId}/tickets/logs`);
+      if (res?.logs) setTicketLogs(res.logs);
+    } catch {}
+    setLogsLoading(false);
   };
+
+  const saveTicketConfig = () => {
+    saveConfig(`ticket/${guildId}/config`, { ...ticketCfg, categories: ticketCategories, formFields });
+  };
+
+  const addCategory = () => {
+    const id = `cat_${Date.now()}`;
+    const newCat = { ...catForm, id, order: ticketCategories.length };
+    const updated = [...ticketCategories, newCat];
+    setTicketCategories(updated);
+    setCatForm({ id: "", label: "", emoji: "🎫", description: "", color: "#5865F2", priority: "low", status: "active", staffRole: "", allowedRoles: [], blockedRoles: [], channelCategoryId: "", logChannel: "", transcriptChannel: "", notificationChannel: "", autoMessage: "", businessHours: "", estimatedResponseTime: "", welcomeMsg: "", style: undefined, sortOrder: 0 });
+    setShowCatForm(false);
+    showToast("Categoría agregada", "success");
+  };
+
+  const updateCategory = () => {
+    if (!editingCat) return;
+    const updated = ticketCategories.map((c: any) => c.id === editingCat.id ? { ...c, ...catForm } : c);
+    setTicketCategories(updated);
+    setEditingCat(null);
+    setShowCatForm(false);
+    showToast("Categoría actualizada", "success");
+  };
+
+  const duplicateCategory = (cat: any) => {
+    const newCat = { ...cat, id: `cat_${Date.now()}`, label: `${cat.label} (copia)`, order: ticketCategories.length };
+    setTicketCategories([...ticketCategories, newCat]);
+    showToast("Categoría duplicada", "success");
+  };
+
+  const deleteCategory = (catId: string) => {
+    setTicketCategories(ticketCategories.filter((c: any) => c.id !== catId));
+    showToast("Categoría eliminada", "success");
+  };
+
+  const startEditCat = (cat: any) => {
+    setEditingCat(cat);
+    setCatForm({ ...cat });
+    setShowCatForm(true);
+  };
+
+  const tabs = [
+    { id: "panel", label: "Panel", icon: Layout },
+    { id: "categories", label: "Categorías", icon: FolderOpen },
+    { id: "forms", label: "Formularios", icon: FileText },
+    { id: "behavior", label: "Comportamiento", icon: Settings },
+    { id: "rating", label: "Calificación", icon: Star },
+    { id: "logs", label: "Logs", icon: ScrollText },
+    { id: "stats", label: "Estadísticas", icon: BarChart3 },
+  ];
+
+  const colorSwatches = ["#5865F2", "#7C3AED", "#EB459E", "#57F287", "#FEE75C", "#ED4245", "#FF6B35", "#00B4D8"];
+  const priorityColors: Record<string, string> = { low: "bg-green-500/20 text-green-400", medium: "bg-yellow-500/20 text-yellow-400", high: "bg-red-500/20 text-red-400", urgent: "bg-red-600/20 text-red-300" };
+  const filteredLogs = logsFilter === "all" ? ticketLogs : ticketLogs.filter((l: any) => (l.action || l.type || "").toLowerCase().includes(logsFilter.toLowerCase()));
+  const paginatedLogs = filteredLogs.slice((logsPage - 1) * LOGS_PER_PAGE, logsPage * LOGS_PER_PAGE);
+  const totalPages = Math.ceil(filteredLogs.length / LOGS_PER_PAGE);
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-black text-white mb-1">🎫 Tickets</h2>
-        <p className="text-sm text-gray-500">Configura el sistema de tickets de soporte.</p>
+      <div className="rounded-2xl p-6" style={{ background: "linear-gradient(135deg, #5865F220, #7C3AED20)", border: "1px solid rgba(88,101,242,0.2)" }}>
+        <h2 className="text-xl font-black text-white mb-1">🎫 Sistema de Tickets</h2>
+        <p className="text-sm text-gray-400">Configura el panel, categorías, formularios y comportamiento de tickets.</p>
       </div>
-      <div className="glass rounded-2xl p-6 space-y-4">
-        <h3 className="font-bold text-white">Configuración del Panel</h3>
-        <SelectInput value={ticketCfg.channelId} onChange={(v) => setTicketCfg({ ...ticketCfg, channelId: v })} options={channels} label="Canal del panel" />
-        <SelectInput value={ticketCfg.supportRoleId} onChange={(v) => setTicketCfg({ ...ticketCfg, supportRoleId: v })} options={roles} label="Rol de Soporte" />
-        <SelectInput value={ticketCfg.logChannelId} onChange={(v) => setTicketCfg({ ...ticketCfg, logChannelId: v })} options={channels} label="Canal de Logs" />
-        <SelectInput value={ticketCfg.categoryId} onChange={(v) => setTicketCfg({ ...ticketCfg, categoryId: v })} options={categories} label="Categoría Discord" />
-        <TextInput value={ticketCfg.title} onChange={(v) => setTicketCfg({ ...ticketCfg, title: v })} label="Título del embed" />
-        <div>
-          <label className="block text-xs text-gray-500 mb-1.5">Descripción</label>
-          <textarea value={ticketCfg.description} onChange={(e) => setTicketCfg({ ...ticketCfg, description: e.target.value })} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none h-20 resize-none" />
-        </div>
-        <TextInput value={ticketCfg.color} onChange={(v) => setTicketCfg({ ...ticketCfg, color: v })} label="Color (hex)" />
-        <TextInput value={ticketCfg.prefix} onChange={(v) => setTicketCfg({ ...ticketCfg, prefix: v })} label="Prefijo canal" />
-        <NumberInput value={ticketCfg.maxTickets} onChange={(v) => setTicketCfg({ ...ticketCfg, maxTickets: v })} label="Máx tickets por usuario" />
-        <Toggle checked={!!ticketCfg.pingRole} onChange={(v) => setTicketCfg({ ...ticketCfg, pingRole: v })} label="Ping al rol de soporte" />
-        <Toggle checked={!!ticketCfg.dmTranscript} onChange={(v) => setTicketCfg({ ...ticketCfg, dmTranscript: v })} label="DM transcript al cerrar" />
-        <TextInput value={ticketCfg.welcomeMsg} onChange={(v) => setTicketCfg({ ...ticketCfg, welcomeMsg: v })} label="Mensaje al abrir ticket" placeholder="Hola {user}, ¿en qué puedo ayudarte?" />
-        <div className="flex gap-2">
-          <button onClick={() => saveConfig(`guild/${guildId}/tickets/setup`, { ...ticketCfg, categories: ticketCategories })} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#5865F2] text-white text-sm font-semibold hover:bg-[#4752c4]"><Save size={14} /> Guardar</button>
-          <button onClick={publishPanel} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#57F287]/10 text-[#57F287] text-sm font-semibold hover:bg-[#57F287]/20"><Send size={14} /> Publicar en Discord</button>
-        </div>
+      <div className="flex gap-2 overflow-x-auto pb-2">
+        {tabs.map((t) => (
+          <button key={t.id} onClick={() => setActiveTicketTab(t.id)} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${activeTicketTab === t.id ? "bg-[#5865F2] text-white shadow-lg shadow-[#5865F2]/20" : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"}`}>
+            <t.icon size={14} />
+            {t.label}
+          </button>
+        ))}
       </div>
+
+      {/* ── PANEL TAB ── */}
+      {activeTicketTab === "panel" && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div className="glass rounded-2xl p-6 space-y-4">
+              <h3 className="font-bold text-white flex items-center gap-2"><Hash size={16} className="text-[#5865F2]" /> Canales y Roles</h3>
+              <SelectInput value={ticketCfg.panelChannel} onChange={(v: string) => setTicketCfg({ ...ticketCfg, panelChannel: v })} options={channels} label="Canal del panel" />
+              <SelectInput value={ticketCfg.supportRole} onChange={(v: string) => setTicketCfg({ ...ticketCfg, supportRole: v })} options={roles} label="Rol de Soporte" />
+              <SelectInput value={ticketCfg.logChannel} onChange={(v: string) => setTicketCfg({ ...ticketCfg, logChannel: v })} options={channels} label="Canal de Logs" />
+              <SelectInput value={ticketCfg.ticketCategory} onChange={(v: string) => setTicketCfg({ ...ticketCfg, ticketCategory: v })} options={categories} label="Categoría Discord" />
+            </div>
+            <div className="glass rounded-2xl p-6 space-y-4">
+              <h3 className="font-bold text-white flex items-center gap-2"><MessageSquare size={16} className="text-[#7C3AED]" /> Apariencia del Panel</h3>
+              <TextInput value={ticketCfg.panelTitle} onChange={(v: string) => setTicketCfg({ ...ticketCfg, panelTitle: v })} label="Título del embed" placeholder="Soporte" />
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs text-gray-500">Descripción</label>
+                  <span className="text-xs text-gray-600">{ticketCfg.panelDesc.length}/2000</span>
+                </div>
+                <textarea value={ticketCfg.panelDesc} onChange={(e) => setTicketCfg({ ...ticketCfg, panelDesc: e.target.value })} maxLength={2000} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50 h-24 resize-none" />
+              </div>
+              <TextInput value={ticketCfg.panelImage} onChange={(v: string) => setTicketCfg({ ...ticketCfg, panelImage: v })} label="URL de imagen (opcional)" placeholder="https://..." />
+              <div>
+                <label className="block text-xs text-gray-500 mb-2">Color del embed</label>
+                <div className="flex items-center gap-3">
+                  <input type="color" value={ticketCfg.panelColor} onChange={(e) => setTicketCfg({ ...ticketCfg, panelColor: e.target.value })} className="w-10 h-10 rounded-lg border border-white/10 cursor-pointer" />
+                  <input type="text" value={ticketCfg.panelColor} onChange={(e) => setTicketCfg({ ...ticketCfg, panelColor: e.target.value })} className="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-mono outline-none focus:border-[#5865F2]/50" />
+                </div>
+                <div className="flex gap-2 mt-2">
+                  {colorSwatches.map((c) => (
+                    <button key={c} onClick={() => setTicketCfg({ ...ticketCfg, panelColor: c })} className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${ticketCfg.panelColor === c ? "border-white scale-110" : "border-transparent"}`} style={{ background: c }} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div className="glass rounded-2xl p-6">
+              <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Eye size={16} className="text-[#7C3AED]" /> Vista Previa</h3>
+              <div className="rounded-xl overflow-hidden" style={{ background: "#2b2d31" }}>
+                <div className="p-1" style={{ background: ticketCfg.panelColor || "#5865F2" }} />
+                <div className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: (ticketCfg.panelColor || "#5865F2") + "30" }}>
+                      <Ticket size={20} style={{ color: ticketCfg.panelColor || "#5865F2" }} />
+                    </div>
+                    <div className="flex-1">
+                      {ticketCfg.panelTitle && <div className="font-bold text-white mb-1">{ticketCfg.panelTitle}</div>}
+                      <div className="text-sm text-gray-300 whitespace-pre-wrap">{ticketCfg.panelDesc || "Selecciona el tipo de ticket."}</div>
+                    </div>
+                  </div>
+                  {ticketCfg.panelImage && (
+                    <div className="mt-3 rounded-lg overflow-hidden">
+                      <img src={ticketCfg.panelImage} alt="Preview" className="w-full h-32 object-cover rounded-lg" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                    </div>
+                  )}
+                  {ticketCategories.filter((c: any) => c.status !== "inactive").length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      {ticketCategories.filter((c: any) => c.status !== "inactive").map((cat: any) => (
+                        <div key={cat.id} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
+                          <span>{cat.emoji || "🎫"}</span>
+                          <span className="text-sm text-white">{cat.label}</span>
+                          <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${priorityColors[cat.priority] || priorityColors.low}`}>{cat.priority}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="glass rounded-2xl p-6 space-y-4">
+              <h3 className="font-bold text-white flex items-center gap-2"><Terminal size={16} className="text-[#57F287]" /> Configuración Rápida</h3>
+              <TextInput value={ticketCfg.channelPrefix} onChange={(v: string) => setTicketCfg({ ...ticketCfg, channelPrefix: v })} label="Prefijo del canal" placeholder="ticket" />
+              <NumberInput value={ticketCfg.maxPerUser} onChange={(v: number) => setTicketCfg({ ...ticketCfg, maxPerUser: v })} label="Máximo tickets por usuario" min={1} />
+            </div>
+            <div className="flex gap-3">
+              <button onClick={saveTicketConfig} className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#5865F2] text-white text-sm font-semibold hover:bg-[#4752c4] transition-colors"><Save size={14} /> Guardar</button>
+              <button onClick={async () => { await saveTicketConfig(); const res = await api(`public/guild/${guildId}/tickets/panel`, { method: "POST" }); if (res?.ok) showToast(res.msg || "Panel publicado", "success"); else showToast(res?.msg || "Error", "error"); }} className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#57F287]/10 text-[#57F287] text-sm font-semibold hover:bg-[#57F287]/20 transition-colors"><Send size={14} /> Publicar en Discord</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── CATEGORIES TAB ── */}
+      {activeTicketTab === "categories" && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="font-bold text-white">📂 Categorías ({ticketCategories.length})</h3>
+            <button onClick={() => { setEditingCat(null); setCatForm({ id: "", label: "", emoji: "🎫", description: "", color: "#5865F2", priority: "low", status: "active", staffRole: "", allowedRoles: [], blockedRoles: [], channelCategoryId: "", logChannel: "", transcriptChannel: "", notificationChannel: "", autoMessage: "", businessHours: "", estimatedResponseTime: "", welcomeMsg: "", style: undefined, sortOrder: ticketCategories.length }); setShowCatForm(true); }} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#5865F2] text-white text-sm font-semibold hover:bg-[#4752c4]"><Plus size={14} /> Nueva Categoría</button>
+          </div>
+          {ticketCategories.length === 0 && <div className="glass rounded-2xl p-8 text-center text-gray-500">No hay categorías. Crea una para empezar.</div>}
+          {ticketCategories.map((cat: any, i: number) => (
+            <div key={cat.id} className="glass rounded-2xl p-4 flex items-center gap-4">
+              <span className="text-2xl">{cat.emoji || "🎫"}</span>
+              <div className="flex-1 min-w-0">
+                <div className="font-bold text-white truncate">{cat.label}</div>
+                <div className="text-xs text-gray-500 truncate">{cat.description || "Sin descripción"}</div>
+                <div className="flex gap-2 mt-1">
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${cat.status === "inactive" ? "bg-red-500/20 text-red-400" : "bg-green-500/20 text-green-400"}`}>{cat.status === "inactive" ? "Inactivo" : "Activo"}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-400">{cat.priority || "low"}</span>
+                </div>
+              </div>
+              <div className="flex gap-1">
+                <button onClick={() => startEditCat(cat)} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white"><Settings size={14} /></button>
+                <button onClick={() => duplicateCategory(cat)} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white">📋</button>
+                <button onClick={() => deleteCategory(cat.id)} className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400"><Trash2 size={14} /></button>
+              </div>
+            </div>
+          ))}
+          {showCatForm && (
+            <div className="glass rounded-2xl p-6 space-y-4 border border-[#5865F2]/30">
+              <h3 className="font-bold text-white">{editingCat ? "✏️ Editar Categoría" : "➕ Nueva Categoría"}</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <TextInput value={catForm.label} onChange={(v: string) => setCatForm({ ...catForm, label: v })} label="Nombre" placeholder="Soporte Técnico" />
+                <TextInput value={catForm.emoji} onChange={(v: string) => setCatForm({ ...catForm, emoji: v })} label="Emoji" placeholder="🔧" />
+              </div>
+              <div><label className="block text-xs text-gray-500 mb-1.5">Descripción</label><textarea value={catForm.description} onChange={(e) => setCatForm({ ...catForm, description: e.target.value })} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none h-16 resize-none" /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <TextInput value={catForm.color} onChange={(v: string) => setCatForm({ ...catForm, color: v })} label="Color" />
+                <SelectInput value={catForm.priority} onChange={(v: string) => setCatForm({ ...catForm, priority: v })} options={[{ value: "low", label: "🟢 Baja" }, { value: "medium", label: "🟡 Media" }, { value: "high", label: "🔴 Alta" }, { value: "urgent", label: "🚨 Urgente" }]} label="Prioridad" />
+                <SelectInput value={catForm.status} onChange={(v: string) => setCatForm({ ...catForm, status: v })} options={[{ value: "active", label: "✅ Activo" }, { value: "inactive", label: "❌ Inactivo" }]} label="Estado" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <SelectInput value={catForm.staffRole} onChange={(v: string) => setCatForm({ ...catForm, staffRole: v })} options={roles} label="Rol Staff asignado" />
+                <SelectInput value={catForm.channelCategoryId} onChange={(v: string) => setCatForm({ ...catForm, channelCategoryId: v })} options={categories} label="Categoría Discord" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <SelectInput value={catForm.logChannel} onChange={(v: string) => setCatForm({ ...catForm, logChannel: v })} options={channels} label="Canal de Logs" />
+                <SelectInput value={catForm.transcriptChannel} onChange={(v: string) => setCatForm({ ...catForm, transcriptChannel: v })} options={channels} label="Canal Transcripciones" />
+                <SelectInput value={catForm.notificationChannel} onChange={(v: string) => setCatForm({ ...catForm, notificationChannel: v })} options={channels} label="Canal Notificaciones" />
+              </div>
+              <TextInput value={catForm.autoMessage} onChange={(v: string) => setCatForm({ ...catForm, autoMessage: v })} label="Mensaje automático" placeholder="Mensaje que aparece al abrir ticket" />
+              <TextInput value={catForm.welcomeMsg} onChange={(v: string) => setCatForm({ ...catForm, welcomeMsg: v })} label="Mensaje de bienvenida" placeholder="Bienvenido al soporte técnico" />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <TextInput value={catForm.businessHours} onChange={(v: string) => setCatForm({ ...catForm, businessHours: v })} label="Horario de atención" placeholder="Lun-Vie 9:00-18:00" />
+                <TextInput value={catForm.estimatedResponseTime} onChange={(v: string) => setCatForm({ ...catForm, estimatedResponseTime: v })} label="Tiempo estimado respuesta" placeholder="2-5 minutos" />
+                <NumberInput value={catForm.sortOrder || 0} onChange={(v: number) => setCatForm({ ...catForm, sortOrder: v })} label="Orden" min={0} />
+              </div>
+              <div className="flex gap-2">
+                <button onClick={editingCat ? updateCategory : addCategory} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#5865F2] text-white text-sm font-semibold hover:bg-[#4752c4]"><Save size={14} /> {editingCat ? "Actualizar" : "Crear"}</button>
+                <button onClick={() => { setShowCatForm(false); setEditingCat(null); }} className="px-4 py-2.5 rounded-xl bg-white/5 text-gray-400 text-sm hover:bg-white/10">Cancelar</button>
+              </div>
+            </div>
+          )}
+          <button onClick={saveTicketConfig} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#5865F2] text-white text-sm font-semibold hover:bg-[#4752c4]"><Save size={14} /> Guardar Categorías</button>
+        </div>
+      )}
+
+      {/* ── RATING TAB ── */}
+      {activeTicketTab === "rating" && (
+        <div className="space-y-4">
+          <div className="glass rounded-2xl p-6 space-y-4">
+            <h3 className="font-bold text-white">⭐ Sistema de Valoración</h3>
+            <Toggle checked={!!ticketCfg.ratingEnabled} onChange={(v: boolean) => setTicketCfg({ ...ticketCfg, ratingEnabled: v })} label="Activar sistema de valoración" />
+            <Toggle checked={!!ticketCfg.ratingRequired} onChange={(v: boolean) => setTicketCfg({ ...ticketCfg, ratingRequired: v })} label="Valoración obligatoria antes de cerrar" />
+            <SelectInput value={ticketCfg.ratingLogChannel} onChange={(v: string) => setTicketCfg({ ...ticketCfg, ratingLogChannel: v })} options={channels} label="Canal de valoraciones" />
+            <TextInput value={ticketCfg.ratingMessage} onChange={(v: string) => setTicketCfg({ ...ticketCfg, ratingMessage: v })} label="Mensaje personalizado" placeholder="Antes de cerrar, ¿cómo fue tu experiencia?" />
+            <button onClick={saveTicketConfig} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#5865F2] text-white text-sm font-semibold hover:bg-[#4752c4]"><Save size={14} /> Guardar Configuración</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── STATS TAB ── */}
+      {activeTicketTab === "stats" && (
+        <div className="space-y-4">
+          {ticketStats ? (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: "Promedio General", value: `${(ticketStats.avgRating || 0).toFixed(1)} ⭐`, color: "#FEE75C" },
+                  { label: "Total Valoraciones", value: ticketStats.totalRatings || 0, color: "#5865F2" },
+                  { label: "CSAT", value: `${ticketStats.csat || 0}%`, color: "#57F287" },
+                  { label: "Tiempo Promedio", value: ticketStats.avgDuration ? `${Math.round(ticketStats.avgDuration / 60000)}m` : "N/A", color: "#EB459E" },
+                ].map((s) => (
+                  <div key={s.label} className="glass rounded-2xl p-4 text-center">
+                    <div className="text-2xl font-black" style={{ color: s.color }}>{s.value}</div>
+                    <div className="text-xs text-gray-500 mt-1">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+              {ticketStats.staffRanking?.length > 0 && (
+                <div className="glass rounded-2xl p-6">
+                  <h3 className="font-bold text-white mb-3">👮 Ranking Staff</h3>
+                  <div className="space-y-2">
+                    {ticketStats.staffRanking.slice(0, 10).map((s: any, i: number) => (
+                      <div key={s.id} className="flex items-center gap-3 p-2 rounded-xl bg-white/[0.02]">
+                        <span className="text-lg font-bold text-gray-600 w-6">#{i + 1}</span>
+                        <span className="text-white text-sm flex-1">{s.tag}</span>
+                        <span className="text-yellow-400 text-sm">{s.avg.toFixed(1)} ⭐</span>
+                        <span className="text-gray-500 text-xs">{s.total} tickets</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {ticketStats.categoryRanking?.length > 0 && (
+                <div className="glass rounded-2xl p-6">
+                  <h3 className="font-bold text-white mb-3">📂 Ranking Categorías</h3>
+                  <div className="space-y-2">
+                    {ticketStats.categoryRanking.map((c: any, i: number) => (
+                      <div key={c.id} className="flex items-center gap-3 p-2 rounded-xl bg-white/[0.02]">
+                        <span className="text-lg font-bold text-gray-600 w-6">#{i + 1}</span>
+                        <span className="text-white text-sm flex-1">{c.name}</span>
+                        <span className="text-yellow-400 text-sm">{c.avg.toFixed(1)} ⭐</span>
+                        <span className="text-gray-500 text-xs">{c.total} tickets</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {ticketStats.recentRatings?.length > 0 && (
+                <div className="glass rounded-2xl p-6">
+                  <h3 className="font-bold text-white mb-3">📋 Valoraciones Recientes</h3>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {ticketStats.recentRatings.map((r: any, i: number) => (
+                      <div key={i} className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-yellow-400">{"⭐".repeat(r.stars)}</span>
+                          <span className="text-xs text-gray-500">#{r.ticketNumber}</span>
+                          <span className="text-xs text-gray-600">{r.category}</span>
+                        </div>
+                        {r.comment && <p className="text-xs text-gray-400">{r.comment}</p>}
+                        <div className="text-xs text-gray-600 mt-1">por {r.userTag} → {r.staffTag}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="glass rounded-2xl p-8 text-center text-gray-500">Cargando estadísticas...</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -1388,6 +2032,147 @@ function NotificationsSection({ api, channels, roles, guildId, showToast }: any)
           {history.length === 0 && <p className="text-gray-600 text-sm text-center py-4">Sin notificaciones enviadas aún</p>}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── ACTIVITY LOGS SECTION ──────────────────────────────────────────────────
+function ActivityLogsSection({ api, guildId }: { api: any; guildId: string }) {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [filter, setFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api(`public/guild/${guildId}/logs`).then((r: any) => {
+      if (r?.logs) setLogs(r.logs);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, [api, guildId]);
+
+  const typeColors: Record<string, string> = {
+    moderation: "bg-red-500/20 text-red-400",
+    message: "bg-blue-500/20 text-blue-400",
+    member: "bg-green-500/20 text-green-400",
+    channel: "bg-purple-500/20 text-purple-400",
+    role: "bg-yellow-500/20 text-yellow-400",
+    voice: "bg-cyan-500/20 text-cyan-400",
+    ticket: "bg-[#FEE75C]/20 text-[#FEE75C]",
+    bot: "bg-[#5865F2]/20 text-[#5865F2]",
+    system: "bg-gray-500/20 text-gray-400",
+  };
+
+  const typeIcons: Record<string, string> = {
+    moderation: "🔨", message: "💬", member: "👤", channel: "📢",
+    role: "🎭", voice: "🔊", ticket: "🎫", bot: "🤖", system: "⚙️",
+  };
+
+  const filtered = filter === "all" ? logs : logs.filter((l) => l.type === filter);
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-black text-white mb-1">📜 Logs de Actividad</h2>
+        <p className="text-sm text-gray-500">Historial de todas las acciones del bot en el servidor.</p>
+      </div>
+      <div className="flex gap-2 flex-wrap">
+        {["all", "moderation", "message", "member", "channel", "role", "voice", "ticket", "bot"].map((t) => (
+          <button key={t} onClick={() => setFilter(t)} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${filter === t ? "bg-[#5865F2] text-white" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}>
+            {typeIcons[t] || "📋"} {t === "all" ? "Todos" : t.charAt(0).toUpperCase() + t.slice(1)}
+          </button>
+        ))}
+      </div>
+      <div className="glass rounded-2xl p-6">
+        {loading ? (
+          <div className="text-center py-8"><div className="w-8 h-8 border-2 border-[#5865F2] border-t-transparent rounded-full animate-spin mx-auto" /></div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">Sin registros de actividad</div>
+        ) : (
+          <div className="space-y-2 max-h-[600px] overflow-y-auto">
+            {filtered.slice(0, 100).map((log: any, i: number) => (
+              <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+                <span className="text-lg">{typeIcons[log.type] || "📋"}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-white truncate">{log.action || log.message || "Acción desconocida"}</div>
+                  <div className="text-xs text-gray-500">
+                    {log.user && <span>por {log.user}</span>}
+                    {log.target && <span> → {log.target}</span>}
+                  </div>
+                </div>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${typeColors[log.type] || typeColors.system}`}>{log.type}</span>
+                <span className="text-xs text-gray-600 whitespace-nowrap">{log.timestamp ? new Date(log.timestamp).toLocaleString() : log.ts ? new Date(log.ts).toLocaleString() : ""}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── ROLE PERMISSIONS SECTION ───────────────────────────────────────────────
+function RolePermsSection({ api, guildId, roles, showToast }: { api: any; guildId: string; roles: any[]; showToast: any }) {
+  const [selectedRole, setSelectedRole] = useState("");
+  const [rolePerms, setRolePerms] = useState<Record<string, string[]>>({
+    moderation: ["ban", "kick", "timeout", "warn", "purge"],
+    tickets: ["open", "close", "claim", "move", "delete"],
+    welcome: ["configure", "test"],
+    levels: ["reset", "set"],
+    economy: ["give", "take", "set"],
+    admin: ["config", "broadcast", "globalban"],
+  });
+  const [newPerm, setNewPerm] = useState({ category: "moderation", permission: "" });
+
+  const allPerms = Object.entries(rolePerms).flatMap(([cat, perms]) => perms.map(p => ({ category: cat, permission: p, label: `${cat}.${p}` })));
+
+  const addPerm = () => {
+    if (!newPerm.permission) return;
+    const updated = { ...rolePerms };
+    if (!updated[newPerm.category]) updated[newPerm.category] = [];
+    if (!updated[newPerm.category].includes(newPerm.permission)) {
+      updated[newPerm.category].push(newPerm.permission);
+      setRolePerms(updated);
+      showToast("Permiso agregado", "success");
+    }
+  };
+
+  const removePerm = (cat: string, perm: string) => {
+    const updated = { ...rolePerms };
+    updated[cat] = (updated[cat] || []).filter(p => p !== perm);
+    setRolePerms(updated);
+    showToast("Permiso eliminado", "success");
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-black text-white mb-1">🛡️ Permisos de Roles</h2>
+        <p className="text-sm text-gray-500">Configura qué roles pueden hacer qué acciones en el bot.</p>
+      </div>
+      <SelectInput value={selectedRole} onChange={setSelectedRole} options={[{ value: "", label: "Seleccionar rol..." }, ...roles.map((r: any) => ({ value: r.id, label: r.name }))]} label="Seleccionar Rol" />
+      {selectedRole && (
+        <div className="glass rounded-2xl p-6 space-y-4">
+          <h3 className="font-bold text-white">Permisos del rol: {roles.find((r: any) => r.id === selectedRole)?.name}</h3>
+          {Object.entries(rolePerms).map(([category, perms]) => (
+            <div key={category} className="border border-white/10 rounded-xl p-4 space-y-2">
+              <h4 className="text-sm font-bold text-white capitalize">{category}</h4>
+              <div className="flex flex-wrap gap-2">
+                {perms.map((perm) => (
+                  <span key={perm} className="flex items-center gap-1 px-3 py-1 rounded-full bg-[#5865F2]/10 text-[#5865F2] text-xs">
+                    {perm}
+                    <button onClick={() => removePerm(category, perm)} className="hover:text-red-400 ml-1">✕</button>
+                  </span>
+                ))}
+                {perms.length === 0 && <span className="text-xs text-gray-600">Sin permisos</span>}
+              </div>
+            </div>
+          ))}
+          <div className="flex gap-2">
+            <SelectInput value={newPerm.category} onChange={(v) => setNewPerm({ ...newPerm, category: v })} options={[{ value: "moderation", label: "Moderación" }, { value: "tickets", label: "Tickets" }, { value: "welcome", label: "Bienvenida" }, { value: "levels", label: "Niveles" }, { value: "economy", label: "Economía" }, { value: "admin", label: "Admin" }]} label="Categoría" />
+            <TextInput value={newPerm.permission} onChange={(v) => setNewPerm({ ...newPerm, permission: v })} label="Permiso" placeholder=" Nombre del permiso" />
+            <div className="flex items-end"><button onClick={addPerm} className="px-4 py-2.5 rounded-xl bg-[#57F287]/10 text-[#57F287] text-sm font-semibold hover:bg-[#57F287]/20"><Plus size={14} className="inline" /> Agregar</button></div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
