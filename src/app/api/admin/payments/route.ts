@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getAllPayments, updatePaymentStatus } from "@/lib/db";
 
-export const runtime = "edge";
 
 export async function GET() {
   try {

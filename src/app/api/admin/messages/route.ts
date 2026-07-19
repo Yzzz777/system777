@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
 
-export const runtime = "edge";
 
 export async function GET() {
   try {

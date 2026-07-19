@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { enrollUser, getUserEnrollment, getUserEnrollments, updateEnrollmentProgress } from "@/lib/db";
 
-export const runtime = "edge";
 
 export async function POST(request: Request) {
   try {

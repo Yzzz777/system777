@@ -65,7 +65,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ path
 
   try {
     const { headers, updatedSession } = await getAuthHeaders(req);
-    const res = await fetch(targetUrl, { headers, signal: AbortSignal.timeout(15000) });
+    const res = await fetch(targetUrl, { headers });
     const data = await res.text();
 
     const response = new NextResponse(data, {
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pat
   try {
     const body = await req.text();
     const { headers, updatedSession } = await getAuthHeaders(req);
-    const res = await fetch(targetUrl, { method: "POST", headers, body, signal: AbortSignal.timeout(10000) });
+    const res = await fetch(targetUrl, { method: "POST", headers, body });
     const data = await res.text();
 
     const response = new NextResponse(data, {
@@ -118,7 +118,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ path
   try {
     const body = await req.text();
     const { headers, updatedSession } = await getAuthHeaders(req);
-    const res = await fetch(targetUrl, { method: "PUT", headers, body, signal: AbortSignal.timeout(10000) });
+    const res = await fetch(targetUrl, { method: "PUT", headers, body });
     const data = await res.text();
 
     const response = new NextResponse(data, {
@@ -143,7 +143,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ p
 
   try {
     const { headers, updatedSession } = await getAuthHeaders(req);
-    const res = await fetch(targetUrl, { method: "DELETE", headers, signal: AbortSignal.timeout(10000) });
+    const res = await fetch(targetUrl, { method: "DELETE", headers });
     const data = await res.text();
 
     const response = new NextResponse(data, {
