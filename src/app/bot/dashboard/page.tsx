@@ -123,6 +123,8 @@ function Toggle({ checked, onChange, label, onSave }: { checked: boolean; onChan
 function SelectInput({ value, onChange, options, label }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; label: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
   const selected = options.find(o => o.value === value);
 
   useEffect(() => {
@@ -131,15 +133,22 @@ function SelectInput({ value, onChange, options, label }: { value: string; onCha
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  useEffect(() => {
+    if (open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 4, left: r.left, width: r.width });
+    }
+  }, [open]);
+
   return (
     <div ref={ref} className="relative">
       <label className="block text-xs text-gray-500 mb-1.5">{label}</label>
-      <button type="button" onClick={() => setOpen(!open)} className="w-full px-4 py-3 rounded-xl bg-white/[0.08] border border-white/10 text-white text-sm flex items-center justify-between hover:border-[#5865F2]/30 transition-all">
+      <button ref={btnRef} type="button" onClick={() => setOpen(!open)} className="w-full px-4 py-3 rounded-xl bg-white/[0.08] border border-white/10 text-white text-sm flex items-center justify-between hover:border-[#5865F2]/30 transition-all">
         <span className={selected?.value ? "text-white" : "text-gray-500"}>{selected?.label || "Seleccionar..."}</span>
         <svg className={`w-4 h-4 text-gray-500 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
       </button>
       {open && (
-        <div className="absolute z-[100] mt-2 w-full rounded-xl border border-white/10 shadow-2xl max-h-64 overflow-y-auto" style={{ background: "#1a1a2e" }}>
+        <div className="fixed z-[100] rounded-xl border border-white/10 shadow-2xl max-h-64 overflow-y-auto" style={{ background: "#1a1a2e", top: pos.top, left: pos.left, width: pos.width }}>
           {options.map((o) => (
             <button key={o.value} type="button" onClick={() => { onChange(o.value); setOpen(false); }} className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[#5865F2]/15 transition-colors ${value === o.value ? "text-[#5865F2] bg-[#5865F2]/10" : "text-gray-300"}`}>
               {o.label}
