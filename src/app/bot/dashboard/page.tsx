@@ -838,15 +838,15 @@ function WelcomeSection({ config, channels, roles, saveConfig, guildId }: { conf
                 <h4 className="text-sm font-bold text-white">🎭 Auto-roles al entrar</h4>
                 <p className="text-xs text-gray-500">Selecciona uno o más roles que se asignarán automáticamente al unirse.</p>
                 <div className="flex flex-wrap gap-2">
-                  {roles.map((r: any) => {
-                    const isSelected = (welcome.autoRole || []).includes(r.id);
+                  {roles.filter((r: any) => r.value).map((r: any) => {
+                    const isSelected = (welcome.autoRole || []).includes(r.value);
                     return (
-                      <button key={r.id} onClick={() => {
+                      <button key={r.value} onClick={() => {
                         const current = welcome.autoRole || [];
-                        const updated = isSelected ? current.filter((id: string) => id !== r.id) : [...current, r.id];
+                        const updated = isSelected ? current.filter((id: string) => id !== r.value) : [...current, r.value];
                         setWelcome({ ...welcome, autoRole: updated });
                       }} className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${isSelected ? "bg-[#57F287] text-white shadow-lg shadow-[#57F287]/30" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}>
-                        {isSelected ? "✓ " : ""}@ {r.name}
+                        {isSelected ? "✓ " : ""}{r.label}
                       </button>
                     );
                   })}
