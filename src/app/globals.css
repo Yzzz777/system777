@@ -130,10 +130,10 @@ body {
   --bot-accent: #EB459E;
 }
 .bot-section .glass {
-  background: rgba(88, 101, 242, 0.03);
-  border: 1px solid rgba(88, 101, 242, 0.08);
+  background: rgba(88, 101, 242, 0.08);
+  border: 1px solid rgba(88, 101, 242, 0.12);
 }
 .bot-section .glass:hover {
-  background: rgba(88, 101, 242, 0.06);
-  border-color: rgba(88, 101, 242, 0.15);
+  background: rgba(88, 101, 242, 0.12);
+  border-color: rgba(88, 101, 242, 0.2);
 }
