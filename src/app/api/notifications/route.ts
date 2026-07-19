@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { getNotifications, createNotification, markNotificationRead, markAllNotificationsRead } from "@/lib/db";
 import { z } from "zod";
 
-export const runtime = "edge";
+
 
 const notificationSchema = z.object({
   userId: z.string().min(1),

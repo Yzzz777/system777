@@ -516,7 +516,7 @@ export default function BotDashboardPage() {
               <h2 className="text-2xl font-black text-white">🔗 Webhooks</h2>
               <div className="glass rounded-2xl p-6 space-y-4">
                 <h3 className="font-bold text-white">Crear Webhook</h3>
-                <SelectInput value={webhookChannel || ""} onChange={setWebhookChannel} options={channels} label="Canal destino" />
+                <SelectInput value={webhookChannel || ""} onChange={setWebhookChannel} options={channelOptions} label="Canal destino" />
                 <TextInput value={webhookName} onChange={setWebhookName} label="Nombre" placeholder="Mi Webhook" />
                 <TextInput value={webhookAvatar} onChange={setWebhookAvatar} label="Avatar URL (opcional)" placeholder="https://..." />
                 <button onClick={async () => {
@@ -532,7 +532,7 @@ export default function BotDashboardPage() {
               <h2 className="text-2xl font-black text-white">🕐 Slowmode</h2>
               <div className="glass rounded-2xl p-6 space-y-4">
                 <h3 className="font-bold text-white">Configurar Slowmode</h3>
-                <SelectInput value={slowmodeChannel || ""} onChange={setSlowmodeChannel} options={channels} label="Canal" />
+                <SelectInput value={slowmodeChannel || ""} onChange={setSlowmodeChannel} options={channelOptions} label="Canal" />
                 <SelectInput value={String(slowmodeDuration)} onChange={(v) => setSlowmodeDuration(parseInt(v))} label="Cooldown" options={[{ value: "0", label: "Desactivar" }, { value: "5", label: "5 segundos" }, { value: "10", label: "10 segundos" }, { value: "30", label: "30 segundos" }, { value: "60", label: "1 minuto" }, { value: "120", label: "2 minutos" }, { value: "300", label: "5 minutos" }, { value: "600", label: "10 minutos" }, { value: "1800", label: "30 minutos" }, { value: "3600", label: "1 hora" }]} />
                 <button onClick={async () => {
                   if (!slowmodeChannel) return showToast("Selecciona un canal", "error");
