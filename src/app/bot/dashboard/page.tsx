@@ -139,7 +139,7 @@ function SelectInput({ value, onChange, options, label }: { value: string; onCha
         <svg className={`w-4 h-4 text-gray-500 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
       </button>
       {open && (
-        <div className="absolute z-50 mt-2 w-full rounded-xl border border-white/10 shadow-2xl max-h-64 overflow-y-auto" style={{ background: "#1a1a2e" }}>
+        <div className="absolute z-[100] mt-2 w-full rounded-xl border border-white/10 shadow-2xl max-h-64 overflow-y-auto" style={{ background: "#1a1a2e" }}>
           {options.map((o) => (
             <button key={o.value} type="button" onClick={() => { onChange(o.value); setOpen(false); }} className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[#5865F2]/15 transition-colors ${value === o.value ? "text-[#5865F2] bg-[#5865F2]/10" : "text-gray-300"}`}>
               {o.label}
@@ -1013,8 +1013,12 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
     setLogsLoading(false);
   };
 
-  const saveTicketConfig = () => {
-    saveConfig(`ticket/${guildId}/config`, { ...ticketCfg, categories: ticketCategories, formFields });
+  const saveTicketConfig = async () => {
+    try {
+      await saveConfig(`ticket/${guildId}/config`, { ...ticketCfg, categories: ticketCategories, formFields });
+    } catch (e) {
+      showToast("Error al guardar configuración", "error");
+    }
   };
 
   const addCategory = () => {
