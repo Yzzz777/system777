@@ -219,9 +219,21 @@ export default function BotDashboardPage() {
     setTimeout(() => setToast(null), 3000);
   }, []);
 
+  const [authToken, setAuthToken] = useState<string | null>(null);
+
   const api = useCallback(async (path: string, opts?: RequestInit) => {
     try {
-      const res = await fetch(`https://bot-api.jrsystem7777.com/api/${path}`, { ...opts, headers: { "Content-Type": "application/json", ...opts?.headers } });
+      let token = authToken;
+      if (!token) {
+        try {
+          const tr = await fetch("/api/auth/token");
+          const td = await tr.json();
+          if (td?.token) { token = td.token; setAuthToken(td.token); }
+        } catch {}
+      }
+      const hdrs: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) hdrs["Authorization"] = "Bearer " + token;
+      const res = await fetch(`https://bot-api.jrsystem7777.com/api/${path}`, { ...opts, headers: hdrs });
       return await res.json();
     } catch (e) {
       showToast("Error de conexión", "error");
