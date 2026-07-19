@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "include": ["/*"],
+  "exclude": [],
+  "rules": [
+    { "src": "/api/(.*)", "dest": "/api/$1" }
+  ]
+}
