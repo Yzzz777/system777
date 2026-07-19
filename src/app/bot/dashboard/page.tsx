@@ -1232,6 +1232,116 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
         </div>
       )}
 
+      {/* ── FORMS TAB ── */}
+      {activeTicketTab === "forms" && (
+        <div className="space-y-4">
+          <div className="glass rounded-2xl p-6 space-y-4">
+            <h3 className="font-bold text-white flex items-center gap-2"><FileText size={16} className="text-[#5865F2]" /> Formularios Personalizados</h3>
+            <p className="text-xs text-gray-500">Define campos personalizados que se mostrarán al abrir un ticket en cada categoría.</p>
+            <SelectInput value={selectedFormCat} onChange={setSelectedFormCat} options={[{ value: "", label: "Seleccionar categoría..." }, ...ticketCategories.map((c: any) => ({ value: c.id, label: `${c.emoji || "🎫"} ${c.label}` }))]} label="Categoría" />
+            {selectedFormCat && (
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  {(formFields[selectedFormCat] || []).map((f: any, i: number) => (
+                    <div key={i} className="flex items-center gap-3 p-2 rounded-xl bg-white/[0.02] border border-white/5">
+                      <span className="text-xs text-gray-400 w-4">{i + 1}</span>
+                      <span className="text-sm text-white flex-1">{f.label}</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-400">{f.type}</span>
+                      {f.required && <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-400">Requerido</span>}
+                      <button onClick={() => { const updated = { ...formFields }; updated[selectedFormCat] = (updated[selectedFormCat] || []).filter((_: any, j: number) => j !== i); setFormFields(updated); }} className="text-red-400 hover:text-red-300"><Trash2 size={12} /></button>
+                    </div>
+                  ))}
+                  {(formFields[selectedFormCat] || []).length === 0 && <p className="text-xs text-gray-600 text-center py-2">Sin campos definidos</p>}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                  <TextInput value={newField.label} onChange={(v: string) => setNewField({ ...newField, label: v })} label="Nombre del campo" placeholder="Tu problema" />
+                  <SelectInput value={newField.type} onChange={(v: string) => setNewField({ ...newField, type: v })} options={[{ value: "short_text", label: "Texto corto" }, { value: "long_text", label: "Texto largo" }, { value: "number", label: "Número" }]} label="Tipo" />
+                  <div className="flex items-end gap-2">
+                    <Toggle checked={newField.required} onChange={(v: boolean) => setNewField({ ...newField, required: v })} label="Requerido" />
+                    <button onClick={() => { if (!newField.label) return; const updated = { ...formFields }; if (!updated[selectedFormCat]) updated[selectedFormCat] = []; updated[selectedFormCat].push({ ...newField }); setFormFields(updated); setNewField({ label: "", type: "short_text", required: false }); showToast("Campo agregado", "success"); }} className="px-4 py-2.5 rounded-xl bg-[#57F287]/10 text-[#57F287] text-sm font-semibold hover:bg-[#57F287]/20"><Plus size={14} /></button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {!selectedFormCat && <p className="text-xs text-gray-600 text-center py-4">Selecciona una categoría para configurar sus campos</p>}
+            <button onClick={saveTicketConfig} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#5865F2] text-white text-sm font-semibold hover:bg-[#4752c4]"><Save size={14} /> Guardar Formularios</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── BEHAVIOR TAB ── */}
+      {activeTicketTab === "behavior" && (
+        <div className="space-y-4">
+          <div className="glass rounded-2xl p-6 space-y-4">
+            <h3 className="font-bold text-white flex items-center gap-2"><Settings size={16} className="text-[#5865F2]" /> Comportamiento del Ticket</h3>
+            <Toggle checked={!!ticketCfg.autoCloseEnabled} onChange={(v: boolean) => setTicketCfg({ ...ticketCfg, autoCloseEnabled: v })} label="Auto-cierre por inactividad" />
+            {ticketCfg.autoCloseEnabled && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-4 border-l-2 border-white/5">
+                <NumberInput value={ticketCfg.autoCloseMinutes} onChange={(v: number) => setTicketCfg({ ...ticketCfg, autoCloseMinutes: v })} label="Minutos de inactividad" min={5} />
+                <TextInput value={ticketCfg.autoCloseMessage} onChange={(v: string) => setTicketCfg({ ...ticketCfg, autoCloseMessage: v })} label="Mensaje de cierre" placeholder="Este ticket se cerrará por inactividad." />
+              </div>
+            )}
+            <Toggle checked={!!ticketCfg.ping} onChange={(v: boolean) => setTicketCfg({ ...ticketCfg, ping: v })} label="Mencionar staff al abrir ticket" />
+            <Toggle checked={!!ticketCfg.dmTranscript} onChange={(v: boolean) => setTicketCfg({ ...ticketCfg, dmTranscript: v })} label="Enviar transcript por DM al cerrar" />
+            <TextInput value={ticketCfg.welcomeMessage} onChange={(v: string) => setTicketCfg({ ...ticketCfg, welcomeMessage: v })} label="Mensaje de bienvenida del ticket" placeholder="Describe tu problema con detalle..." />
+            <TextInput value={ticketCfg.channelPrefix} onChange={(v: string) => setTicketCfg({ ...ticketCfg, channelPrefix: v })} label="Prefijo del canal" placeholder="ticket" />
+            <NumberInput value={ticketCfg.maxPerUser} onChange={(v: number) => setTicketCfg({ ...ticketCfg, maxPerUser: v })} label="Máximo tickets por usuario" min={1} />
+            <button onClick={saveTicketConfig} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#5865F2] text-white text-sm font-semibold hover:bg-[#4752c4]"><Save size={14} /> Guardar Comportamiento</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── LOGS TAB ── */}
+      {activeTicketTab === "logs" && (
+        <div className="space-y-4">
+          <div className="glass rounded-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-white flex items-center gap-2"><ScrollText size={16} className="text-[#5865F2]" /> Logs de Tickets</h3>
+              <div className="flex items-center gap-3">
+                <Toggle checked={logsAutoRefresh} onChange={setLogsAutoRefresh} label="Auto-refresh" />
+                <button onClick={loadLogs} className="text-gray-400 hover:text-white"><RefreshCw size={16} /></button>
+              </div>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {["all", "created", "closed", "claimed", "moved", "renamed", "priority_changed", "rating_received", "transcript_sent"].map((f) => (
+                <button key={f} onClick={() => { setLogsFilter(f); setLogsPage(1); }} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${logsFilter === f ? "bg-[#5865F2] text-white" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}>
+                  {f === "all" ? "Todos" : f.replace(/_/g, " ")}
+                </button>
+              ))}
+            </div>
+            {logsLoading ? (
+              <div className="text-center py-8"><div className="w-8 h-8 border-2 border-[#5865F2] border-t-transparent rounded-full animate-spin mx-auto" /></div>
+            ) : paginatedLogs.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">Sin registros de actividad</div>
+            ) : (
+              <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                {paginatedLogs.map((log: any, i: number) => (
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm text-white truncate">{log.action || log.type || "Acción desconocida"}</div>
+                      <div className="text-xs text-gray-500">
+                        {log.user && <span>por {log.user}</span>}
+                        {log.target && <span> → {log.target}</span>}
+                      </div>
+                    </div>
+                    <span className="text-xs text-gray-600 whitespace-nowrap">{log.timestamp ? new Date(log.timestamp).toLocaleString() : log.ts ? new Date(log.ts).toLocaleString() : ""}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-xs text-gray-500">Página {logsPage} de {totalPages}</span>
+                <div className="flex gap-2">
+                  <button onClick={() => setLogsPage(Math.max(1, logsPage - 1))} disabled={logsPage <= 1} className="px-3 py-1 rounded-lg bg-white/5 text-gray-400 text-xs hover:bg-white/10 disabled:opacity-30"><ChevronLeft size={14} /></button>
+                  <button onClick={() => setLogsPage(Math.min(totalPages, logsPage + 1))} disabled={logsPage >= totalPages} className="px-3 py-1 rounded-lg bg-white/5 text-gray-400 text-xs hover:bg-white/10 disabled:opacity-30"><ChevronRight size={14} /></button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── RATING TAB ── */}
       {activeTicketTab === "rating" && (
         <div className="space-y-4">
