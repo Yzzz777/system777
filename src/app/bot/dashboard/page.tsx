@@ -221,8 +221,7 @@ export default function BotDashboardPage() {
 
   const api = useCallback(async (path: string, opts?: RequestInit) => {
     try {
-      const botUrl = "https://bot-api.jrsystem7777.com";
-      const res = await fetch(`${botUrl}/api/${path}`, { ...opts, headers: { "Content-Type": "application/json", ...opts?.headers } });
+      const res = await fetch(`https://bot-api.jrsystem7777.com/api/${path}`, { ...opts, headers: { "Content-Type": "application/json", ...opts?.headers } });
       return await res.json();
     } catch (e) {
       showToast("Error de conexión", "error");
