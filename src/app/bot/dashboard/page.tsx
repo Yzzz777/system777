@@ -1281,6 +1281,10 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
                 <TextInput value={ticketCfg.autoCloseMessage} onChange={(v: string) => setTicketCfg({ ...ticketCfg, autoCloseMessage: v })} label="Mensaje de cierre" placeholder="Este ticket se cerrará por inactividad." />
               </div>
             )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <SelectInput value={ticketCfg.logChannel || ""} onChange={(v: string) => setTicketCfg({ ...ticketCfg, logChannel: v })} options={channels} label="Canal de Logs" />
+              <SelectInput value={ticketCfg.supportRole || ""} onChange={(v: string) => setTicketCfg({ ...ticketCfg, supportRole: v })} options={roles} label="Rol de Soporte" />
+            </div>
             <Toggle checked={!!ticketCfg.ping} onChange={(v: boolean) => setTicketCfg({ ...ticketCfg, ping: v })} label="Mencionar staff al abrir ticket" />
             <Toggle checked={!!ticketCfg.dmTranscript} onChange={(v: boolean) => setTicketCfg({ ...ticketCfg, dmTranscript: v })} label="Enviar transcript por DM al cerrar" />
             <TextInput value={ticketCfg.welcomeMessage} onChange={(v: string) => setTicketCfg({ ...ticketCfg, welcomeMessage: v })} label="Mensaje de bienvenida del ticket" placeholder="Describe tu problema con detalle..." />
