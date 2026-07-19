@@ -111,8 +111,8 @@ function Toggle({ checked, onChange, label, onSave }: { checked: boolean; onChan
     if (onSave) setTimeout(onSave, 200);
   };
   return (
-    <label className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] hover:bg-[#5865F2]/5 transition-all cursor-pointer group" onClick={doToggle}>
-      <span className="text-sm text-gray-300 group-hover:text-white transition-colors">{label}</span>
+    <label className="flex items-center justify-between p-3 rounded-xl bg-white/[0.06] hover:bg-[#5865F2]/10 transition-all cursor-pointer group" onClick={doToggle}>
+      <span className="text-sm text-gray-200 group-hover:text-white transition-colors">{label}</span>
       <div className={`relative w-11 h-6 rounded-full transition-all duration-300 ${checked ? "bg-[#5865F2] shadow-lg shadow-[#5865F2]/30" : "bg-white/10"}`}>
         <motion.div animate={{ x: checked ? 20 : 0 }} transition={{ type: "spring", stiffness: 500, damping: 30 }} className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md" />
       </div>
@@ -134,7 +134,7 @@ function SelectInput({ value, onChange, options, label }: { value: string; onCha
   return (
     <div ref={ref} className="relative">
       <label className="block text-xs text-gray-500 mb-1.5">{label}</label>
-      <button type="button" onClick={() => setOpen(!open)} className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white text-sm flex items-center justify-between hover:border-[#5865F2]/30 transition-all">
+      <button type="button" onClick={() => setOpen(!open)} className="w-full px-4 py-3 rounded-xl bg-white/[0.08] border border-white/10 text-white text-sm flex items-center justify-between hover:border-[#5865F2]/30 transition-all">
         <span className={selected?.value ? "text-white" : "text-gray-500"}>{selected?.label || "Seleccionar..."}</span>
         <svg className={`w-4 h-4 text-gray-500 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
       </button>
@@ -155,7 +155,7 @@ function TextInput({ value, onChange, label, placeholder, type = "text" }: { val
   return (
     <div>
       <label className="block text-xs text-gray-500 mb-1.5">{label}</label>
-      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50 placeholder-gray-600" />
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="w-full px-3 py-2.5 rounded-xl bg-white/[0.08] border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50 placeholder-gray-500" />
     </div>
   );
 }
@@ -164,7 +164,7 @@ function NumberInput({ value, onChange, label, min = 0 }: { value: number; onCha
   return (
     <div>
       <label className="block text-xs text-gray-500 mb-1.5">{label}</label>
-      <input type="number" value={value} min={min} onChange={(e) => onChange(Number(e.target.value))} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50" />
+      <input type="number" value={value} min={min} onChange={(e) => onChange(Number(e.target.value))} className="w-full px-3 py-2.5 rounded-xl bg-white/[0.08] border border-white/10 text-white text-sm outline-none focus:border-[#5865F2]/50" />
     </div>
   );
 }
