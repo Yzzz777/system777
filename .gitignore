@@ -9,3 +9,4 @@ npm-debug.log*
 .wrangler/
 *.log
 deploy.log
+tsconfig.tsbuildinfo
