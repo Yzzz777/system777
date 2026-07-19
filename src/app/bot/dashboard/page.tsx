@@ -221,7 +221,8 @@ export default function BotDashboardPage() {
 
   const api = useCallback(async (path: string, opts?: RequestInit) => {
     try {
-      const res = await fetch(`/api/bot/proxy/${path}`, { ...opts, headers: { "Content-Type": "application/json", ...opts?.headers } });
+      const botUrl = "https://bot-api.jrsystem7777.com";
+      const res = await fetch(`${botUrl}/api/${path}`, { ...opts, headers: { "Content-Type": "application/json", ...opts?.headers } });
       return await res.json();
     } catch (e) {
       showToast("Error de conexión", "error");
@@ -233,7 +234,7 @@ export default function BotDashboardPage() {
     (async () => {
       try {
         const [statsRes, guildsRes] = await Promise.all([
-          fetch("/api/bot/proxy/public/stats").then(r => r.json()).catch(() => null),
+          fetch("https://bot-api.jrsystem7777.com/api/public/stats").then(r => r.json()).catch(() => null),
           fetch("/api/bot/guilds").then(r => r.json()).catch(() => null),
         ]);
         if (statsRes) setStats(statsRes);
