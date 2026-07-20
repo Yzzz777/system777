@@ -74,7 +74,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ path
     });
     if (updatedSession) {
       response.cookies.set("system777_session", updatedSession, {
-        path: "/", httpOnly: true, secure: true, sameSite: "lax", maxAge: 30 * 24 * 60 * 60,
+        path: "/", httpOnly: true, secure: true, sameSite: "none", maxAge: 30 * 24 * 60 * 60,
       });
     }
     return response;
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pat
     });
     if (updatedSession) {
       response.cookies.set("system777_session", updatedSession, {
-        path: "/", httpOnly: true, secure: true, sameSite: "lax", maxAge: 30 * 24 * 60 * 60,
+        path: "/", httpOnly: true, secure: true, sameSite: "none", maxAge: 30 * 24 * 60 * 60,
       });
     }
     return response;
@@ -127,7 +127,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ path
     });
     if (updatedSession) {
       response.cookies.set("system777_session", updatedSession, {
-        path: "/", httpOnly: true, secure: true, sameSite: "lax", maxAge: 30 * 24 * 60 * 60,
+        path: "/", httpOnly: true, secure: true, sameSite: "none", maxAge: 30 * 24 * 60 * 60,
       });
     }
     return response;
@@ -152,7 +152,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ p
     });
     if (updatedSession) {
       response.cookies.set("system777_session", updatedSession, {
-        path: "/", httpOnly: true, secure: true, sameSite: "lax", maxAge: 30 * 24 * 60 * 60,
+        path: "/", httpOnly: true, secure: true, sameSite: "none", maxAge: 30 * 24 * 60 * 60,
       });
     }
     return response;
