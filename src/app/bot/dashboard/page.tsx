@@ -233,7 +233,7 @@ export default function BotDashboardPage() {
       }
       const hdrs: Record<string, string> = { "Content-Type": "application/json" };
       if (token) hdrs["Authorization"] = "Bearer " + token;
-      const res = await fetch(`https://bot-api.jrsystem7777.com/api/${path}`, { ...opts, headers: hdrs });
+      const res = await fetch(`/api/bot/proxy/${path}`, { ...opts, headers: hdrs });
       return await res.json();
     } catch (e) {
       showToast("Error de conexión", "error");
