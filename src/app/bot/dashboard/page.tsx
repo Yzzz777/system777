@@ -1086,9 +1086,9 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
 
   const saveTicketConfig = async () => {
     try {
-      const payload = {
+      const payload: any = {
         ...ticketCfg,
-        panelDescription: ticketCfg.panelDesc || ticketCfg.panelDescription,
+        panelDescription: ticketCfg.panelDesc || "",
         pingOnOpen: ticketCfg.ping,
         categories: ticketCategories,
         formFields,
