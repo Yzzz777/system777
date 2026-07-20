@@ -10,3 +10,4 @@ npm-debug.log*
 *.log
 deploy.log
 tsconfig.tsbuildinfo
+_deploy
