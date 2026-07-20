@@ -1037,7 +1037,14 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
 
   const saveTicketConfig = async () => {
     try {
-      await saveConfig(`ticket/${guildId}/config`, { ...ticketCfg, categories: ticketCategories, formFields });
+      const payload = {
+        ...ticketCfg,
+        panelDescription: ticketCfg.panelDesc || ticketCfg.panelDescription,
+        pingOnOpen: ticketCfg.ping,
+        categories: ticketCategories,
+        formFields,
+      };
+      await saveConfig(`ticket/${guildId}/config`, payload);
     } catch (e) {
       showToast("Error al guardar configuración", "error");
     }
