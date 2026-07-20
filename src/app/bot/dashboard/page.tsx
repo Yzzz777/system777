@@ -1314,32 +1314,42 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
           <div className="glass rounded-2xl p-6 space-y-4">
             <h3 className="font-bold text-white flex items-center gap-2"><FileText size={16} className="text-[#5865F2]" /> Formularios Personalizados</h3>
             <p className="text-xs text-gray-500">Define campos personalizados que se mostrarán al abrir un ticket en cada categoría.</p>
-            <SelectInput value={selectedFormCat} onChange={setSelectedFormCat} options={[{ value: "", label: "Seleccionar categoría..." }, ...ticketCategories.map((c: any) => ({ value: c.id, label: `${c.emoji || "🎫"} ${c.label}` }))]} label="Categoría" />
-            {selectedFormCat && (
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  {(formFields[selectedFormCat] || []).map((f: any, i: number) => (
-                    <div key={i} className="flex items-center gap-3 p-2 rounded-xl bg-white/[0.02] border border-white/5">
-                      <span className="text-xs text-gray-400 w-4">{i + 1}</span>
-                      <span className="text-sm text-white flex-1">{f.label}</span>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-400">{f.type}</span>
-                      {f.required && <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-400">Requerido</span>}
-                      <button onClick={() => { const updated = { ...formFields }; updated[selectedFormCat] = (updated[selectedFormCat] || []).filter((_: any, j: number) => j !== i); setFormFields(updated); }} className="text-red-400 hover:text-red-300"><Trash2 size={12} /></button>
-                    </div>
-                  ))}
-                  {(formFields[selectedFormCat] || []).length === 0 && <p className="text-xs text-gray-600 text-center py-2">Sin campos definidos</p>}
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
-                  <TextInput value={newField.label} onChange={(v: string) => setNewField({ ...newField, label: v })} label="Nombre del campo" placeholder="Tu problema" />
-                  <SelectInput value={newField.type} onChange={(v: string) => setNewField({ ...newField, type: v })} options={[{ value: "short_text", label: "Texto corto" }, { value: "long_text", label: "Texto largo" }, { value: "number", label: "Número" }]} label="Tipo" />
-                  <div className="flex items-end gap-2">
-                    <Toggle checked={newField.required} onChange={(v: boolean) => setNewField({ ...newField, required: v })} label="Requerido" />
-                    <button onClick={() => { if (!newField.label) return; const updated = { ...formFields }; if (!updated[selectedFormCat]) updated[selectedFormCat] = []; updated[selectedFormCat].push({ ...newField }); setFormFields(updated); setNewField({ label: "", type: "short_text", required: false }); showToast("Campo agregado", "success"); }} className="px-4 py-2.5 rounded-xl bg-[#57F287]/10 text-[#57F287] text-sm font-semibold hover:bg-[#57F287]/20"><Plus size={14} /></button>
-                  </div>
-                </div>
+            {ticketCategories.length === 0 ? (
+              <div className="text-center py-8 space-y-3">
+                <p className="text-gray-400 text-sm">No hay categorías creadas todavía.</p>
+                <p className="text-gray-500 text-xs">Primero crea categorías en la pestaña <strong className="text-white">Categorías</strong>, luego vuelve aquí para configurar los formularios.</p>
+                <button onClick={() => setActiveTicketTab("categories")} className="px-4 py-2 rounded-xl bg-[#5865F2]/20 text-[#5865F2] text-sm font-semibold hover:bg-[#5865F2]/30 transition-colors">Ir a Categorías</button>
               </div>
+            ) : (
+              <>
+                <SelectInput value={selectedFormCat} onChange={setSelectedFormCat} options={[{ value: "", label: "Seleccionar categoría..." }, ...ticketCategories.map((c: any) => ({ value: c.id, label: `${c.emoji || "🎫"} ${c.label}` }))]} label="Categoría" />
+                {selectedFormCat && (
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      {(formFields[selectedFormCat] || []).map((f: any, i: number) => (
+                        <div key={i} className="flex items-center gap-3 p-2 rounded-xl bg-white/[0.02] border border-white/5">
+                          <span className="text-xs text-gray-400 w-4">{i + 1}</span>
+                          <span className="text-sm text-white flex-1">{f.label}</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-400">{f.type}</span>
+                          {f.required && <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-400">Requerido</span>}
+                          <button onClick={() => { const updated = { ...formFields }; updated[selectedFormCat] = (updated[selectedFormCat] || []).filter((_: any, j: number) => j !== i); setFormFields(updated); }} className="text-red-400 hover:text-red-300"><Trash2 size={12} /></button>
+                        </div>
+                      ))}
+                      {(formFields[selectedFormCat] || []).length === 0 && <p className="text-xs text-gray-600 text-center py-2">Sin campos definidos</p>}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                      <TextInput value={newField.label} onChange={(v: string) => setNewField({ ...newField, label: v })} label="Nombre del campo" placeholder="Tu problema" />
+                      <SelectInput value={newField.type} onChange={(v: string) => setNewField({ ...newField, type: v })} options={[{ value: "short_text", label: "Texto corto" }, { value: "long_text", label: "Texto largo" }, { value: "number", label: "Número" }]} label="Tipo" />
+                      <div className="flex items-end gap-2">
+                        <Toggle checked={newField.required} onChange={(v: boolean) => setNewField({ ...newField, required: v })} label="Requerido" />
+                        <button onClick={() => { if (!newField.label) return; const updated = { ...formFields }; if (!updated[selectedFormCat]) updated[selectedFormCat] = []; updated[selectedFormCat].push({ ...newField }); setFormFields(updated); setNewField({ label: "", type: "short_text", required: false }); showToast("Campo agregado", "success"); }} className="px-4 py-2.5 rounded-xl bg-[#57F287]/10 text-[#57F287] text-sm font-semibold hover:bg-[#57F287]/20"><Plus size={14} /></button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {!selectedFormCat && <p className="text-xs text-gray-600 text-center py-4">Selecciona una categoría para configurar sus campos</p>}
+              </>
             )}
-            {!selectedFormCat && <p className="text-xs text-gray-600 text-center py-4">Selecciona una categoría para configurar sus campos</p>}
             <button onClick={saveTicketConfig} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#5865F2] text-white text-sm font-semibold hover:bg-[#4752c4]"><Save size={14} /> Guardar Formularios</button>
           </div>
         </div>
