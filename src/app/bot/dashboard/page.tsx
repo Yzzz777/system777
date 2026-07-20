@@ -219,16 +219,16 @@ export default function BotDashboardPage() {
     setTimeout(() => setToast(null), 3000);
   }, []);
 
-  const [authToken, setAuthToken] = useState<string | null>(null);
+  const authTokenRef = useRef<string | null>(null);
 
   const api = useCallback(async (path: string, opts?: RequestInit) => {
     try {
-      let token = authToken;
+      let token = authTokenRef.current;
       if (!token) {
         try {
           const tr = await fetch("/api/auth/token");
           const td = await tr.json();
-          if (td?.token) { token = td.token; setAuthToken(td.token); }
+          if (td?.token) { token = td.token; authTokenRef.current = td.token; }
         } catch {}
       }
       const hdrs: Record<string, string> = { "Content-Type": "application/json" };
@@ -280,7 +280,10 @@ export default function BotDashboardPage() {
   }, [activeTab, isOwner, api]);
 
   const saveConfig = useCallback(async (path: string, body: any) => {
-    const publicPath = path.replace(/guild\/([^/]+)/, 'public/guild/$1');
+    let publicPath = path.replace(/guild\/([^/]+)/, 'public/guild/$1');
+    if (!publicPath.startsWith('public/') && !publicPath.startsWith('notifications/') && !publicPath.startsWith('staff/') && !publicPath.startsWith('premium/') && !publicPath.startsWith('power') && !publicPath.startsWith('globalbans') && !publicPath.startsWith('ipban') && !publicPath.startsWith('jarvis/')) {
+      publicPath = 'public/' + publicPath;
+    }
     const res = await api(publicPath, { method: "POST", body: JSON.stringify(body) });
     if (res?.ok !== false) {
       showToast("Guardado correctamente", "success");
@@ -432,9 +435,6 @@ export default function BotDashboardPage() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto relative" id="dashboard-main" style={{ height: "100vh" }}>
-        {/* Scroll arrows */}
-        <button onClick={() => document.getElementById('dashboard-main')?.scrollBy({ top: -400, behavior: 'smooth' })} className="fixed bottom-24 right-8 z-40 w-10 h-10 rounded-full bg-[#5865F2]/80 text-white flex items-center justify-center hover:bg-[#5865F2] transition-all shadow-lg hover:scale-110" title="Subir"><ChevronLeft size={20} className="rotate-[-90deg]" /></button>
-        <button onClick={() => document.getElementById('dashboard-main')?.scrollBy({ top: 400, behavior: 'smooth' })} className="fixed bottom-8 right-8 z-40 w-10 h-10 rounded-full bg-[#5865F2]/80 text-white flex items-center justify-center hover:bg-[#5865F2] transition-all shadow-lg hover:scale-110" title="Bajar"><ChevronRight size={20} className="rotate-[-90deg]" /></button>
 
         <div className="p-6 max-w-5xl mx-auto">
           <AnimatePresence mode="wait">
