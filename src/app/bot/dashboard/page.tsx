@@ -810,28 +810,27 @@ function WelcomeSection({ config, channels, roles, saveConfig, guildId }: { conf
   });
   const [newChannelLink, setNewChannelLink] = useState({ channelId: "", label: "", emoji: "📢" });
 
-  const prevWelcomeRef = useRef<any>(null);
-  useEffect(() => {
-    const newW = config?.welcome || {};
-    const newG = config?.goodbye || {};
-    if (prevWelcomeRef.current === config) return;
-    prevWelcomeRef.current = config;
-    if (newW.enabled !== undefined || newW.channel) {
+  const cfgRef = useRef(config);
+  if (config && cfgRef.current !== config) {
+    cfgRef.current = config;
+    const w = config.welcome || {};
+    const g = config.goodbye || {};
+    if (w.enabled !== undefined || w.channel) {
       setWelcome({
-        enabled: newW.enabled || false, channel: newW.channel || "", title: newW.title || "Introducción",
-        message: newW.message || "¡Hey! {user} Bienvenido/a a la comunidad oficial de **{server}**. 👋\n\n👉 Te recomendamos visitar los canales indicados a continuación para conocer las normas y mantenerte al tanto de toda la información del servidor.\n\n¡Esperamos que disfrutes tu estancia y formes parte de esta gran comunidad! 🥳🎉",
-        color: newW.color || "#5865F2", image: newW.image || "", thumbnail: newW.thumbnail || "",
-        footer: newW.footer || "", mentionRole: newW.mentionRole || "", channelLinks: newW.channelLinks || [],
-        dmMessage: newW.dmMessage || "", dmEnabled: newW.dmEnabled !== false,
-        autoRole: Array.isArray(newW.autoRole) ? newW.autoRole : (newW.autoRole ? [newW.autoRole] : []),
+        enabled: w.enabled || false, channel: w.channel || "", title: w.title || "Introducción",
+        message: w.message || "¡Hey! {user} Bienvenido/a a la comunidad oficial de **{server}**. 👋\n\n👉 Te recomendamos visitar los canales indicados a continuación para conocer las normas y mantenerte al tanto de toda la información del servidor.\n\n¡Esperamos que disfrutes tu estancia y formes parte de esta gran comunidad! 🥳🎉",
+        color: w.color || "#5865F2", image: w.image || "", thumbnail: w.thumbnail || "",
+        footer: w.footer || "", mentionRole: w.mentionRole || "", channelLinks: w.channelLinks || [],
+        dmMessage: w.dmMessage || "", dmEnabled: w.dmEnabled !== false,
+        autoRole: Array.isArray(w.autoRole) ? w.autoRole : (w.autoRole ? [w.autoRole] : []),
       });
       setGoodbye({
-        enabled: newG.enabled || false, channel: newG.channel || "",
-        title: newG.title || "¡Adiós!", message: newG.message || "👋 **{user}** ha abandonado el servidor.\n¡Esperamos verte de nuevo!",
-        color: newG.color || "#ED4245", image: newG.image || "",
+        enabled: g.enabled || false, channel: g.channel || "",
+        title: g.title || "¡Adiós!", message: g.message || "👋 **{user}** ha abandonado el servidor.\n¡Esperamos verte de nuevo!",
+        color: g.color || "#ED4245", image: g.image || "",
       });
     }
-  }, [config]);
+  }
 
   const addChannelLink = () => {
     if (!newChannelLink.channelId) return;
@@ -1027,31 +1026,26 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
   const [selectedFormCat, setSelectedFormCat] = useState("");
   const [newField, setNewField] = useState({label: "", type: "short_text", required: false});
 
-  const prevConfigRef = useRef<any>(null);
-  useEffect(() => {
-    const newTc = config?.tickets || config?.ticketConfig || {};
-    const prevTc = prevConfigRef.current;
-    if (prevTc === newTc) return;
-    prevConfigRef.current = newTc;
-    if (newTc.panelChannel || newTc.supportRole || newTc.logChannel || newTc.panelTitle || (newTc.categories && newTc.categories.length > 0)) {
+  const tcRef = useRef(tc);
+  if (tc.panelChannel || tc.supportRole || tc.logChannel) {
+    if (tcRef.current !== tc) {
+      tcRef.current = tc;
       setTicketCfg({
-        panelChannel: newTc.panelChannel || "", supportRole: newTc.supportRole || "", logChannel: newTc.logChannel || "",
-        ticketCategory: newTc.ticketCategory || "", panelTitle: newTc.panelTitle || "Soporte",
-        panelDesc: newTc.panelDesc || newTc.panelDescription || "Selecciona el tipo de ticket.", panelColor: newTc.panelColor || "#5865F2",
-        panelImage: newTc.panelImage || "",
-        channelPrefix: newTc.channelPrefix || "ticket", maxPerUser: newTc.maxPerUser || 3, ping: newTc.pingOnOpen !== false,
-        dmTranscript: newTc.dmTranscript !== false, welcomeMessage: newTc.welcomeMessage || "",
-        ratingEnabled: newTc.ratingEnabled !== false, ratingRequired: newTc.ratingRequired === true,
-        ratingLogChannel: newTc.ratingLogChannel || "", ratingMessage: newTc.ratingMessage || "",
-        panelMessageId: newTc.panelMessageId || "",
-        autoCloseEnabled: newTc.autoCloseEnabled || false,
-        autoCloseMinutes: newTc.autoCloseMinutes || 1440,
-        autoCloseMessage: newTc.autoCloseMessage || "Este ticket se cerrará por inactividad.",
+        panelChannel: tc.panelChannel || "", supportRole: tc.supportRole || "", logChannel: tc.logChannel || "",
+        ticketCategory: tc.ticketCategory || "", panelTitle: tc.panelTitle || "Soporte",
+        panelDesc: tc.panelDesc || tc.panelDescription || "Selecciona el tipo de ticket.", panelColor: tc.panelColor || "#5865F2",
+        panelImage: tc.panelImage || "",
+        channelPrefix: tc.channelPrefix || "ticket", maxPerUser: tc.maxPerUser || 3, ping: tc.pingOnOpen !== false,
+        dmTranscript: tc.dmTranscript !== false, welcomeMessage: tc.welcomeMessage || "",
+        ratingEnabled: tc.ratingEnabled !== false, ratingRequired: tc.ratingRequired === true,
+        ratingLogChannel: tc.ratingLogChannel || "", ratingMessage: tc.ratingMessage || "",
+        panelMessageId: tc.panelMessageId || "",
+        autoCloseEnabled: tc.autoCloseEnabled || false,
+        autoCloseMinutes: tc.autoCloseMinutes || 1440,
+        autoCloseMessage: tc.autoCloseMessage || "Este ticket se cerrará por inactividad.",
       });
-      setTicketCategories(newTc.categories || []);
-      setFormFields(newTc.formFields || {});
     }
-  }, [config]);
+  }
 
   const [ticketLogs, setTicketLogs] = useState<any[]>([]);
   const [logsFilter, setLogsFilter] = useState("all");
