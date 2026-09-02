@@ -1,6 +1,8 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Github,
   Instagram,
@@ -13,13 +15,22 @@ import {
   Zap,
   ArrowRight,
   Globe,
-  BookOpen,
-  FileText,
-  Bell,
   Download,
   ChevronRight,
+  Music,
+  Server,
+  Users,
+  Clock,
+  Wifi,
+  Activity,
+  Sparkles,
+  Eye,
+  Star,
+  Rocket,
+  Lock,
+  Brain,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import {
   FadeIn,
   FadeInUp,
@@ -31,6 +42,130 @@ import StudyTimeCounter from "@/components/StudyTimeCounter";
 
 const studyStartDate = new Date("2023-01-01");
 
+/* ===================== PARTICLES ===================== */
+function Particles() {
+  const particles = Array.from({ length: 30 }, (_, i) => ({
+    id: i,
+    left: `${Math.random() * 100}%`,
+    delay: Math.random() * 15,
+    duration: 10 + Math.random() * 20,
+    size: 1 + Math.random() * 2,
+  }));
+  return (
+    <div className="particles">
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          className="particle"
+          style={{
+            left: p.left,
+            bottom: "-10px",
+            width: p.size,
+            height: p.size,
+            animationDelay: `${p.delay}s`,
+            animationDuration: `${p.duration}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ===================== 3D TILT CARD ===================== */
+function TiltCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [8, -8]), { stiffness: 300, damping: 30 });
+  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-8, 8]), { stiffness: 300, damping: 30 });
+
+  const handleMouse = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    x.set((e.clientX - rect.left) / rect.width - 0.5);
+    y.set((e.clientY - rect.top) / rect.height - 0.5);
+  }, [x, y]);
+
+  const handleLeave = useCallback(() => {
+    x.set(0);
+    y.set(0);
+  }, [x, y]);
+
+  return (
+    <motion.div
+      onMouseMove={handleMouse}
+      onMouseLeave={handleLeave}
+      style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/* ===================== DISCORD STATUS ===================== */
+interface BotStats {
+  guilds: number;
+  users: number;
+  ping: number;
+  uptime: number;
+  memory: string;
+  online: boolean;
+  commands: number;
+}
+
+function DiscordStatus() {
+  const [stats, setStats] = useState<BotStats | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const r = await fetch("/api/bot/stats");
+        if (r.ok) setStats(await r.json());
+      } catch {}
+    };
+    fetchStats();
+    const interval = setInterval(fetchStats, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatUptime = (ms: number) => {
+    if (!ms) return "N/A";
+    const s = Math.floor(ms / 1000);
+    const d = Math.floor(s / 86400);
+    const h = Math.floor((s % 86400) / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    return d > 0 ? `${d}d ${h}h` : `${h}h ${m}m`;
+  };
+
+  return (
+    <div className="glass glass-hover rounded-2xl p-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className={`h-3 w-3 rounded-full ${stats?.online ? "bg-[#00FF88] status-online" : "bg-red-500"}`} />
+        <span className="text-sm font-medium text-white">{stats?.online ? "System 777 Online" : "Offline"}</span>
+        <BotIcon className="ml-auto h-4 w-4 text-[#5865F2]" />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex items-center gap-2 text-sm text-gray-400">
+          <Server className="h-4 w-4 text-[#5865F2]" />
+          <span>{stats?.guilds ?? "—"} servers</span>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-gray-400">
+          <Users className="h-4 w-4 text-[#00C8FF]" />
+          <span>{stats?.users?.toLocaleString() ?? "—"} users</span>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-gray-400">
+          <Wifi className="h-4 w-4 text-[#00FF88]" />
+          <span>{stats?.ping ?? "—"}ms</span>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-gray-400">
+          <Clock className="h-4 w-4 text-[#FFD93D]" />
+          <span>{formatUptime(stats?.uptime ?? 0)}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===================== DATA ===================== */
 const socialLinks = [
   { name: "Discord", icon: MessageSquare, href: "https://discord.gg/system777", color: "#5865F2" },
   { name: "GitHub", icon: Github, href: "https://github.com/Yzzz777", color: "#fff" },
@@ -42,35 +177,40 @@ const socialLinks = [
   ), href: "https://www.tiktok.com/@yzz.yzx", color: "#000" },
 ];
 
-const features = [
-  { icon: Code, title: "Programación", desc: "HTML, CSS, JS, React, Next.js, Python, Java y más de 20 lenguajes y frameworks.", color: "#00FF88" },
-  { icon: Shield, title: "Ciberseguridad", desc: "Hacking ético, pruebas de penetración, forensics, análisis SOC y operaciones Red/Blue.", color: "#00C8FF" },
-  { icon: Terminal, title: "Linux y DevOps", desc: "Administración de Linux, gestión de servidores, Docker, Kubernetes, CI/CD.", color: "#7C3AED" },
-];
-
 const techData = [
-  { name: "JavaScript", icon: "JS", color: "#F7DF1E" },
-  { name: "TypeScript", icon: "TS", color: "#3178C6" },
-  { name: "Python", icon: "Py", color: "#3776AB" },
-  { name: "React", icon: "Re", color: "#61DAFB" },
-  { name: "Next.js", icon: "Nx", color: "#FFFFFF" },
-  { name: "Node.js", icon: "No", color: "#339933" },
-  { name: "HTML", icon: "H5", color: "#E34F26" },
-  { name: "CSS", icon: "CS", color: "#1572B6" },
-  { name: "SQL", icon: "SQ", color: "#FF8C42" },
-  { name: "C", icon: "C", color: "#A8B9CC" },
-  { name: "C++", icon: "C+", color: "#00599C" },
-  { name: "C#", icon: "C#", color: "#239120" },
-  { name: "Linux", icon: "Li", color: "#FCC624" },
-  { name: "Docker", icon: "Dk", color: "#2496ED" },
-  { name: "Git", icon: "Gi", color: "#F05032" },
-  { name: "Cloudflare", icon: "CF", color: "#F38020" },
+  { name: "JavaScript", icon: "JS", color: "#F7DF1E", level: 90 },
+  { name: "TypeScript", icon: "TS", color: "#3178C6", level: 70 },
+  { name: "Python", icon: "Py", color: "#3776AB", level: 85 },
+  { name: "React", icon: "Re", color: "#61DAFB", level: 75 },
+  { name: "Next.js", icon: "Nx", color: "#FFFFFF", level: 70 },
+  { name: "Node.js", icon: "No", color: "#339933", level: 80 },
+  { name: "HTML", icon: "H5", color: "#E34F26", level: 95 },
+  { name: "CSS", icon: "CS", color: "#1572B6", level: 90 },
+  { name: "SQL", icon: "SQ", color: "#FF8C42", level: 75 },
+  { name: "C", icon: "C", color: "#A8B9CC", level: 50 },
+  { name: "C++", icon: "C+", color: "#00599C", level: 45 },
+  { name: "C#", icon: "C#", color: "#239120", level: 40 },
+  { name: "Linux", icon: "Li", color: "#FCC624", level: 90 },
+  { name: "Docker", icon: "Dk", color: "#2496ED", level: 65 },
+  { name: "Git", icon: "Gi", color: "#F05032", level: 85 },
+  { name: "Cloudflare", icon: "CF", color: "#F38020", level: 70 },
+  { name: "PostgreSQL", icon: "PG", color: "#4169E1", level: 70 },
+  { name: "Redis", icon: "Rd", color: "#DC382D", level: 50 },
 ];
 
 const cyberAreas = [
-  "Seguridad Web", "Análisis de Vulnerabilidades", "Seguridad APIs", "Autenticación",
-  "OSINT Defensivo", "Hardening", "Redes Seguras", "Automatización",
-  "Anti-Raid", "Moderación", "Forensics", "SOC Operations",
+  { name: "Seguridad Web", icon: Globe, desc: "Pentesting y auditorías" },
+  { name: "Vulnerabilidades", icon: Shield, desc: "Análisis y explotación" },
+  { name: "APIs", icon: Lock, desc: "Hardening REST/GraphQL" },
+  { name: "Autenticación", icon: Lock, desc: "OAuth, JWT, MFA" },
+  { name: "OSINT", icon: Eye, desc: "Inteligencia abierta" },
+  { name: "Hardening", icon: Server, desc: "Servidores seguros" },
+  { name: "Redes", icon: Wifi, desc: "Seguridad de red" },
+  { name: "Automatización", icon: Zap, desc: "Scripts de seguridad" },
+  { name: "Anti-Raid", icon: Shield, desc: "Protección Discord" },
+  { name: "Moderación", icon: Users, desc: "Bots automatizados" },
+  { name: "Forensics", icon: Activity, desc: "Análisis digital" },
+  { name: "SOC", icon: Brain, desc: "Red/Blue team" },
 ];
 
 const projects = [
@@ -84,408 +224,468 @@ const projects = [
     tech: ["Node.js", "Discord.js", "PostgreSQL"],
   },
   {
-    name: "Dashboard System 777",
-    desc: "Panel de administración web con gestión de servidores, usuarios, analytics y control del bot en tiempo real.",
+    name: "Dashboard",
+    desc: "Panel de administración web con gestión de servidores, usuarios, analytics y control del bot.",
     color: "#7C3AED",
     github: "https://github.com/Yzzz777/system777",
     web: "https://12e022de.system777.pages.dev",
     status: "Activo",
-    tech: ["Next.js", "Cloudflare Pages", "Neon"],
+    tech: ["Next.js", "Cloudflare", "Neon"],
+  },
+  {
+    name: "Portfolio Web",
+    desc: "Este sitio web. Portafolio personal con blog, biblioteca y sistema de archivos.",
+    color: "#00FF88",
+    github: "https://github.com/Yzzz777/system777",
+    web: "https://jrsystem7777.com",
+    status: "Activo",
+    tech: ["Next.js", "Tailwind", "Framer Motion"],
   },
 ];
 
-const botStats = [
-  { label: "Comandos", value: "91+" },
-  { label: "Servidores", value: "21" },
-  { label: "Usuarios", value: "4,622" },
-  { label: "Sistemas", value: "12" },
-];
-
 const botFeatures = [
-  { icon: Shield, name: "Moderación", desc: "Ban, kick, warn, timeout, AutoMod y más." },
-  { icon: Zap, name: "Protección", desc: "Anti-raid, anti-nuke, anti-spam, whitelist." },
-  { icon: Terminal, name: "Terminal VPS", desc: "Control directo del servidor desde Discord." },
-  { icon: BotIcon, name: "JARVIS AI", desc: "Asistente IA con LLaMA 3.3 70B vía Groq." },
+  { icon: Shield, name: "Moderación", desc: "Ban, kick, warn, timeout, AutoMod.", color: "#00FF88" },
+  { icon: Zap, name: "Protección", desc: "Anti-raid, anti-nuke, whitelist.", color: "#FFD93D" },
+  { icon: Terminal, name: "Terminal VPS", desc: "Control del servidor desde Discord.", color: "#00C8FF" },
+  { icon: Brain, name: "JARVIS AI", desc: "IA con LLaMA 3.3 70B vía Groq.", color: "#7C3AED" },
+  { icon: Music, name: "Música", desc: "YouTube, Spotify, cola.", color: "#EB459E" },
+  { icon: Activity, name: "Economía", desc: "Monedas, banco, daily, slots.", color: "#F38020" },
+  { icon: Star, name: "Niveles", desc: "XP, rewards, leaderboard.", color: "#5865F2" },
+  { icon: Rocket, name: "Premium", desc: "Planes normal, pro, max.", color: "#00FF88" },
 ];
 
 const recentPosts = [
   { title: "Next.js 15 nuevas características", category: "Framework", date: "2024-01-15" },
   { title: "Roadmap ético hacking 2025", category: "Ciberseguridad", date: "2024-02-10" },
-  { title: "Ciberseguridad mejores prácticas 2025", category: "Ciberseguridad", date: "2024-03-05" },
+  { title: "Mejores prácticas cybersecurity 2025", category: "Seguridad", date: "2024-03-05" },
 ];
 
 const announcements = [
-  { title: "Nueva actualización del bot System 777", type: "success", content: "Se han añadido 9 sistemas de whitelist granular." },
-  { title: "Nuevo plan Pro disponible", type: "info", content: "Recursos ilimitados y sesiones de mentoría incluidas." },
-  { title: "Parche de seguridad crítico", type: "warning", content: "Actualización urgente de seguridad aplicada." },
+  { title: "System 777 — Nuevos 9 sistemas de whitelist", type: "success", content: "Granular whitelist añadida." },
+  { title: "Nuevo plan Pro disponible", type: "info", content: "Recursos ilimitados y mentoría." },
+  { title: "Parche de seguridad crítico", type: "warning", content: "Actualización urgente aplicada." },
 ];
 
+/* ===================== MAIN ===================== */
 export default function HomePage() {
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouse = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight });
+    };
+    window.addEventListener("mousemove", handleMouse);
+    return () => window.removeEventListener("mousemove", handleMouse);
+  }, []);
+
   return (
-    <>
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#00FF88]/5 via-transparent to-transparent" />
-        <motion.div animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }} transition={{ duration: 8, repeat: Infinity }} className="absolute left-1/2 top-0 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-[#00FF88]/5 blur-[120px]" />
-        <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }} transition={{ duration: 10, repeat: Infinity, delay: 2 }} className="absolute right-0 top-1/2 h-[400px] w-[400px] rounded-full bg-[#00C8FF]/5 blur-[100px]" />
+    <div className="relative">
+      {/* Background layers */}
+      <div className="grid-bg" />
+      <Particles />
 
-        <div className="relative mx-auto max-w-5xl px-4 py-24 text-center sm:py-32">
-          <FadeIn>
-            <div className="mb-8 inline-flex items-center justify-center">
-              <div className="h-28 w-28 rounded-full border-4 border-[#00FF88]/30 bg-[#121212] flex items-center justify-center text-4xl font-bold text-[#00FF88] shadow-[0_0_40px_rgba(0,255,136,0.15)]">
-                A
+      {/* Dynamic glow following mouse */}
+      <div
+        className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-700"
+        style={{
+          background: `radial-gradient(800px circle at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(0,255,136,0.06), transparent 60%)`,
+        }}
+      />
+
+      <div className="relative z-10">
+        {/* =================== HERO =================== */}
+        <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+          {/* Animated orbs */}
+          <motion.div animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0.3, 0.15] }} transition={{ duration: 8, repeat: Infinity }} className="absolute left-[10%] top-[20%] h-[500px] w-[500px] rounded-full bg-[#00FF88]/10 blur-[150px]" />
+          <motion.div animate={{ scale: [1.2, 1, 1.2], opacity: [0.1, 0.25, 0.1] }} transition={{ duration: 10, repeat: Infinity, delay: 3 }} className="absolute right-[10%] bottom-[20%] h-[400px] w-[400px] rounded-full bg-[#5865F2]/10 blur-[130px]" />
+          <motion.div animate={{ scale: [1, 1.15, 1], opacity: [0.08, 0.2, 0.08] }} transition={{ duration: 12, repeat: Infinity, delay: 1 }} className="absolute left-[50%] top-[60%] h-[300px] w-[300px] rounded-full bg-[#7C3AED]/10 blur-[120px]" />
+
+          <div className="relative mx-auto max-w-6xl px-4 py-20 text-center">
+            {/* Banner GIF */}
+            <FadeIn>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className="relative mx-auto mb-8 max-w-2xl"
+              >
+                <div className="relative w-full h-48 sm:h-64 rounded-3xl overflow-hidden border border-white/5">
+                  <Image src="/banner.gif" alt="Banner" fill className="object-cover" unoptimized />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#050508] via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#050508]/60 via-transparent to-[#050508]/60" />
+
+                  {/* Profile avatar overlapping banner */}
+                  <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
+                    <div className="relative">
+                      <div className="h-24 w-24 rounded-full border-4 border-[#050508] overflow-hidden avatar-glow">
+                        <Image src="/profile.png" alt="Ángel" width={96} height={96} className="h-full w-full object-cover" />
+                      </div>
+                      <div className="absolute bottom-1 right-1 h-4 w-4 rounded-full border-2 border-[#050508] bg-[#00FF88] status-online" />
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </FadeIn>
+
+            {/* Name + Username */}
+            <FadeIn delay={0.2}>
+              <div className="mt-16">
+                <h1 className="text-5xl font-black tracking-tight text-white sm:text-7xl">
+                  Ángel
+                </h1>
+                <div className="mt-2 flex items-center justify-center gap-3">
+                  <span className="holographic rounded-full px-4 py-1 text-sm font-bold text-black">Yzzz 777</span>
+                  <span className="flex items-center gap-1.5 rounded-full border border-[#00FF88]/20 bg-[#00FF88]/5 px-3 py-1 text-xs text-[#00FF88]">
+                    <span className="h-2 w-2 rounded-full bg-[#00FF88] status-online" />
+                    Online
+                  </span>
+                </div>
               </div>
-            </div>
-          </FadeIn>
+            </FadeIn>
 
-          <FadeIn delay={0.1}>
-            <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
-              <span className="bg-gradient-to-r from-[#00FF88] to-[#00C8FF] bg-clip-text text-transparent">Ángel</span>
-              <span className="text-gray-500 text-2xl sm:text-3xl ml-4">Yzzz 777</span>
-            </h1>
-          </FadeIn>
+            {/* Bio */}
+            <FadeIn delay={0.3}>
+              <p className="mx-auto mt-6 max-w-xl text-lg text-gray-400 leading-relaxed">
+                Programación, ciberseguridad, Linux, automatización y bots de Discord.
+                <br />
+                <span className="text-gray-500">Más de 3 años aprendiendo y construyendo.</span>
+              </p>
+            </FadeIn>
 
-          <FadeIn delay={0.2}>
-            <p className="mx-auto mt-6 max-w-2xl text-lg text-gray-400">
-              Programación, ciberseguridad, Linux, automatización y bots de Discord. Más de 3 años aprendiendo y construyendo.
-            </p>
-          </FadeIn>
+            {/* Social buttons */}
+            <FadeIn delay={0.4}>
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
+                {socialLinks.map((s) => (
+                  <a
+                    key={s.name}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-gray-300 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white hover:shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+                  >
+                    <s.icon className="h-4 w-4" />
+                    {s.name}
+                    <ExternalLink className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
+                  </a>
+                ))}
+              </div>
+            </FadeIn>
 
-          <FadeIn delay={0.3}>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              {socialLinks.map((s) => (
-                <a
-                  key={s.name}
-                  href={s.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-gray-300 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
-                >
-                  <s.icon className="h-4 w-4" />
-                  {s.name}
-                  <ExternalLink className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
-                </a>
-              ))}
-            </div>
-          </FadeIn>
-
-          <FadeIn delay={0.4}>
-            <div className="mt-12 flex flex-col items-center gap-6">
-              <div className="text-center">
-                <p className="text-sm text-gray-500 mb-3">Llevo aprendiendo</p>
+            {/* Counter */}
+            <FadeIn delay={0.5}>
+              <div className="mt-12">
                 <StudyTimeCounter startDate={studyStartDate} />
               </div>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
+            </FadeIn>
 
-      {/* Sobre mí */}
-      <section className="py-24">
-        <div className="mx-auto max-w-4xl px-4">
-          <FadeInUp>
-            <div className="glass rounded-3xl p-10 sm:p-12">
-              <h2 className="text-3xl font-bold text-white mb-6">Sobre mí</h2>
-              <div className="space-y-4 text-gray-400 leading-relaxed">
-                <p>
-                  Soy <span className="text-white font-semibold">Ángel</span>, conocido como <span className="text-[#00FF88] font-semibold">Yzzz 777</span>. Llevo aproximadamente 3 años estudiando programación y ciberseguridad de forma autodidacta y práctica.
-                </p>
-                <p>
-                  Mis intereses incluyen programación, desarrollo web, Linux, ciberseguridad, automatización, bots de Discord, APIs, sistemas y bases de datos. No invento experiencia profesional ni certificaciones — todo lo que muestro es lo que realmente sé y he construido.
-                </p>
-                <p>
-                  Mi proyecto principal es <span className="text-[#5865F2] font-semibold">System 777</span>, un bot avanzado para Discord con moderación, música, economía, niveles y protección. También administro este sitio web y un panel de administración completo.
-                </p>
+            {/* Scroll indicator */}
+            <FadeIn delay={0.8}>
+              <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 2, repeat: Infinity }} className="mt-16">
+                <ChevronRight className="mx-auto h-6 w-6 rotate-90 text-gray-600" />
+              </motion.div>
+            </FadeIn>
+          </div>
+        </section>
+
+        {/* =================== SOBRE MÍ =================== */}
+        <section className="py-24">
+          <div className="mx-auto max-w-4xl px-4">
+            <FadeInUp>
+              <TiltCard className="glass glass-hover rounded-3xl p-10 sm:p-12">
+                <div className="flex items-center gap-2 mb-6">
+                  <Sparkles className="h-5 w-5 text-[#00FF88]" />
+                  <h2 className="text-3xl font-bold text-white">Sobre mí</h2>
+                </div>
+                <div className="space-y-4 text-gray-400 leading-relaxed">
+                  <p>
+                    Soy <span className="text-white font-semibold">Ángel</span>, conocido como <span className="gradient-text font-semibold">Yzzz 777</span>. Llevo aproximadamente 3 años estudiando programación y ciberseguridad de forma autodidacta y práctica.
+                  </p>
+                  <p>
+                    Mis intereses incluyen programación, desarrollo web, Linux, ciberseguridad, automatización, bots de Discord, APIs, sistemas y bases de datos. No invento experiencia profesional — todo lo que muestro es lo que realmente sé y he construido.
+                  </p>
+                  <p>
+                    Mi proyecto principal es <span className="text-[#5865F2] font-semibold">System 777</span>, un bot avanzado para Discord con moderación, música, economía, niveles y protección. También administro este sitio y un panel de administración completo.
+                  </p>
+                </div>
+              </TiltCard>
+            </FadeInUp>
+          </div>
+        </section>
+
+        {/* =================== TECNOLOGÍAS =================== */}
+        <section className="py-24 relative">
+          <div className="mx-auto max-w-7xl px-4">
+            <FadeIn>
+              <div className="text-center mb-16">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#00FF88]/20 bg-[#00FF88]/5 px-4 py-1.5 text-xs text-[#00FF88] mb-4">
+                  <Code className="h-3 w-3" /> Stack
+                </span>
+                <h2 className="text-4xl font-bold text-white sm:text-5xl">Tecnologías</h2>
+                <p className="mx-auto mt-4 max-w-xl text-gray-400">Tecnologías que domino y estudio</p>
               </div>
-            </div>
-          </FadeInUp>
-        </div>
-      </section>
-
-      {/* Tecnologías */}
-      <section className="py-24 bg-gradient-to-b from-transparent via-[#00FF88]/[0.02] to-transparent">
-        <div className="mx-auto max-w-7xl px-4">
-          <FadeIn>
-            <div className="text-center">
-              <h2 className="text-3xl font-bold text-white sm:text-4xl">Tecnologías</h2>
-              <p className="mx-auto mt-4 max-w-2xl text-gray-400">Tecnologías que estudio y conozco</p>
-            </div>
-          </FadeIn>
-          <StaggerContainer className="mt-16 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {techData.map((t) => (
-              <StaggerItem key={t.name}>
-                <HoverScale>
-                  <div className="glass rounded-xl p-5 text-center">
+            </FadeIn>
+            <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {techData.map((t) => (
+                <StaggerItem key={t.name}>
+                  <TiltCard className="tech-badge glass glass-hover rounded-xl p-4 text-center cursor-default">
                     <div
-                      className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl text-sm font-bold"
-                      style={{ backgroundColor: t.color + "15", color: t.color }}
+                      className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-lg text-xs font-bold"
+                      style={{ backgroundColor: t.color + "18", color: t.color }}
                     >
                       {t.icon}
                     </div>
-                    <h3 className="text-sm font-semibold text-white">{t.name}</h3>
-                  </div>
-                </HoverScale>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
-        </div>
-      </section>
-
-      {/* Ciberseguridad */}
-      <section className="py-24">
-        <div className="mx-auto max-w-7xl px-4">
-          <FadeIn>
-            <div className="text-center">
-              <h2 className="text-3xl font-bold text-white sm:text-4xl">Cybersecurity</h2>
-              <p className="mx-auto mt-4 max-w-2xl text-gray-400">Áreas de conocimiento e interés en seguridad informática</p>
-            </div>
-          </FadeIn>
-          <StaggerContainer className="mt-16 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {cyberAreas.map((area) => (
-              <StaggerItem key={area}>
-                <HoverScale>
-                  <div className="glass rounded-xl p-5 text-center">
-                    <Shield className="mx-auto mb-3 h-6 w-6 text-[#00C8FF]" />
-                    <h3 className="text-sm font-semibold text-white">{area}</h3>
-                  </div>
-                </HoverScale>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
-        </div>
-      </section>
-
-      {/* Features / Intereses */}
-      <section className="py-24 bg-gradient-to-b from-transparent via-[#7C3AED]/[0.02] to-transparent">
-        <div className="mx-auto max-w-7xl px-4">
-          <FadeIn>
-            <div className="text-center">
-              <h2 className="text-3xl font-bold text-white sm:text-4xl">Intereses</h2>
-              <p className="mx-auto mt-4 max-w-2xl text-gray-400">Áreas en las que enfoco mi aprendizaje</p>
-            </div>
-          </FadeIn>
-          <StaggerContainer className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((f) => (
-              <StaggerItem key={f.title}>
-                <HoverScale>
-                  <div className="glass rounded-2xl p-8 text-center">
-                    <div
-                      className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
-                      style={{ backgroundColor: f.color + "15" }}
-                    >
-                      <f.icon className="h-7 w-7" style={{ color: f.color }} />
+                    <h3 className="text-xs font-semibold text-white">{t.name}</h3>
+                    <div className="mt-2 h-1 rounded-full bg-white/5 overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        whileInView={{ width: `${t.level}%` }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 1, delay: 0.2 }}
+                        className="h-full rounded-full"
+                        style={{ backgroundColor: t.color }}
+                      />
                     </div>
-                    <h3 className="text-lg font-semibold text-white">{f.title}</h3>
-                    <p className="mt-2 text-sm text-gray-400">{f.desc}</p>
-                  </div>
-                </HoverScale>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
-        </div>
-      </section>
+                  </TiltCard>
+                </StaggerItem>
+              ))}
+            </StaggerContainer>
+          </div>
+        </section>
 
-      {/* Proyectos */}
-      <section className="py-24">
-        <div className="mx-auto max-w-7xl px-4">
-          <FadeIn>
-            <div className="text-center">
-              <h2 className="text-3xl font-bold text-white sm:text-4xl">Mis Proyectos</h2>
-              <p className="mx-auto mt-4 max-w-2xl text-gray-400">Proyectos que he construido y mantengo</p>
-            </div>
-          </FadeIn>
-          <StaggerContainer className="mt-16 grid gap-8 sm:grid-cols-2">
-            {projects.map((p) => (
-              <StaggerItem key={p.name}>
-                <HoverScale>
-                  <div className="glass rounded-2xl p-8">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
+        {/* =================== CYBERSECURITY =================== */}
+        <section className="py-24 relative">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#00C8FF]/[0.02] to-transparent" />
+          <div className="relative mx-auto max-w-7xl px-4">
+            <FadeIn>
+              <div className="text-center mb-16">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#00C8FF]/20 bg-[#00C8FF]/5 px-4 py-1.5 text-xs text-[#00C8FF] mb-4">
+                  <Shield className="h-3 w-3" /> Security
+                </span>
+                <h2 className="text-4xl font-bold text-white sm:text-5xl">Cybersecurity</h2>
+                <p className="mx-auto mt-4 max-w-xl text-gray-400">Áreas de conocimiento en seguridad informática</p>
+              </div>
+            </FadeIn>
+            <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {cyberAreas.map((area) => (
+                <StaggerItem key={area.name}>
+                  <TiltCard className="glass glass-hover rounded-xl p-5 cursor-default">
+                    <area.icon className="mb-3 h-5 w-5 text-[#00C8FF]" />
+                    <h3 className="text-sm font-semibold text-white">{area.name}</h3>
+                    <p className="mt-1 text-xs text-gray-500">{area.desc}</p>
+                  </TiltCard>
+                </StaggerItem>
+              ))}
+            </StaggerContainer>
+          </div>
+        </section>
+
+        {/* =================== PROYECTOS =================== */}
+        <section className="py-24">
+          <div className="mx-auto max-w-7xl px-4">
+            <FadeIn>
+              <div className="text-center mb-16">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#7C3AED]/20 bg-[#7C3AED]/5 px-4 py-1.5 text-xs text-[#7C3AED] mb-4">
+                  <Rocket className="h-3 w-3" /> Projects
+                </span>
+                <h2 className="text-4xl font-bold text-white sm:text-5xl">Mis Proyectos</h2>
+              </div>
+            </FadeIn>
+            <StaggerContainer className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {projects.map((p) => (
+                <StaggerItem key={p.name}>
+                  <TiltCard className="glass glass-hover rounded-2xl overflow-hidden h-full">
+                    {/* Color bar top */}
+                    <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${p.color}, transparent)` }} />
+                    <div className="p-7">
+                      <div className="flex items-start justify-between mb-3">
                         <h3 className="text-xl font-bold text-white">{p.name}</h3>
-                        <p className="mt-2 text-sm text-gray-400">{p.desc}</p>
+                        <span className="shrink-0 rounded-full bg-[#00FF88]/10 px-3 py-1 text-xs font-medium text-[#00FF88]">{p.status}</span>
                       </div>
-                      <span className="shrink-0 ml-4 rounded-full bg-[#00FF88]/10 px-3 py-1 text-xs font-medium text-[#00FF88]">{p.status}</span>
+                      <p className="text-sm text-gray-400 mb-4">{p.desc}</p>
+                      <div className="flex flex-wrap gap-2 mb-6">
+                        {p.tech.map((t) => (
+                          <span key={t} className="rounded-lg bg-white/5 px-2.5 py-1 text-xs text-gray-400">{t}</span>
+                        ))}
+                      </div>
+                      <div className="flex gap-3">
+                        <a href={p.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-xl bg-white/5 px-4 py-2 text-sm text-gray-300 transition-all hover:bg-white/10 hover:text-white">
+                          <Github className="h-4 w-4" /> GitHub
+                        </a>
+                        <a href={p.web} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-xl bg-white/5 px-4 py-2 text-sm text-gray-300 transition-all hover:bg-white/10 hover:text-white">
+                          <Globe className="h-4 w-4" /> Web
+                        </a>
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-2 mb-6">
-                      {p.tech.map((t) => (
-                        <span key={t} className="rounded-lg bg-white/5 px-2.5 py-1 text-xs text-gray-400">{t}</span>
-                      ))}
-                    </div>
-                    <div className="flex gap-3">
-                      <a href={p.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-xl bg-white/5 px-4 py-2 text-sm text-gray-300 transition-all hover:bg-white/10 hover:text-white">
-                        <Github className="h-4 w-4" /> GitHub
-                      </a>
-                      <a href={p.web} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-xl bg-white/5 px-4 py-2 text-sm text-gray-300 transition-all hover:bg-white/10 hover:text-white">
-                        <Globe className="h-4 w-4" /> Web
-                      </a>
-                    </div>
-                  </div>
-                </HoverScale>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
-        </div>
-      </section>
+                  </TiltCard>
+                </StaggerItem>
+              ))}
+            </StaggerContainer>
+          </div>
+        </section>
 
-      {/* System 777 */}
-      <section className="py-24 bg-gradient-to-b from-transparent via-[#5865F2]/[0.03] to-transparent">
-        <div className="mx-auto max-w-7xl px-4">
-          <FadeIn>
-            <div className="text-center">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#5865F2]/20 bg-[#5865F2]/5 px-4 py-1.5 text-sm text-[#5865F2]">
-                <BotIcon className="h-3 w-3" /> Discord Bot
+        {/* =================== SYSTEM 777 =================== */}
+        <section className="py-24 relative">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#5865F2]/[0.03] to-transparent" />
+          <div className="relative mx-auto max-w-7xl px-4">
+            <FadeIn>
+              <div className="text-center mb-16">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#5865F2]/20 bg-[#5865F2]/5 px-4 py-1.5 text-xs text-[#5865F2] mb-4">
+                  <BotIcon className="h-3 w-3" /> Discord Bot
+                </span>
+                <h2 className="text-4xl font-bold text-white sm:text-5xl">
+                  <span className="bg-gradient-to-r from-[#5865F2] to-[#7C3AED] bg-clip-text text-transparent">System 777</span>
+                </h2>
+                <p className="mx-auto mt-4 max-w-2xl text-gray-400">El bot definitivo para Discord. Moderación, música, economía y protección.</p>
               </div>
-              <h2 className="text-3xl font-bold text-white sm:text-4xl">
-                <span className="bg-gradient-to-r from-[#5865F2] to-[#7C3AED] bg-clip-text text-transparent">System 777</span>
-              </h2>
-              <p className="mx-auto mt-4 max-w-2xl text-gray-400">El bot definitivo para Discord. Moderación, música, economía, niveles y protección en un solo bot profesional.</p>
-            </div>
-          </FadeIn>
+            </FadeIn>
 
-          <StaggerContainer className="mt-16 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {botStats.map((s) => (
-              <StaggerItem key={s.label}>
-                <div className="glass rounded-2xl p-6 text-center">
-                  <div className="text-2xl font-bold text-white">{s.value}</div>
-                  <div className="text-sm text-gray-400 mt-1">{s.label}</div>
-                </div>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
-
-          <StaggerContainer className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {botFeatures.map((f) => (
-              <StaggerItem key={f.name}>
-                <div className="glass rounded-2xl p-6">
-                  <f.icon className="mb-3 h-6 w-6 text-[#5865F2]" />
-                  <h3 className="font-semibold text-white">{f.name}</h3>
-                  <p className="mt-1 text-sm text-gray-400">{f.desc}</p>
-                </div>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
-
-          <FadeIn delay={0.2}>
-            <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a
-                href="https://discord.com/oauth2/authorize?client_id=1502804306125132057&permissions=8&integration_type=0&scope=applications.commands+bot"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center gap-2 rounded-xl bg-[#5865F2] px-8 py-3.5 text-sm font-semibold text-white transition-all hover:bg-[#4752c4] hover:shadow-[0_0_30px_rgba(88,101,242,0.3)]"
-              >
-                Invitar Bot <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </a>
-              <Link href="/bot" className="flex items-center gap-2 rounded-xl border border-white/10 px-8 py-3.5 text-sm font-semibold text-white transition-all hover:border-[#5865F2]/30 hover:bg-white/5">
-                Ver más
-              </Link>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* Blog Preview */}
-      <section className="py-24">
-        <div className="mx-auto max-w-7xl px-4">
-          <FadeIn>
-            <div className="flex items-center justify-between mb-12">
-              <div>
-                <h2 className="text-3xl font-bold text-white sm:text-4xl">Blog</h2>
-                <p className="mt-2 text-gray-400">Noticias, tutoriales y artículos</p>
+            {/* Live Status */}
+            <FadeIn delay={0.1}>
+              <div className="mx-auto max-w-lg mb-12">
+                <DiscordStatus />
               </div>
-              <Link href="/blog" className="flex items-center gap-1 text-sm font-medium text-[#00FF88] hover:underline">
-                Ver todo <ChevronRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </FadeIn>
-          <StaggerContainer className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {recentPosts.map((post) => (
-              <StaggerItem key={post.title}>
-                <HoverScale>
-                  <div className="glass rounded-2xl p-6">
+            </FadeIn>
+
+            {/* Features grid */}
+            <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {botFeatures.map((f) => (
+                <StaggerItem key={f.name}>
+                  <TiltCard className="glass glass-hover rounded-xl p-5 cursor-default">
+                    <f.icon className="mb-3 h-5 w-5" style={{ color: f.color }} />
+                    <h3 className="text-sm font-semibold text-white">{f.name}</h3>
+                    <p className="mt-1 text-xs text-gray-500">{f.desc}</p>
+                  </TiltCard>
+                </StaggerItem>
+              ))}
+            </StaggerContainer>
+
+            {/* CTA */}
+            <FadeIn delay={0.3}>
+              <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a
+                  href="https://discord.com/oauth2/authorize?client_id=1502804306125132057&permissions=8&integration_type=0&scope=applications.commands+bot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-2 rounded-xl bg-[#5865F2] px-8 py-3.5 text-sm font-semibold text-white transition-all hover:bg-[#4752c4] hover:shadow-[0_0_30px_rgba(88,101,242,0.3)]"
+                >
+                  Invitar Bot <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </a>
+                <Link href="/bot" className="flex items-center gap-2 rounded-xl border border-white/10 px-8 py-3.5 text-sm font-semibold text-white transition-all hover:border-[#5865F2]/30 hover:bg-white/5">
+                  Ver más
+                </Link>
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+
+        {/* =================== BLOG =================== */}
+        <section className="py-24">
+          <div className="mx-auto max-w-7xl px-4">
+            <FadeIn>
+              <div className="flex items-center justify-between mb-12">
+                <div>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[#FFD93D]/20 bg-[#FFD93D]/5 px-4 py-1.5 text-xs text-[#FFD93D] mb-3">
+                    <Star className="h-3 w-3" /> Blog
+                  </span>
+                  <h2 className="text-3xl font-bold text-white sm:text-4xl">Últimas publicaciones</h2>
+                </div>
+                <Link href="/blog" className="flex items-center gap-1 text-sm font-medium text-[#00FF88] hover:underline">
+                  Ver todo <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </FadeIn>
+            <StaggerContainer className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {recentPosts.map((post) => (
+                <StaggerItem key={post.title}>
+                  <TiltCard className="glass glass-hover rounded-xl p-6">
                     <span className="text-xs text-gray-500 uppercase tracking-wider">{post.category}</span>
                     <h3 className="mt-2 text-lg font-semibold text-white">{post.title}</h3>
-                    <p className="mt-1 text-sm text-gray-400">{post.date}</p>
-                  </div>
-                </HoverScale>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
-        </div>
-      </section>
-
-      {/* Anuncios */}
-      <section className="py-24 bg-gradient-to-b from-transparent via-[#FFD93D]/[0.02] to-transparent">
-        <div className="mx-auto max-w-7xl px-4">
-          <FadeIn>
-            <div className="flex items-center justify-between mb-12">
-              <div>
-                <h2 className="text-3xl font-bold text-white sm:text-4xl">Anuncios</h2>
-                <p className="mt-2 text-gray-400">Avisos importantes y actualizaciones</p>
-              </div>
-              <Link href="/announcements" className="flex items-center gap-1 text-sm font-medium text-[#00FF88] hover:underline">
-                Ver todos <ChevronRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </FadeIn>
-          <StaggerContainer className="space-y-4">
-            {announcements.map((a) => (
-              <StaggerItem key={a.title}>
-                <div className="glass rounded-2xl p-6 flex items-start gap-4">
-                  <Bell className="mt-1 h-5 w-5 shrink-0 text-[#FFD93D]" />
-                  <div>
-                    <h3 className="font-semibold text-white">{a.title}</h3>
-                    <p className="mt-1 text-sm text-gray-400">{a.content}</p>
-                  </div>
-                </div>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
-        </div>
-      </section>
-
-      {/* Biblioteca Preview */}
-      <section className="py-24">
-        <div className="mx-auto max-w-7xl px-4">
-          <FadeIn>
-            <div className="flex items-center justify-between mb-12">
-              <div>
-                <h2 className="text-3xl font-bold text-white sm:text-4xl">Biblioteca</h2>
-                <p className="mt-2 text-gray-400">Archivos, documentos y recursos descargables</p>
-              </div>
-              <Link href="/library" className="flex items-center gap-1 text-sm font-medium text-[#00FF88] hover:underline">
-                Ver todo <ChevronRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </FadeIn>
-          <div className="glass rounded-2xl p-12 text-center">
-            <Download className="mx-auto mb-4 h-10 w-10 text-gray-600" />
-            <p className="text-gray-400">Próximamente disponible</p>
+                    <p className="mt-1 text-sm text-gray-500">{post.date}</p>
+                  </TiltCard>
+                </StaggerItem>
+              ))}
+            </StaggerContainer>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* CTA / Contacto */}
-      <section className="py-24 bg-gradient-to-b from-transparent via-[#00FF88]/[0.02] to-transparent">
-        <div className="mx-auto max-w-4xl px-4">
-          <FadeInUp>
-            <div className="glass rounded-3xl p-12 text-center">
-              <h2 className="text-3xl font-bold text-white sm:text-4xl">Contacto</h2>
-              <p className="mx-auto mt-4 max-w-xl text-gray-400">¿Quieres hablar? Puedes encontrarme en mis redes sociales o escribirme directo.</p>
-              <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <a href="https://discord.gg/system777" target="_blank" rel="noopener noreferrer" className="group flex items-center gap-2 rounded-xl bg-[#5865F2] px-8 py-3.5 text-sm font-semibold text-white transition-all hover:bg-[#4752c4]">
-                  <MessageSquare className="h-4 w-4" /> Discord
-                </a>
-                <a href="https://github.com/Yzzz777" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-xl border border-white/10 px-8 py-3.5 text-sm font-semibold text-white transition-all hover:bg-white/5">
-                  <Github className="h-4 w-4" /> GitHub
-                </a>
-                <a href="https://www.instagram.com/yzz.yzx?igsi=ZndvczI3bnZncWtj&utm_source=qr" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-xl border border-white/10 px-8 py-3.5 text-sm font-semibold text-white transition-all hover:bg-white/5">
-                  <Instagram className="h-4 w-4" /> Instagram
-                </a>
+        {/* =================== ANUNCIOS =================== */}
+        <section className="py-24 relative">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#FFD93D]/[0.02] to-transparent" />
+          <div className="relative mx-auto max-w-7xl px-4">
+            <FadeIn>
+              <div className="flex items-center justify-between mb-12">
+                <div>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[#FF6B6B]/20 bg-[#FF6B6B]/5 px-4 py-1.5 text-xs text-[#FF6B6B] mb-3">
+                    <Zap className="h-3 w-3" /> Updates
+                  </span>
+                  <h2 className="text-3xl font-bold text-white sm:text-4xl">Anuncios</h2>
+                </div>
               </div>
+            </FadeIn>
+            <StaggerContainer className="space-y-3">
+              {announcements.map((a) => (
+                <StaggerItem key={a.title}>
+                  <TiltCard className="glass glass-hover rounded-xl p-5 flex items-start gap-4">
+                    <div className={`mt-0.5 h-2 w-2 shrink-0 rounded-full ${a.type === "success" ? "bg-[#00FF88]" : a.type === "warning" ? "bg-[#FFD93D]" : "bg-[#00C8FF]"}`} />
+                    <div>
+                      <h3 className="font-semibold text-white text-sm">{a.title}</h3>
+                      <p className="mt-0.5 text-xs text-gray-400">{a.content}</p>
+                    </div>
+                  </TiltCard>
+                </StaggerItem>
+              ))}
+            </StaggerContainer>
+          </div>
+        </section>
+
+        {/* =================== BIBLIOTECA =================== */}
+        <section className="py-24">
+          <div className="mx-auto max-w-7xl px-4">
+            <FadeIn>
+              <div className="flex items-center justify-between mb-12">
+                <div>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[#00FF88]/20 bg-[#00FF88]/5 px-4 py-1.5 text-xs text-[#00FF88] mb-3">
+                    <Download className="h-3 w-3" /> Files
+                  </span>
+                  <h2 className="text-3xl font-bold text-white sm:text-4xl">Biblioteca</h2>
+                </div>
+                <Link href="/library" className="flex items-center gap-1 text-sm font-medium text-[#00FF88] hover:underline">
+                  Ver todo <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </FadeIn>
+            <div className="glass glass-hover rounded-2xl p-16 text-center glow-line">
+              <Download className="mx-auto mb-4 h-12 w-12 text-gray-700" />
+              <p className="text-gray-400 font-medium">Próximamente</p>
+              <p className="text-sm text-gray-600 mt-1">Documentos, archivos y recursos descargables</p>
             </div>
-          </FadeInUp>
-        </div>
-      </section>
-    </>
+          </div>
+        </section>
+
+        {/* =================== CONTACTO =================== */}
+        <section className="py-24 relative">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#00FF88]/[0.02] to-transparent" />
+          <div className="relative mx-auto max-w-4xl px-4">
+            <FadeInUp>
+              <TiltCard className="glass glass-hover rounded-3xl p-12 text-center">
+                <h2 className="text-3xl font-bold text-white sm:text-4xl">Contacto</h2>
+                <p className="mx-auto mt-4 max-w-xl text-gray-400">¿Quieres hablar? Encuéntrame en mis redes o escríbeme.</p>
+                <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <a href="https://discord.gg/system777" target="_blank" rel="noopener noreferrer" className="group flex items-center gap-2 rounded-xl bg-[#5865F2] px-8 py-3.5 text-sm font-semibold text-white transition-all hover:bg-[#4752c4] hover:shadow-[0_0_30px_rgba(88,101,242,0.3)]">
+                    <MessageSquare className="h-4 w-4" /> Discord
+                  </a>
+                  <a href="https://github.com/Yzzz777" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-xl border border-white/10 px-8 py-3.5 text-sm font-semibold text-white transition-all hover:bg-white/5">
+                    <Github className="h-4 w-4" /> GitHub
+                  </a>
+                  <a href="https://www.instagram.com/yzz.yzx?igsi=ZndvczI3bnZncWtj&utm_source=qr" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-xl border border-white/10 px-8 py-3.5 text-sm font-semibold text-white transition-all hover:bg-white/5">
+                    <Instagram className="h-4 w-4" /> Instagram
+                  </a>
+                </div>
+              </TiltCard>
+            </FadeInUp>
+          </div>
+        </section>
+      </div>
+    </div>
   );
 }
