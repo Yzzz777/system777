@@ -15,7 +15,7 @@ export default function ThemePicker() {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-surface)] border border-[var(--color-border)] shadow-lg hover:border-[var(--color-primary)]/30 transition-colors"
+        className="fixed bottom-6 right-6 z-50 hidden lg:flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-surface)] border border-[var(--color-border)] shadow-lg hover:border-[var(--color-primary)]/30 transition-colors"
         style={{ color: "var(--color-primary)" }}
       >
         <Palette className="h-5 w-5" />

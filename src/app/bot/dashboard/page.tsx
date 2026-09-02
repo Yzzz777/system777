@@ -178,6 +178,28 @@ function NumberInput({ value, onChange, label, min = 0 }: { value: number; onCha
   );
 }
 
+function MultiChannelSelect({ selected, onChange, options, label }: { selected: string[]; onChange: (v: string[]) => void; options: { value: string; label: string }[]; label: string }) {
+  const toggle = (id: string) => {
+    if (selected.includes(id)) onChange(selected.filter(x => x !== id));
+    else onChange([...selected, id]);
+  };
+  return (
+    <div>
+      <label className="block text-xs text-gray-500 mb-1.5">{label}</label>
+      <div className="max-h-40 overflow-y-auto rounded-xl bg-white/[0.05] border border-white/10 p-2 space-y-1">
+        {options.map(o => (
+          <label key={o.value} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/[0.05] cursor-pointer transition-colors">
+            <input type="checkbox" checked={selected.includes(o.value)} onChange={() => toggle(o.value)} className="accent-[#5865F2]" />
+            <span className="text-sm text-gray-300">{o.label}</span>
+          </label>
+        ))}
+        {options.length === 0 && <p className="text-xs text-gray-600 text-center py-2">Sin canales</p>}
+      </div>
+      {selected.length > 0 && <p className="text-xs text-gray-500 mt-1">{selected.length} canal(es) seleccionado(s) — vacío = todos</p>}
+    </div>
+  );
+}
+
 export default function BotDashboardPage() {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
@@ -189,7 +211,7 @@ export default function BotDashboardPage() {
   const [roles, setRoles] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
   const [ownerData, setOwnerData] = useState<any>(null);
   const [hierarchy, setHierarchy] = useState<any[]>([]);
@@ -360,15 +382,13 @@ export default function BotDashboardPage() {
                   ) : (
                     <div className="w-14 h-14 rounded-2xl bg-[#5865F2]/20 flex items-center justify-center"><span className="text-[#5865F2] font-black text-xl">{guild.name?.[0]}</span></div>
                   )}
-                  <div className="min-w-0 flex-1">
+                   <div className="min-w-0 flex-1">
                     <div className="font-bold text-white truncate">{guild.name}</div>
                     <div className="text-xs text-gray-500 flex items-center gap-1 mt-1"><Users size={10} /> {guild.members?.toLocaleString()} Miembros</div>
-                    {guild.inBot && <div className="text-xs text-[#57F287] mt-1">✅ Bot activo</div>}
-                    {!guild.inBot && <div className="text-xs text-gray-600 mt-1">⚠️ Bot no está en este servidor</div>}
-                    {!guild.isAdmin && <div className="text-xs text-yellow-500/70 mt-1">👁️ Solo lectura</div>}
+                    <div className="text-xs text-[#57F287] mt-1">✅ Bot activo</div>
                   </div>
                 </div>
-                <button disabled={!guild.inBot} className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-colors ${guild.inBot ? "bg-[#5865F2]/10 text-[#5865F2] hover:bg-[#5865F2]/20" : "bg-white/5 text-gray-600 cursor-not-allowed"}`}>{guild.inBot ? (guild.isAdmin ? "Configurar" : "Ver") : "Invitar Bot"}</button>
+                <button onClick={() => guild.isAdmin && setSelectedServer(guild.id)} className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-colors ${guild.isAdmin ? "bg-[#5865F2]/10 text-[#5865F2] hover:bg-[#5865F2]/20" : "bg-white/5 text-gray-500 cursor-not-allowed"}`}>{guild.isAdmin ? "Configurar" : "Sin permisos"}</button>
               </motion.div>
             ))}
           </div>
@@ -392,8 +412,11 @@ export default function BotDashboardPage() {
     <div className="flex min-h-screen" style={{ background: "#0f0f1a" }}>
       <AnimatePresence>{toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}</AnimatePresence>
 
+      {/* Mobile overlay */}
+      {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? "w-64" : "w-16"} flex-shrink-0 transition-all duration-300 flex flex-col border-r border-white/5 overflow-hidden`} style={{ background: "#141428", height: "100vh", position: "sticky", top: 0 }}>
+      <aside className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 fixed lg:sticky top-0 left-0 z-50 w-64 flex-shrink-0 transition-transform duration-300 flex flex-col border-r border-white/5 overflow-hidden`} style={{ background: "#141428", height: "100vh" }}>
         <div className="p-4 border-b border-white/5">
           <div className="flex items-center gap-3">
             {selectedGuild?.icon ? (
@@ -401,18 +424,18 @@ export default function BotDashboardPage() {
             ) : (
               <div className="w-9 h-9 rounded-xl bg-[#5865F2]/20 flex items-center justify-center flex-shrink-0"><span className="text-[#5865F2] font-bold text-sm">{selectedGuild?.name?.[0]}</span></div>
             )}
-            {sidebarOpen && <div className="min-w-0 flex-1"><div className="text-sm font-bold text-white truncate">{selectedGuild?.name}</div><div className="text-xs text-gray-500">{selectedGuild?.members?.toLocaleString()} miembros</div></div>}
+            <div className="min-w-0 flex-1"><div className="text-sm font-bold text-white truncate">{selectedGuild?.name}</div><div className="text-xs text-gray-500">{selectedGuild?.members?.toLocaleString()} miembros</div></div>
           </div>
         </div>
 
         <nav className="flex-1 overflow-y-auto py-2 px-2">
           {(isOwner ? OWNER_NAV : MEMBER_NAV).map((section) => (
             <div key={section.category} className="mb-3">
-              {sidebarOpen && <div className="px-3 py-1.5 text-xs font-semibold text-gray-600 uppercase">{section.category}</div>}
+              <div className="px-3 py-1.5 text-xs font-semibold text-gray-600 uppercase">{section.category}</div>
               {section.items.map((item) => (
-                <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors ${activeTab === item.id ? "bg-[#5865F2]/15 text-[#5865F2]" : "text-gray-400 hover:text-white hover:bg-white/5"}`}>
+                <button key={item.id} onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors ${activeTab === item.id ? "bg-[#5865F2]/15 text-[#5865F2]" : "text-gray-400 hover:text-white hover:bg-white/5"}`}>
                   <item.icon size={16} className="flex-shrink-0" />
-                  {sidebarOpen && <span>{item.label}</span>}
+                  <span>{item.label}</span>
                 </button>
               ))}
             </div>
@@ -421,22 +444,23 @@ export default function BotDashboardPage() {
 
         <div className="p-3 border-t border-white/5 space-y-1">
           <button onClick={() => setSelectedServer(null)} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-white/5">
-            <ChevronLeft size={16} /> {sidebarOpen && "Mis Servidores"}
+            <ChevronLeft size={16} /> Mis Servidores
           </button>
           <button onClick={() => signOut()} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-red-400 hover:bg-red-500/10">
-            <Power size={16} /> {sidebarOpen && "Cerrar Sesión"}
+            <Power size={16} /> Cerrar Sesión
           </button>
         </div>
-
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 border-t border-white/5 text-gray-500 hover:text-white">
-          {sidebarOpen ? <ChevronLeft size={16} className="mx-auto" /> : <ChevronRight size={16} className="mx-auto" />}
-        </button>
       </aside>
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto relative" id="dashboard-main" style={{ height: "100vh" }}>
 
-        <div className="p-6 max-w-5xl mx-auto">
+        {/* Mobile hamburger - FIXED position above everything */}
+        <button onClick={() => setSidebarOpen(true)} className="lg:hidden fixed top-20 right-4 z-[70] p-3 rounded-full bg-[#5865F2] text-white shadow-lg shadow-[#5865F2]/30 hover:bg-[#4752c4] transition-colors active:scale-95">
+          <Menu size={22} />
+        </button>
+
+        <div className="p-3 sm:p-4 lg:p-6 max-w-5xl mx-auto">
           <AnimatePresence mode="wait">
           <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
           {activeTab === "inicio" && (
@@ -1052,6 +1076,8 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
   const [logsPage, setLogsPage] = useState(1);
   const [logsAutoRefresh, setLogsAutoRefresh] = useState(false);
   const [logsLoading, setLogsLoading] = useState(false);
+  const [openTickets, setOpenTickets] = useState<any[]>([]);
+  const [ticketsLoading, setTicketsLoading] = useState(false);
   const LOGS_PER_PAGE = 15;
 
   useEffect(() => {
@@ -1060,6 +1086,9 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
     }
     if (activeTicketTab === "logs") {
       loadLogs();
+    }
+    if (activeTicketTab === "manage") {
+      loadOpenTickets();
     }
   }, [activeTicketTab, api, guildId]);
 
@@ -1076,6 +1105,31 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
       if (res?.logs) setTicketLogs(res.logs);
     } catch {}
     setLogsLoading(false);
+  };
+
+  const loadOpenTickets = async () => {
+    setTicketsLoading(true);
+    try {
+      const res = await api(`guild/${guildId}/tickets/list`);
+      if (res?.tickets) setOpenTickets(res.tickets);
+    } catch {}
+    setTicketsLoading(false);
+  };
+
+  const closeTicketFromDashboard = async (channelId: string) => {
+    try {
+      await api(`guild/${guildId}/tickets/close/${channelId}`, { method: "POST" });
+      showToast("Ticket cerrado", "success");
+      loadOpenTickets();
+    } catch { showToast("Error al cerrar ticket", "error"); }
+  };
+
+  const claimTicketFromDashboard = async (channelId: string) => {
+    try {
+      await api(`guild/${guildId}/tickets/claim/${channelId}`, { method: "POST" });
+      showToast("Ticket reclamado", "success");
+      loadOpenTickets();
+    } catch { showToast("Error al reclamar ticket", "error"); }
   };
 
   const saveTicketConfig = async () => {
@@ -1131,6 +1185,7 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
 
   const tabs = [
     { id: "panel", label: "Panel", icon: Layout },
+    { id: "manage", label: "Gestionar", icon: Ticket },
     { id: "categories", label: "Categorías", icon: FolderOpen },
     { id: "forms", label: "Formularios", icon: FileText },
     { id: "behavior", label: "Comportamiento", icon: Settings },
@@ -1151,18 +1206,84 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
         <h2 className="text-xl font-black text-white mb-1">🎫 Sistema de Tickets</h2>
         <p className="text-sm text-gray-400">Configura el panel, categorías, formularios y comportamiento de tickets.</p>
       </div>
-      <div className="flex gap-2 overflow-x-auto pb-2">
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
         {tabs.map((t) => (
-          <button key={t.id} onClick={() => setActiveTicketTab(t.id)} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${activeTicketTab === t.id ? "bg-[#5865F2] text-white shadow-lg shadow-[#5865F2]/20" : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"}`}>
+          <button key={t.id} onClick={() => setActiveTicketTab(t.id)} className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${activeTicketTab === t.id ? "bg-[#5865F2] text-white shadow-lg shadow-[#5865F2]/20" : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"}`}>
             <t.icon size={14} />
             {t.label}
           </button>
         ))}
       </div>
 
+      {/* ── MANAGE TAB ── */}
+      {activeTicketTab === "manage" && (
+        <div className="space-y-4">
+          <div className="glass rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-white flex items-center gap-2"><Ticket size={16} className="text-[#FEE75C]" /> Tickets Abiertos ({openTickets.length})</h3>
+              <button onClick={loadOpenTickets} className="text-gray-400 hover:text-white"><RefreshCw size={16} /></button>
+            </div>
+            {ticketsLoading ? (
+              <div className="text-center py-8"><div className="w-8 h-8 border-2 border-[#5865F2] border-t-transparent rounded-full animate-spin mx-auto" /></div>
+            ) : openTickets.length === 0 ? (
+              <div className="text-center py-12">
+                <Ticket size={48} className="mx-auto text-gray-600 mb-3" />
+                <p className="text-gray-500">No hay tickets abiertos</p>
+                <p className="text-xs text-gray-600 mt-1">Los tickets aparecerán aquí cuando los usuarios los abran</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {openTickets.map((t: any) => (
+                  <div key={t.channelId || t.id} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-white/[0.03] hover:bg-white/[0.05] transition-colors border border-white/5">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0" style={{ background: (t.color || "#5865F2") + "20" }}>
+                        {t.emoji || "🎫"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-white font-semibold text-sm truncate">{t.channelName || `ticket-${t.number}`}</span>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${t.status === "open" ? "bg-green-500/20 text-green-400" : t.status === "claimed" ? "bg-blue-500/20 text-blue-400" : "bg-gray-500/20 text-gray-400"}`}>
+                            {t.status || "open"}
+                          </span>
+                          {t.priority && (
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${priorityColors[t.priority] || priorityColors.low}`}>
+                              {t.priority}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1 truncate">
+                          <span>por <span className="text-gray-400">{t.userName || t.userId}</span></span>
+                          {t.category && <span className="ml-2">· {t.emoji || "🎫"} {t.category}</span>}
+                          {t.claimedBy && <span className="ml-2">· 👮 {t.claimedBy}</span>}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 sm:flex-shrink-0">
+                      {t.status !== "claimed" && (
+                        <button onClick={() => claimTicketFromDashboard(t.channelId)} className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 text-xs font-semibold hover:bg-blue-500/20 transition-colors">
+                          Reclamar
+                        </button>
+                      )}
+                      <button onClick={() => closeTicketFromDashboard(t.channelId)} className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 text-xs font-semibold hover:bg-red-500/20 transition-colors">
+                        Cerrar
+                      </button>
+                      {t.channelId && (
+                        <a href={`https://discord.com/channels/${guildId}/${t.channelId}`} target="_blank" rel="noopener noreferrer" className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-white/5 text-gray-400 text-xs font-semibold hover:bg-white/10 transition-colors text-center">
+                          Abrir
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── PANEL TAB ── */}
       {activeTicketTab === "panel" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 overflow-hidden">
           <div className="space-y-4">
             <div className="glass rounded-2xl p-6 space-y-4">
               <h3 className="font-bold text-white flex items-center gap-2"><Hash size={16} className="text-[#5865F2]" /> Canales y Roles</h3>
@@ -1199,34 +1320,49 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
           <div className="space-y-4">
             <div className="glass rounded-2xl p-6">
               <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Eye size={16} className="text-[#7C3AED]" /> Vista Previa</h3>
-              <div className="rounded-xl overflow-hidden" style={{ background: "#2b2d31" }}>
-                <div className="p-1" style={{ background: ticketCfg.panelColor || "#5865F2" }} />
+              <div className="rounded-xl overflow-hidden" style={{ background: "#313338" }}>
+                <div className="flex items-center gap-2 px-4 py-2 bg-[#2b2d31] border-b border-[#1e1f22]">
+                  <span className="text-[#80848e] text-lg">#</span>
+                  <span className="text-[#dbdee1] text-sm font-semibold">{ticketCfg.panelChannel ? channels.find((c: any) => c.value === ticketCfg.panelChannel)?.label?.replace('#', '') || 'panel-soporte' : 'panel-soporte'}</span>
+                </div>
                 <div className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: (ticketCfg.panelColor || "#5865F2") + "30" }}>
-                      <Ticket size={20} style={{ color: ticketCfg.panelColor || "#5865F2" }} />
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: "#5865F2" }}>
+                      <span className="text-white text-sm font-bold">S7</span>
                     </div>
                     <div className="flex-1">
-                      {ticketCfg.panelTitle && <div className="font-bold text-white mb-1">{ticketCfg.panelTitle}</div>}
-                      <div className="text-sm text-gray-300 whitespace-pre-wrap">{ticketCfg.panelDesc || "Selecciona el tipo de ticket."}</div>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-white text-sm font-semibold">System 777</span>
+                        <span className="bg-[#5865F2] text-white text-[9px] px-1.5 py-0.5 rounded font-semibold">APP</span>
+                      </div>
+                      <div className="rounded-xl overflow-hidden" style={{ background: "#2b2d31", border: `2px solid ${ticketCfg.panelColor || "#5865F2"}` }}>
+                        <div className="h-1.5" style={{ background: ticketCfg.panelColor || "#5865F2" }} />
+                        <div className="p-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: (ticketCfg.panelColor || "#5865F2") + "25" }}>
+                              <Ticket size={14} style={{ color: ticketCfg.panelColor || "#5865F2" }} />
+                            </div>
+                            <span className="text-white font-bold text-sm">{ticketCfg.panelTitle || "Soporte"}</span>
+                          </div>
+                          <p className="text-[#b5bac1] text-xs mb-3 whitespace-pre-wrap">{ticketCfg.panelDesc || "Selecciona el tipo de ticket."}</p>
+                          {ticketCfg.panelImage && (
+                            <img src={ticketCfg.panelImage} alt="" className="w-full h-20 object-cover rounded-lg mb-3" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                          )}
+                          {ticketCategories.filter((c: any) => c.status !== "inactive").length > 0 && (
+                            <div className="space-y-1.5">
+                              {ticketCategories.filter((c: any) => c.status !== "inactive").slice(0, 5).map((cat: any) => (
+                                <div key={cat.id} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-white/5 cursor-pointer transition-colors" style={{ background: "rgba(255,255,255,0.03)" }}>
+                                  <span className="text-sm">{cat.emoji || "🎫"}</span>
+                                  <span className="text-white text-xs font-medium">{cat.label}</span>
+                                  {cat.description && <span className="text-[#80848e] text-[10px] ml-auto truncate max-w-[120px]">{cat.description}</span>}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  {ticketCfg.panelImage && (
-                    <div className="mt-3 rounded-lg overflow-hidden">
-                      <img src={ticketCfg.panelImage} alt="Preview" className="w-full h-32 object-cover rounded-lg" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                    </div>
-                  )}
-                  {ticketCategories.filter((c: any) => c.status !== "inactive").length > 0 && (
-                    <div className="mt-4 space-y-2">
-                      {ticketCategories.filter((c: any) => c.status !== "inactive").map((cat: any) => (
-                        <div key={cat.id} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
-                          <span>{cat.emoji || "🎫"}</span>
-                          <span className="text-sm text-white">{cat.label}</span>
-                          <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${priorityColors[cat.priority] || priorityColors.low}`}>{cat.priority}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -1670,11 +1806,21 @@ function ModerationSection({ guildId, api }: { guildId: string; api: any }) {
 }
 
 function LevelsSection({ config, channels, roles, saveConfig, api, guildId }: any) {
-  const [lvl, setLvl] = useState(config?.levels || { enabled: false, xpPerMessage: 15, xpPerVoiceMin: 10, announceChannel: "", multiplier: "1", levelUpMsg: "¡{user} subió al nivel {level}!", ignoreBots: true, resetRoles: false, rewards: [] });
+  const [lvl, setLvl] = useState(config?.levels || { enabled: false, xpPerMessage: 15, xpPerVoiceMin: 10, announceChannel: "", multiplier: "1", levelUpMsg: "¡{user} subió al nivel {level}!", ignoreBots: true, resetRoles: false, rewards: [], xpChannels: [], levelUpColor: "#F5C518", levelUpTitle: "🎉 ¡Subiste de nivel!", levelUpThumbnail: true, levelUpFooter: "", levelUpImage: "" });
   const [top, setTop] = useState<any[]>([]);
   const [newReward, setNewReward] = useState({ level: 0, roleId: "" });
   useEffect(() => { api(`guild/${guildId}/levels/top`).then((d: any) => setTop(d?.top || [])); }, []);
   const multiplierOpts = [{ value: "1", label: "1× Normal" }, { value: "1.5", label: "1.5× Boost" }, { value: "2", label: "2× Doble XP" }, { value: "3", label: "3× Triple XP" }];
+  const colorPresets = [
+    { value: "#F5C518", label: "🟡 Dorado" },
+    { value: "#5865F2", label: "🔵 Blurple" },
+    { value: "#57F287", label: "🟢 Verde" },
+    { value: "#FEE75C", label: "💛 Amarillo" },
+    { value: "#EB459E", label: "💗 Rosa" },
+    { value: "#ED4245", label: "🔴 Rojo" },
+    { value: "#FF6B35", label: "🟠 Naranja" },
+    { value: "#9B59B6", label: "🟣 Púrpura" },
+  ];
   return (
     <div className="space-y-6">
       <div><h2 className="text-xl font-black text-white mb-1">📊 Niveles & XP</h2><p className="text-sm text-gray-500">Sistema de experiencia y recompensas.</p></div>
@@ -1684,11 +1830,37 @@ function LevelsSection({ config, channels, roles, saveConfig, api, guildId }: an
           <NumberInput value={lvl.xpPerMessage || 15} onChange={(v) => setLvl({ ...lvl, xpPerMessage: v })} label="XP por mensaje" />
           <NumberInput value={lvl.xpPerVoiceMin || 10} onChange={(v) => setLvl({ ...lvl, xpPerVoiceMin: v })} label="XP en voz (por min)" />
         </div>
-        <SelectInput value={lvl.announceChannel || ""} onChange={(v) => setLvl({ ...lvl, announceChannel: v })} options={channels} label="Canal de anuncio" />
+        <SelectInput value={lvl.announceChannel || ""} onChange={(v) => setLvl({ ...lvl, announceChannel: v, channelId: v })} options={channels} label="📢 Canal de anuncio de nivel" />
+        <MultiChannelSelect selected={lvl.xpChannels || []} onChange={(v) => setLvl({ ...lvl, xpChannels: v })} options={channels} label="⚡ Canales donde se gana XP (vacío = todos)" />
         <SelectInput value={lvl.multiplier || "1"} onChange={(v) => setLvl({ ...lvl, multiplier: v })} options={multiplierOpts} label="Multiplicador global" />
-        <TextInput value={lvl.levelUpMsg || ""} onChange={(v) => setLvl({ ...lvl, levelUpMsg: v })} label="Mensaje de subida" />
+        <TextInput value={lvl.levelUpMsg || ""} onChange={(v) => setLvl({ ...lvl, levelUpMsg: v })} label="Mensaje de subida (usa {user} y {level})" placeholder="¡{user} subió al nivel {level}!" />
         <Toggle checked={!!lvl.ignoreBots} onChange={(v) => setLvl({ ...lvl, ignoreBots: v })} label="Ignorar bots" />
         <Toggle checked={!!lvl.resetRoles} onChange={(v) => setLvl({ ...lvl, resetRoles: v })} label="Resetear roles al subir" />
+      </div>
+      <div className="glass rounded-2xl p-6 space-y-4">
+        <h3 className="font-bold text-white">🎨 Personalización Visual del Nivel-Up</h3>
+        <p className="text-xs text-gray-500">Personaliza cómo se ve el embed de subida de nivel.</p>
+        <TextInput value={lvl.levelUpTitle || ""} onChange={(v) => setLvl({ ...lvl, levelUpTitle: v })} label="Título del embed" placeholder="🎉 ¡Subiste de nivel!" />
+        <div>
+          <label className="block text-xs text-gray-500 mb-1.5">Color del embed</label>
+          <div className="flex gap-2 flex-wrap mb-2">
+            {colorPresets.map(c => (
+              <button key={c.value} onClick={() => setLvl({ ...lvl, levelUpColor: c.value })} className={`w-8 h-8 rounded-full border-2 transition-all ${lvl.levelUpColor === c.value ? 'border-white scale-110' : 'border-transparent hover:scale-105'}`} style={{ backgroundColor: c.value }} title={c.label} />
+            ))}
+          </div>
+          <TextInput value={lvl.levelUpColor || "#F5C518"} onChange={(v) => setLvl({ ...lvl, levelUpColor: v })} label="Color hex personalizado" placeholder="#F5C518" />
+        </div>
+        <Toggle checked={lvl.levelUpThumbnail !== false} onChange={(v) => setLvl({ ...lvl, levelUpThumbnail: v })} label="Mostrar avatar del usuario (thumbnail)" />
+        <TextInput value={lvl.levelUpFooter || ""} onChange={(v) => setLvl({ ...lvl, levelUpFooter: v })} label="Footer personalizado (vacío = default)" placeholder="System 777 · Sistema de Niveles" />
+        <TextInput value={lvl.levelUpImage || ""} onChange={(v) => setLvl({ ...lvl, levelUpImage: v })} label="URL de imagen decorativa (opcional)" placeholder="https://..." />
+        <div className="rounded-xl bg-white/[0.03] border border-white/10 p-4 mt-3">
+          <p className="text-xs text-gray-500 mb-2">Vista previa del embed:</p>
+          <div className="rounded-lg border-l-4 p-3" style={{ borderColor: lvl.levelUpColor || '#F5C518', backgroundColor: `${lvl.levelUpColor || '#F5C518'}10` }}>
+            <p className="text-white font-bold text-sm">{lvl.levelUpTitle || '🎉 ¡Subiste de nivel!'}</p>
+            <p className="text-gray-300 text-xs mt-1">{(lvl.levelUpMsg || '¡{user} subió al nivel {level}!').replace('{user}', '@Usuario').replace('{level}', '5')}</p>
+            <p className="text-gray-600 text-[10px] mt-2">{lvl.levelUpFooter || 'System 777 · Sistema de Niveles'}</p>
+          </div>
+        </div>
       </div>
       <div className="glass rounded-2xl p-6 space-y-4">
         <h3 className="font-bold text-white">🎭 Recompensas por Nivel</h3>

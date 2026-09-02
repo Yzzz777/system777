@@ -137,3 +137,18 @@ body {
   background: rgba(88, 101, 242, 0.12);
   border-color: rgba(88, 101, 242, 0.2);
 }
+
+/* Hide scrollbar for tabs */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Mobile responsive fixes */
+@media (max-width: 1023px) {
+  .glass { backdrop-filter: blur(8px); }
+  .glass:hover { transform: none; }
+}
+
+@media (max-width: 640px) {
+  .glass { padding: 1rem; border-radius: 1rem; }
+  .glass h3 { font-size: 0.875rem; }
+}

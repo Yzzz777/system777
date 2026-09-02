@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 async function refreshDiscordToken(refreshToken: string): Promise<string | null> {

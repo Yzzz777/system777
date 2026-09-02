@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 const BOT_API = process.env.BOT_API_URL ?? "";
@@ -63,8 +64,6 @@ export async function GET(req: NextRequest) {
       }
     } catch {}
 
-    const botGuildIds = new Set(botGuilds.map((g) => g.id));
-
     let userGuilds: DiscordGuild[] = [];
     let accessToken: string | null = null;
 
@@ -93,36 +92,23 @@ export async function GET(req: NextRequest) {
       } catch {}
     }
 
-    if (userGuilds.length > 0) {
-      const ADMIN = 0x8;
-      const merged = userGuilds
-        .map((g) => {
-          const bot = botGuilds.find((b) => b.id === g.id);
-          return {
-            id: g.id,
-            name: g.name,
-            icon: g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : null,
-            members: bot?.members ?? 0,
-            inBot: botGuildIds.has(g.id),
-            isAdmin: (parseInt(g.permissions) & ADMIN) === ADMIN,
-          };
-        })
-        .sort((a, b) => (b.inBot ? 1 : 0) - (a.inBot ? 1 : 0));
-      return NextResponse.json(merged);
-    }
+    // Merge: bot guilds are primary, enrich with user data if available
+    const userGuildMap = new Map(userGuilds.map((g) => [g.id, g]));
+    const ADMIN = 0x8;
 
-    if (botGuilds.length > 0) {
-      return NextResponse.json(botGuilds.map((g) => ({
+    const merged = botGuilds.map((g) => {
+      const userGuild = userGuildMap.get(g.id);
+      return {
         id: g.id,
         name: g.name,
         icon: g.icon,
         members: g.members,
         inBot: true,
-        isAdmin: true,
-      })));
-    }
+        isAdmin: userGuild ? (parseInt(userGuild.permissions) & ADMIN) === ADMIN : true,
+      };
+    });
 
-    return NextResponse.json([]);
+    return NextResponse.json(merged.sort((a, b) => b.members - a.members));
   } catch {
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
