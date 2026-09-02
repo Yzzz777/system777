@@ -12,66 +12,81 @@ export default function StudyTimeCounter({ startDate }: StudyTimeCounterProps) {
 
   useEffect(() => {
     setIsMounted(true);
-
     const start = new Date(startDate);
-    const updateTime = () => {
+
+    const calc = () => {
       const now = new Date();
       const diffMs = now.getTime() - start.getTime();
+      if (diffMs <= 0) return;
 
-      if (diffMs <= 0) {
-        setElapsed({ years: 0, months: 0, days: 0, hours: 0, minutes: 0, seconds: 0 });
-        return;
+      const totalSeconds = Math.floor(diffMs / 1000);
+      const seconds = totalSeconds % 60;
+      const totalMinutes = Math.floor(totalSeconds / 60);
+      const minutes = totalMinutes % 60;
+      const totalHours = Math.floor(totalMinutes / 60);
+      const hours = totalHours % 24;
+      const totalDays = Math.floor(totalHours / 24);
+
+      // Calcular meses/años reales
+      let years = now.getFullYear() - start.getFullYear();
+      let months = now.getMonth() - start.getMonth();
+      let days = now.getDate() - start.getDate();
+
+      if (days < 0) {
+        months--;
+        const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+        days += prevMonth.getDate();
       }
-
-      const seconds = Math.floor((diffMs / 1000) % 60);
-      const minutes = Math.floor((diffMs / (1000 * 60)) % 60);
-      const hours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
-
-      const fullDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      const years = Math.floor(fullDays / 365);
-      const remainingDays = fullDays % 365;
-      const months = Math.floor(remainingDays / 30);
-      const days = remainingDays % 30;
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
 
       setElapsed({ years, months, days, hours, minutes, seconds });
     };
 
-    updateTime();
-    const timer = setInterval(updateTime, 1000);
-
+    calc();
+    const timer = setInterval(calc, 1000);
     return () => clearInterval(timer);
   }, [startDate]);
 
-  if (!isMounted) return null;
+  if (!isMounted) {
+    return (
+      <div className="flex items-center gap-3 sm:gap-5">
+        {["AÑOS", "MESES", "DÍAS", "HORAS", "MIN", "SEG"].map((label) => (
+          <div key={label} className="text-center">
+            <div className="text-2xl sm:text-4xl font-black text-gray-700">—</div>
+            <div className="text-[10px] sm:text-xs text-gray-700 mt-1">{label}</div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   const { years, months, days, hours, minutes, seconds } = elapsed;
 
+  const units = [
+    { value: years, label: "AÑOS", color: "#00FF88" },
+    { value: months, label: "MESES", color: "#00C8FF" },
+    { value: days, label: "DÍAS", color: "#7C3AED" },
+    { value: hours, label: "HORAS", color: "#FFD93D" },
+    { value: minutes, label: "MIN", color: "#FF6B6B" },
+    { value: seconds, label: "SEG", color: "#EB459E" },
+  ];
+
   return (
-    <div className="mt-12 flex flex-col sm:flex-row items-center gap-4">
-      <div className="text-center">
-        <div className="text-3xl font-bold text-[#00FF88]">{years}</div>
-        <div className="text-sm text-gray-400">AÑOS</div>
-      </div>
-      <div className="text-center">
-        <div className="text-3xl font-bold text-[#00C8FF]">{months}</div>
-        <div className="text-sm text-gray-400">MESES</div>
-      </div>
-      <div className="text-center">
-        <div className="text-3xl font-bold text-[#7C3AED]">{days}</div>
-        <div className="text-sm text-gray-400">DÍAS</div>
-      </div>
-      <div className="text-center">
-        <div className="text-3xl font-bold text-[#FFD93D]">{hours}</div>
-        <div className="text-sm text-gray-400">HORAS</div>
-      </div>
-      <div className="text-center">
-        <div className="text-3xl font-bold text-[#FF6B6B]">{minutes}</div>
-        <div className="text-sm text-gray-400">MINUTOS</div>
-      </div>
-      <div className="text-center">
-        <div className="text-3xl font-bold text-[#EB459E]">{seconds}</div>
-        <div className="text-sm text-gray-400">SEGUNDOS</div>
-      </div>
+    <div className="flex items-center gap-3 sm:gap-5">
+      {units.map((u, i) => (
+        <div key={u.label} className="text-center">
+          <div className="text-2xl sm:text-4xl font-black tabular-nums" style={{ color: u.color }}>
+            {String(u.value).padStart(2, "0")}
+          </div>
+          <div className="text-[9px] sm:text-[11px] text-gray-500 mt-1 tracking-wider">{u.label}</div>
+          {i < units.length - 1 && (
+            <span className="hidden sm:block absolute -ml-3 mt-0 text-gray-700 text-lg font-bold" style={{ marginLeft: "-4px" }}></span>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
