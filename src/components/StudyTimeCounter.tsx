@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 interface StudyTimeCounterProps {
   startDate: Date;
@@ -9,7 +9,6 @@ interface StudyTimeCounterProps {
 export default function StudyTimeCounter({ startDate }: StudyTimeCounterProps) {
   const [elapsed, setElapsed] = useState({ years: 0, months: 0, days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [isMounted, setIsMounted] = useState(false);
-  const animationRef = useRef(false);
 
   useEffect(() => {
     setIsMounted(true);

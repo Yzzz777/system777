@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Folder, File, Download } from "lucide-react";
+import { File, Download } from "lucide-react";
 import { FadeIn } from "@/components/ui/Animations";
 
 const files = [

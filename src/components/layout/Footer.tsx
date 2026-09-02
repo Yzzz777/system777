@@ -1,27 +1,26 @@
 import Link from "next/link";
-import { Terminal, Mail, MessageCircle } from "lucide-react";
+import { Terminal, Github, Instagram, MessageSquare } from "lucide-react";
 import { siteConfig } from "@/lib/config";
 
 const footerLinks = {
-  Academia: [
-    { label: "Programación", href: "/academy/programming" },
-    { label: "Ciberseguridad", href: "/academy/cybersecurity" },
-    { label: "Desarrollo Discord", href: "/academy/discord" },
-    { label: "Linux", href: "/academy/linux" },
+  Personal: [
+    { label: "Inicio", href: "/" },
+    { label: "Sobre mí", href: "/about" },
+    { label: "Tecnologías", href: "/technologies" },
+    { label: "Cybersecurity", href: "/cybersecurity" },
+    { label: "Proyectos", href: "/projects" },
   ],
-  Premium: [
-    { label: "Chat en Vivo", href: "/premium/chat" },
-    { label: "Llamadas de Voz/Video", href: "/premium/calls" },
-    { label: "Reuniones Zoom", href: "/premium/meetings" },
-    { label: "Agendar Clase", href: "/premium/schedule" },
-    { label: "Obtener Premium", href: "/premium/checkout" },
-  ],
-  Empresa: [
-    { label: "Sobre Nosotros", href: "/about" },
-    { label: "Contacto", href: "/contact" },
+  Contenido: [
     { label: "Blog", href: "/blog" },
-    { label: "Privacidad", href: "/privacy" },
-    { label: "Términos", href: "/terms" },
+    { label: "Anuncios", href: "/announcements" },
+    { label: "Biblioteca", href: "/library" },
+    { label: "Contacto", href: "/contact" },
+  ],
+  "System 777": [
+    { label: "Inicio Bot", href: "/bot" },
+    { label: "Comandos", href: "/bot/commands" },
+    { label: "Estado", href: "/bot/status" },
+    { label: "Dashboard", href: "/bot/dashboard" },
   ],
 };
 
@@ -40,14 +39,17 @@ export function Footer() {
               </span>
             </Link>
             <p className="mt-4 text-sm text-gray-400">
-              Academia tecnológica profesional para programación, ciberseguridad y nuevas tecnologías.
+              Programación, ciberseguridad, proyectos y System 777.
             </p>
-            <div className="mt-6 flex flex-col gap-3">
-              <a href={`mailto:${siteConfig.contact.email}`} className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00FF88]">
-                <Mail className="h-4 w-4" /> {siteConfig.contact.email}
+            <div className="mt-6 flex gap-3">
+              <a href={siteConfig.social.github} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#00FF88] transition-colors">
+                <Github className="h-5 w-5" />
               </a>
-              <a href={siteConfig.contact.whatsappLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#00FF88]">
-                <MessageCircle className="h-4 w-4" /> WhatsApp
+              <a href={siteConfig.social.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#00FF88] transition-colors">
+                <Instagram className="h-5 w-5" />
+              </a>
+              <a href={siteConfig.social.discord} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#00FF88] transition-colors">
+                <MessageSquare className="h-5 w-5" />
               </a>
             </div>
           </div>
@@ -71,7 +73,9 @@ export function Footer() {
             &copy; {new Date().getFullYear()} {siteConfig.name}. Todos los derechos reservados.
           </p>
           <div className="flex gap-4">
-            <span className="text-xs text-gray-500">Powered by Next.js · Hostinger · Cloudflare</span>
+            <Link href="/privacy" className="text-xs text-gray-500 hover:text-gray-400">Privacidad</Link>
+            <Link href="/terms" className="text-xs text-gray-500 hover:text-gray-400">Términos</Link>
+            <span className="text-xs text-gray-500">Next.js · Cloudflare Pages</span>
           </div>
         </div>
       </div>

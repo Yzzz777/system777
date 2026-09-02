@@ -44,27 +44,27 @@ export default function ContactPage() {
       <div className="mx-auto max-w-7xl px-4">
         <FadeIn>
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-white sm:text-5xl">Contáctanos</h1>
-            <p className="mx-auto mt-4 max-w-2xl text-gray-400">¿Tienes una pregunta? Nos encantaría saber de ti.</p>
+              <h1 className="text-4xl font-bold text-white sm:text-5xl">Contacto</h1>
+            <p className="mx-auto mt-4 max-w-2xl text-gray-400">¿Tienes una pregunta? Encuéntrame en mis redes o escríbeme directo.</p>
           </div>
         </FadeIn>
 
         <div className="mt-16 grid gap-12 lg:grid-cols-2">
           <FadeIn delay={0.1}>
             <div>
-              <h2 className="text-2xl font-bold text-white">Ponte en Contacto</h2>
+              <h2 className="text-2xl font-bold text-white">Redes Sociales</h2>
               <div className="mt-8 space-y-6">
-                <a href={`mailto:${siteConfig.contact.email}`} className="flex items-center gap-4 rounded-2xl glass p-5 transition-all hover:border-[#00FF88]/20">
+                <a href={siteConfig.social.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 rounded-2xl glass p-5 transition-all hover:border-[#00FF88]/20">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#00FF88]/10"><Mail className="h-5 w-5 text-[#00FF88]" /></div>
-                  <div><div className="text-sm font-medium text-white">Correo</div><div className="text-sm text-gray-400">{siteConfig.contact.email}</div></div>
+                  <div><div className="text-sm font-medium text-white">GitHub</div><div className="text-sm text-gray-400">Yzzz777</div></div>
                 </a>
-                <a href={siteConfig.contact.whatsappLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 rounded-2xl glass p-5 transition-all hover:border-[#00FF88]/20">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#25D366]/10"><MessageCircle className="h-5 w-5 text-[#25D366]" /></div>
-                  <div><div className="text-sm font-medium text-white">WhatsApp</div><div className="text-sm text-gray-400">{siteConfig.contact.whatsapp}</div></div>
+                <a href={siteConfig.social.discord} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 rounded-2xl glass p-5 transition-all hover:border-[#00FF88]/20">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#5865F2]/10"><MessageCircle className="h-5 w-5 text-[#5865F2]" /></div>
+                  <div><div className="text-sm font-medium text-white">Discord</div><div className="text-sm text-gray-400">Únete al servidor</div></div>
                 </a>
                 <div className="flex items-center gap-4 rounded-2xl glass p-5">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#00C8FF]/10"><MapPin className="h-5 w-5 text-[#00C8FF]" /></div>
-                  <div><div className="text-sm font-medium text-white">Ubicación</div><div className="text-sm text-gray-400">Disponible en Todo el Mundo</div></div>
+                  <div><div className="text-sm font-medium text-white">Ubicación</div><div className="text-sm text-gray-400">Disponible en línea</div></div>
                 </div>
               </div>
             </div>
@@ -76,7 +76,7 @@ export default function ContactPage() {
                 <div className="flex flex-col items-center py-12">
                   <CheckCircle className="h-16 w-16 text-[#00FF88]" />
                   <h3 className="mt-4 text-xl font-bold text-white">¡Mensaje Enviado!</h3>
-                  <p className="mt-2 text-sm text-gray-400">Te responderemos en 24 horas.</p>
+                   <p className="mt-2 text-sm text-gray-400">Te responderé pronto.</p>
                   <button onClick={() => setSuccess(false)} className="mt-6 rounded-xl bg-[#00FF88] px-6 py-2.5 text-sm font-semibold text-black hover:bg-[#00CC6A]">Enviar Otro</button>
                 </div>
               ) : (
@@ -92,11 +92,11 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-gray-300">Asunto</label>
-                    <input type="text" required value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-[#00FF88]/50" placeholder="¿Cómo podemos ayudar?" />
+                    <input type="text" required value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-[#00FF88]/50" placeholder="¿Sobre qué quieres hablar?" />
                   </div>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-gray-300">Mensaje</label>
-                    <textarea required rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-[#00FF88]/50" placeholder="Cuéntanos más..." />
+                    <textarea required rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-[#00FF88]/50" placeholder="Cuéntame más..." />
                   </div>
                   {error && (
                     <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-400">

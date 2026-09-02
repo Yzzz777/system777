@@ -18,14 +18,14 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "SYSTEM 777 - Academia Tecnológica Profesional",
-  description: "Domina Programación, Ciberseguridad, Linux y Desarrollo Discord. Aprende con proyectos prácticos, cursos premium y una comunidad activa.",
-  keywords: ["programación", "ciberseguridad", "linux", "discord", "desarrollo web", "academia"],
+  title: "Ángel — Yzzz 777",
+  description: "Portafolio personal de Ángel. Programación, ciberseguridad, proyectos y System 777.",
+  keywords: ["Ángel", "Yzzz 777", "programación", "ciberseguridad", "portafolio", "System 777", "Discord bot"],
   openGraph: {
-    title: "SYSTEM 777 - Academia Tecnológica Profesional",
-    description: "Domina Programación, Ciberseguridad, Linux y Desarrollo Discord",
+    title: "Ángel — Yzzz 777",
+    description: "Programación, ciberseguridad, proyectos y System 777",
     url: "https://jrsystem7777.com",
-    siteName: "SYSTEM 777",
+    siteName: "Yzzz 777",
     type: "website",
   },
   robots: { index: true, follow: true },

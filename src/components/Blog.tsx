@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FolderOpen, Calendar, Shield, Star, BookOpen, Users, Clock } from "lucide-react";
-import { FadeIn, FadeInUp } from "@/components/ui/Animations";
+import { Star } from "lucide-react";
+import { FadeIn } from "@/components/ui/Animations";
 
 const blogPosts = [
   {
@@ -65,7 +65,7 @@ const categories = [
 ];
 
 export default function BlogPage() {
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
   useEffect(() => {
     const stored = localStorage.getItem("blogCategory");
@@ -119,7 +119,7 @@ export default function BlogPage() {
               transition={{ delay: post.id * 0.1 }}
               className="glass rounded-2xl p-6 hover:shadow-lg transition-shadow border-0"
             >
-              <div className="h-48 rounded-t-xl overflow-hidden">
+              <div className="h-48 rounded-t-xl overflow-hidden relative">
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent transition-transform duration-300"
