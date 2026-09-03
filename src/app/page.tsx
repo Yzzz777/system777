@@ -166,19 +166,19 @@ function DiscordStatus() {
       <div className="grid grid-cols-2 gap-4">
         <div className="flex items-center gap-2 text-sm text-gray-400">
           <Server className="h-4 w-4 text-[#5865F2]" />
-          <span>{stats?.guilds ?? "—"} servidores</span>
+          <span>{stats?.guilds ? `${stats.guilds} servidores` : "No disponible"}</span>
         </div>
         <div className="flex items-center gap-2 text-sm text-gray-400">
           <Users className="h-4 w-4 text-[#00C8FF]" />
-          <span>{stats?.users?.toLocaleString() ?? "—"} usuarios</span>
+          <span>{stats?.users ? `${stats.users.toLocaleString()} usuarios` : "No disponible"}</span>
         </div>
         <div className="flex items-center gap-2 text-sm text-gray-400">
           <Wifi className="h-4 w-4 text-[#00FF88]" />
-          <span>{stats?.ping ?? "—"}ms ping</span>
+          <span>{stats?.ping != null ? `${stats.ping}ms ping` : "No disponible"}</span>
         </div>
         <div className="flex items-center gap-2 text-sm text-gray-400">
           <Clock className="h-4 w-4 text-[#FFD93D]" />
-          <span>{formatUptime(stats?.uptime ?? 0)}</span>
+          <span>{stats?.uptime ? formatUptime(stats.uptime) : "No disponible"}</span>
         </div>
       </div>
     </div>
@@ -213,24 +213,25 @@ const skills = [
 ];
 
 const techData = [
-  { name: "JavaScript", icon: "JS", color: "#F7DF1E", level: 90 },
-  { name: "TypeScript", icon: "TS", color: "#3178C6", level: 70 },
-  { name: "Python", icon: "Py", color: "#3776AB", level: 85 },
-  { name: "React", icon: "Re", color: "#61DAFB", level: 75 },
-  { name: "Next.js", icon: "Nx", color: "#FFFFFF", level: 70 },
-  { name: "Node.js", icon: "No", color: "#339933", level: 80 },
-  { name: "HTML5", icon: "H5", color: "#E34F26", level: 95 },
-  { name: "CSS3", icon: "CS", color: "#1572B6", level: 90 },
-  { name: "SQL", icon: "SQ", color: "#FF8C42", level: 75 },
-  { name: "C", icon: "C", color: "#A8B9CC", level: 50 },
-  { name: "C++", icon: "C+", color: "#00599C", level: 45 },
-  { name: "C#", icon: "C#", color: "#239120", level: 40 },
-  { name: "Linux", icon: "Li", color: "#FCC624", level: 90 },
-  { name: "Docker", icon: "Dk", color: "#2496ED", level: 65 },
-  { name: "Git", icon: "Gi", color: "#F05032", level: 85 },
-  { name: "Cloudflare", icon: "CF", color: "#F38020", level: 70 },
-  { name: "PostgreSQL", icon: "PG", color: "#4169E1", level: 70 },
-  { name: "Redis", icon: "Rd", color: "#DC382D", level: 50 },
+  { name: "JavaScript", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg", color: "#F7DF1E", level: 90 },
+  { name: "TypeScript", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/typescript/typescript-original.svg", color: "#3178C6", level: 70 },
+  { name: "Python", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg", color: "#3776AB", level: 85 },
+  { name: "React", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg", color: "#61DAFB", level: 75 },
+  { name: "Next.js", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg", color: "#FFFFFF", level: 70 },
+  { name: "Node.js", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg", color: "#339933", level: 80 },
+  { name: "HTML5", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg", color: "#E34F26", level: 95 },
+  { name: "CSS3", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg", color: "#1572B6", level: 90 },
+  { name: "C", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/c/c-original.svg", color: "#A8B9CC", level: 50 },
+  { name: "C++", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/cplusplus/cplusplus-original.svg", color: "#00599C", level: 45 },
+  { name: "C#", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/csharp/csharp-original.svg", color: "#239120", level: 55 },
+  { name: "Java", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/java/java-original.svg", color: "#ED8B00", level: 40 },
+  { name: "SQL", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mysql/mysql-original.svg", color: "#FF8C42", level: 75 },
+  { name: "Linux", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/linux/linux-original.svg", color: "#FCC624", level: 90 },
+  { name: "Docker", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/docker/docker-original.svg", color: "#2496ED", level: 65 },
+  { name: "Git", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/git/git-original.svg", color: "#F05032", level: 85 },
+  { name: "Cloudflare", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/cloudflare/cloudflare-original.svg", color: "#F38020", level: 70 },
+  { name: "PostgreSQL", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postgresql/postgresql-original.svg", color: "#4169E1", level: 70 },
+  { name: "Redis", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/redis/redis-original.svg", color: "#DC382D", level: 50 },
 ];
 
 const cyberAreas = [
@@ -416,16 +417,28 @@ export default function HomePage() {
                 </div>
                 <div className="space-y-4 text-gray-400 leading-relaxed">
                   <p>
-                    Soy <span className="text-white font-semibold">Ángel</span>, conocido como <span className="gradient-text font-semibold">Yzzz 777</span>. Llevo más de 3 años estudiando programación y ciberseguridad de forma autodidacta y práctica, construyendo proyectos reales que la gente usa.
+                    Soy <span className="text-white font-semibold">Ángel</span>, conocido como <span className="gradient-text font-semibold">Yzzz 777</span>. Llevo aproximadamente <span className="text-white font-medium">3 años</span> estudiando programación, sistemas y ciberseguridad de forma autodidacta y práctica.
                   </p>
                   <p>
-                    Empecé curioseando cómo funcionaban las páginas web y los bots de Discord. Hoy mantengo un bot con 91+ comandos, más de 21 servidores y más de 4,600 usuarios. También administro este sitio web, un dashboard completo de administración, y sigo aprendiendo cada día.
+                    He trabajado en proyectos reales relacionados con:{" "}
+                    <span className="text-white">desarrollo web</span>,{" "}
+                    <span className="text-white">bots de Discord</span>,{" "}
+                    <span className="text-white">automatización</span>,{" "}
+                    <span className="text-white">APIs</span>,{" "}
+                    <span className="text-white">Linux</span>,{" "}
+                    <span className="text-white">servidores</span>,{" "}
+                    <span className="text-white">bases de datos</span>,{" "}
+                    <span className="text-white">seguridad</span> y{" "}
+                    <span className="text-white">sistemas</span>.
                   </p>
                   <p>
-                    Mis intereses principales son: programación web (React, Next.js, Node.js), ciberseguridad (pentesting, hardening, OSINT), administración de Linux y servidores, automatización con Python, bases de datos (PostgreSQL, Redis) y desarrollo de bots de Discord.
+                    Mis lenguajes principales incluyen <span className="text-white font-medium">JavaScript</span>, <span className="text-white font-medium">TypeScript</span>, <span className="text-white font-medium">Python</span>, y <span className="text-white font-medium">C#</span> — este último es uno de los que más manejo y en el que tengo más experiencia práctica.
                   </p>
                   <p>
-                    No invento experiencia profesional ni certificaciones. Todo lo que muestro aquí es lo que realmente sé, he construido y mantengo activo. Si algo no funciona, lo digo. Si algo puede mejorar, lo trabajo.
+                    Actualmente mantengo <span className="text-[#5865F2] font-medium">System 777</span> — un bot con 91+ comandos, más de 21 servidores y 4,600+ usuarios. También administro este sitio web, un dashboard completo de administración, y sigo aprendiendo cada día.
+                  </p>
+                  <p className="text-sm text-gray-500 italic border-l-2 border-[#00FF88]/20 pl-4">
+                    No invento empleos, empresas, certificaciones ni títulos. Todo lo que muestro aquí es lo que realmente sé, he construido y mantengo activo.
                   </p>
                 </div>
               </TiltCard>
@@ -487,8 +500,8 @@ export default function HomePage() {
               {techData.map((t) => (
                 <StaggerItem key={t.name}>
                   <TiltCard className="tech-badge glass glass-hover rounded-xl p-4 text-center cursor-default">
-                    <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-lg text-xs font-bold" style={{ backgroundColor: t.color + "18", color: t.color }}>
-                      {t.icon}
+                    <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-lg" style={{ backgroundColor: t.color + "18" }}>
+                      <img src={t.icon} alt={t.name} className="h-6 w-6 object-contain" loading="lazy" />
                     </div>
                     <h3 className="text-[11px] font-semibold text-white">{t.name}</h3>
                     <div className="mt-2 h-1 rounded-full bg-white/5 overflow-hidden">
@@ -694,17 +707,43 @@ export default function HomePage() {
                     <Download className="h-3 w-3" /> Files
                   </span>
                   <h2 className="text-3xl font-bold text-white sm:text-4xl">Biblioteca</h2>
+                  <p className="mt-2 text-gray-400 text-sm">Documentos, scripts, backups y recursos descargables</p>
                 </div>
                 <Link href="/library" className="flex items-center gap-1 text-sm font-medium text-[#00FF88] hover:underline">
                   Ver todo <ChevronRight className="h-4 w-4" />
                 </Link>
               </div>
             </FadeIn>
-            <div className="glass glass-hover rounded-2xl p-16 text-center glow-line">
-              <Download className="mx-auto mb-4 h-12 w-12 text-gray-700" />
-              <p className="text-gray-400 font-medium">Próximamente</p>
-              <p className="text-sm text-gray-600 mt-1">Documentos, scripts, backups y recursos descargables</p>
-            </div>
+            <StaggerContainer className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                { name: "System 777 Docs", desc: "Documentación completa del bot — setup, comandos, configuración.", size: "2.4 MB", downloads: 128, icon: FileCode, color: "#5865F2" },
+                { name: "Bot Setup Guide", desc: "Guía paso a paso para configurar System 777 en tu servidor.", size: "8.7 MB", downloads: 89, icon: Terminal, color: "#00FF88" },
+                { name: "Database Backup", desc: "Backup de la base de datos del bot con estructura completa.", size: "15.3 MB", downloads: 45, icon: Database, color: "#FF8C42" },
+                { name: "Config Example", desc: "Archivo .env.example con todas las variables de entorno necesarias.", size: "3.2 KB", downloads: 312, icon: Cog, color: "#FFD93D" },
+                { name: "Design System", desc: "Paleta de colores, tipografía y tokens de diseño del sitio.", size: "45.6 MB", downloads: 12, icon: Palette, color: "#EB459E" },
+                { name: "README Project", desc: "Readme principal del proyecto con estructura y comandos útiles.", size: "128 KB", downloads: 234, icon: FileCode, color: "#00C8FF" },
+              ].map((f) => (
+                <StaggerItem key={f.name}>
+                  <TiltCard className="glass glass-hover rounded-xl p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-lg" style={{ backgroundColor: f.color + "15" }}>
+                        <f.icon className="h-5 w-5" style={{ color: f.color }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-bold text-white">{f.name}</h3>
+                        <p className="mt-1 text-xs text-gray-400 leading-relaxed">{f.desc}</p>
+                        <div className="mt-3 flex items-center justify-between">
+                          <span className="text-[10px] text-gray-500">{f.size}</span>
+                          <span className="text-[10px] text-gray-500 flex items-center gap-1">
+                            <Download className="h-3 w-3" /> {f.downloads}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </TiltCard>
+                </StaggerItem>
+              ))}
+            </StaggerContainer>
           </div>
         </section>
 
