@@ -94,17 +94,25 @@ export async function GET(req: NextRequest) {
 
     // Merge: bot guilds are primary, enrich with user data if available
     const userGuildMap = new Map(userGuilds.map((g) => [g.id, g]));
-    const ADMIN = 0x8;
+    const ADMIN = BigInt(0x8);
 
     const merged = botGuilds.map((g) => {
       const userGuild = userGuildMap.get(g.id);
+      let isAdmin = true;
+      if (userGuild) {
+        try {
+          isAdmin = (BigInt(userGuild.permissions) & ADMIN) === ADMIN;
+        } catch {
+          isAdmin = true;
+        }
+      }
       return {
         id: g.id,
         name: g.name,
         icon: g.icon,
         members: g.members,
         inBot: true,
-        isAdmin: userGuild ? (parseInt(userGuild.permissions) & ADMIN) === ADMIN : true,
+        isAdmin,
       };
     });
 
