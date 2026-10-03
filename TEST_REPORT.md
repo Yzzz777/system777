@@ -350,3 +350,60 @@ oficiales de la obra**, sólo referencias estéticas.
   foco en “Cerrar”** y `Esc` lo cierra; menú móvil opera; imágenes **0 rotas**
   (22/22 devicons cargan; el conteo del test con espera corta era transitorio).
 
+
+---
+
+## 10. Motion avanzado + ojo real (04/10/2026)
+
+Reemplazo de la capa 9 por assets reales del usuario y motion estilo Apple;
+**corrige además un error de hidratación preexistente en producción**
+(React #418 en `/` con `prefers-reduced-motion`).
+
+### Cambios
+
+| Área | Detalle |
+|---|---|
+| Transiciones de ruta | `app/template.tsx` → `data-page-template.page-enter` (keyframes CSS, 450 ms). CSS puro: SSR/cliente idénticos; reduced-motion lo anula con la regla global `0.001ms` |
+| Ojo real | `Sharingan.tsx`/`ChidoriArcs.tsx` **retirados**; `RealEye.tsx` con `public/eye/sharingan-spin.webp` (GIF del usuario convertido, 30 f · 50 ms, 116 KB, `unoptimized`); proximidad → `data-eye=active`; reduced → frame estático |
+| Easter egg | `public/eye/eye-activation.webp` (33 f · 90 ms, 380 KB) durante 3 s (un ciclo completo); sin SVG procedural |
+| Parallax hero | retrato `y-70/scale.96`, texto `y-38/fade.55`, ojo `y-140` (scroll 0–700 px); gate `allowMotion` post-hidratación |
+| Reveals | opt-in `blur`: eyebrow/h1 + 7 `section-head` entran con `blur(10px)→0` |
+| Scroll progress | `ScrollProgress.tsx`, `scaleX` de `scrollYProgress`, `z-[60]`; oculto si reduced-motion |
+| Nav pill | `motion.span layoutId="nav-pill"` desliza entre rutas activas; `aria-current`; `MotionConfig reducedMotion="user"` en `Providers` |
+| Escena 3D | `CameraDrift` (deriva senoidal amortiguada + `lookAt`) |
+
+### Assets (`public/eye/`)
+
+`sharingan-spin.webp` 116 KB · `sharingan-spin-static.webp` 5 KB ·
+`eye-activation.webp` 380 KB · `eye-activation-static.webp` 17 KB ·
+`eye-blue.webp` 74 KB (reserva) — convertidos desde los GIF del usuario con
+PIL (`save_all`, quality 78, loop 0).
+
+### Verificación (build local, `next start -p 3002`)
+
+- `tsc --noEmit` **0** · `eslint src --max-warnings=0` **0/0** · `next build` OK.
+- **Auditoría 90 checks** (15 rutas × 6 anchos): **0 overflow**, `h1` en todas,
+  títulos/descripciones completos, enlaces **15/15 OK**, único error el **404
+  esperado**; reveals reduced-motion **51/51 visibles**.
+- **motion-check**: ojo `idle→active→idle` con `src=/eye/sharingan-spin.webp`;
+  progress existe y su `scaleX` cambia con el scroll; pill `Inicio→Proyectos`
+  (y desaparece de Inicio); parallax retrato `matrix(0.976,…,-42)` y ojo `-84`;
+  reveals-blur **9**, `filter: blur(0px)` e `is-visible`; transición de ruta
+  (`animationName=page-enter`, nuevo nodo montado al navegar); egg **1 → 0**
+  con `src=/eye/eye-activation.webp`; móvil 375 sin overflow.
+- **Reduced-motion (9 rutas)**: `data-hero=reduced`, `data-eye=reduced`,
+  `0 [data-scroll-progress]`, egg **0**, `page-enter` a `1e-06 s`, **0 errores**
+  — en el build previo de producción `/` fallaba con **React #418** (ya corregido).
+- **Diálogo `/projects`**: abre con `aria-modal=true`, foco en “Cerrar”, `Esc`
+  cierra · **tilt** `rotateX(1.85) rotateY(3.49) scale(1.03)` · egg Konami/3-clics
+  → **1 → desaparece** · **imágenes** 22/22 devicons cargan al entrar en la
+  sección (la pasada rápida del test generaba falsos positivos).
+- **Nota headless**: Chromium sin capturas no produce frames → las animaciones
+  CSS permanecen en `currentTime=0` hasta forzar un frame (`page.screenshot`).
+  No afecta a navegadores reales; los checks de animación miden estado/propiedades.
+
+### Capturas
+
+`/tmp/opencode/shots/` · `hero-2`, `hero-eye-active`, `hero-mobile`,
+`egg-final` (activación real fullscreen), `tech-section`, `proj-dialog`,
+`mob-f2`.

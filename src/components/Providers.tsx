@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { MotionConfig } from "framer-motion";
 
 interface SessionUser {
   id: string;
@@ -68,7 +69,8 @@ export default function SessionProvider({ children }: { children: React.ReactNod
 
   return (
     <SessionContext.Provider value={{ data: session, status, update: fetchSession }}>
-      {children}
+      {/* reducedMotion="user": framer omite transform/layout para quienes lo piden */}
+      <MotionConfig reducedMotion="user">{children}</MotionConfig>
     </SessionContext.Provider>
   );
 }

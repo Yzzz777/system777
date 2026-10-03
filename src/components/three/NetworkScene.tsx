@@ -16,7 +16,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import Sharingan from "./Sharingan";
 import type { Tier } from "./quality";
 
 type Vec2 = { x: number; y: number };
@@ -234,10 +233,25 @@ function Graph({
   );
 }
 
+/** Deriva suave de la cámara (movimiento continuo, sin capturar el scroll) */
+function CameraDrift() {
+  const look = useMemo(() => new THREE.Vector3(0, 0, 0), []);
+  useFrame((state, delta) => {
+    const cam = state.camera;
+    const t = state.clock.elapsedTime;
+    const d = Math.min(1, delta * 1.4);
+    const tx = Math.sin(t * 0.17) * 0.8;
+    const ty = Math.cos(t * 0.13) * 0.5;
+    cam.position.x += (tx - cam.position.x) * d;
+    cam.position.y += (ty - cam.position.y) * d;
+    cam.lookAt(look);
+  });
+  return null;
+}
+
 export default function NetworkScene({ tier, active = true }: { tier: Tier; active?: boolean }) {
   const pointer = useRef<Vec2>({ x: 0, y: 0 });
   const scroll = useRef(0);
-  const shareAct = useRef(0);
 
   useEffect(() => {
     const onMove = (e: PointerEvent) => {
@@ -268,7 +282,7 @@ export default function NetworkScene({ tier, active = true }: { tier: Tier; acti
     >
       <ambientLight intensity={2.4} />
       <Graph tier={tier} pointer={pointer} scroll={scroll} />
-      <Sharingan pointer={pointer} activeRef={shareAct} />
+      <CameraDrift />
     </Canvas>
   );
 }

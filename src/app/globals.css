@@ -450,12 +450,32 @@ select.input option { background: var(--surface, #0b0f14); color: var(--text); }
 .reveal {
   opacity: 0;
   transform: translateY(18px);
-  transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
+  transition:
+    opacity var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out),
+    filter var(--dur-slow) var(--ease-out);
   transition-delay: var(--reveal-delay, 0ms);
 }
 .reveal.is-visible {
   opacity: 1;
   transform: none;
+}
+/* opt-in: entrada con desenfoque (títulos) */
+.reveal-blur {
+  filter: blur(10px);
+}
+.reveal-blur.is-visible {
+  filter: blur(0px);
+}
+
+/* Transición de ruta (template.tsx): CSS puro, sin JS en la hidratación */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+.page-enter {
+  animation: page-enter 0.45s var(--ease-out) both;
+  will-change: opacity, transform;
 }
 
 @media (max-width: 640px) {
@@ -472,30 +492,77 @@ select.input option { background: var(--surface, #0b0f14); color: var(--text); }
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
-  .reveal { opacity: 1; transform: none; }
+  .reveal { opacity: 1; transform: none; filter: none; }
   .card-3d:hover { transform: none; }
   .panel-hover:hover { transform: none; }
 }
 
 /* =========================================================
-   EASTER EGG — sharingan (ver SharinganEgg.tsx)
+   OJO REAL — hero (RealEye.tsx, animación WebP del usuario)
    ========================================================= */
-@keyframes egg-spin {
+@keyframes eye-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes eye-orbit {
   to { transform: rotate(360deg); }
 }
+.eye-float {
+  position: relative;
+  z-index: 1;
+  animation: eye-float 7s ease-in-out infinite;
+  will-change: transform;
+}
+.eye-img {
+  transition: transform 0.5s var(--ease-out);
+}
+.eye-img.is-active {
+  transform: scale(1.08);
+}
+.eye-glow {
+  position: absolute;
+  inset: -24%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 30, 54, 0.42) 0%,
+    rgba(255, 30, 54, 0.14) 45%,
+    transparent 70%
+  );
+  opacity: 0.5;
+  transform: scale(1);
+  transition:
+    opacity 0.45s var(--ease-out),
+    transform 0.45s var(--ease-out);
+}
+.eye-glow.is-active {
+  opacity: 1;
+  transform: scale(1.12);
+}
+.eye-orbit {
+  position: absolute;
+  inset: -7%;
+  z-index: 2;
+  opacity: 0.5;
+  animation: eye-orbit 26s linear infinite;
+  transition: opacity 0.4s var(--ease-out);
+  will-change: transform;
+}
+.eye-orbit.is-active {
+  opacity: 1;
+  animation-duration: 4s;
+}
+
+/* =========================================================
+   EASTER EGG — activación real (ver SharinganEgg.tsx)
+   ========================================================= */
 @keyframes egg-pop {
   0% { opacity: 0; transform: scale(0.55); }
-  22% { opacity: 1; transform: scale(1.07); }
-  78% { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1.14); }
+  18% { opacity: 1; transform: scale(1.05); }
+  84% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.12); }
 }
 .egg-pop {
-  animation: egg-pop 2.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: egg-pop 3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   will-change: opacity, transform;
-}
-.egg-spin {
-  display: block;
-  transform-origin: 50% 50%;
-  animation: egg-spin 1.5s linear infinite;
-  will-change: transform;
 }

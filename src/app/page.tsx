@@ -37,7 +37,9 @@ import {
 } from "lucide-react";
 import StudyTimeCounter from "@/components/StudyTimeCounter";
 import HeroCanvas from "@/components/three/HeroCanvas";
+import RealEye from "@/components/RealEye";
 import TiltBanner from "@/components/TiltBanner";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { siteConfig } from "@/lib/config";
 import { useBotStats, formatUptime, NA } from "@/lib/useBotStats";
 
@@ -50,11 +52,13 @@ function Reveal({
   children,
   delay = 0,
   className = "",
+  blur = false,
   as: Tag = "div",
 }: {
   children: ReactNode;
   delay?: number;
   className?: string;
+  blur?: boolean;
   as?: "div" | "section" | "li" | "article";
 }) {
   const ref = useRef<HTMLElement | null>(null);
@@ -93,7 +97,7 @@ function Reveal({
     <Component
       ref={ref}
       style={{ "--reveal-delay": `${delay}ms` } as React.CSSProperties}
-      className={`reveal ${visible ? "is-visible" : ""} ${className}`}
+      className={`reveal ${blur ? "reveal-blur" : ""} ${visible ? "is-visible" : ""} ${className}`}
     >
       {children}
     </Component>
@@ -325,6 +329,23 @@ const libraryResources = [
 export default function HomePage() {
   const [posts, setPosts] = useState<BlogPost[] | null>(null);
 
+  /* Motion estilo Apple — gate post-hidratación para reduced-motion
+     (SSR y primer render del cliente son idénticos: sin desajuste) */
+  const [allowMotion, setAllowMotion] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const upd = () => setAllowMotion(!mq.matches);
+    upd();
+    mq.addEventListener?.("change", upd);
+    return () => mq.removeEventListener?.("change", upd);
+  }, []);
+  const { scrollY } = useScroll();
+  const portraitY = useTransform(scrollY, [0, 700], [0, -70]);
+  const portraitScale = useTransform(scrollY, [0, 700], [1, 0.96]);
+  const textY = useTransform(scrollY, [0, 700], [0, -38]);
+  const textFade = useTransform(scrollY, [300, 700], [1, 0.55]);
+  const eyeY = useTransform(scrollY, [0, 700], [0, -140]);
+
   useEffect(() => {
     let alive = true;
     fetch("/api/blog/posts")
@@ -347,6 +368,13 @@ export default function HomePage() {
         {/* ============================ HERO ============================ */}
         <section className="relative overflow-hidden px-4 pb-16 pt-10 sm:px-6 sm:pt-16 lg:pb-24">
           <HeroCanvas />
+          <motion.div
+            aria-hidden
+            style={allowMotion ? { y: eyeY } : undefined}
+            className="pointer-events-none absolute right-[3%] top-[7%] z-0 w-[clamp(84px,12vw,190px)] sm:right-[4%]"
+          >
+            <RealEye />
+          </motion.div>
           <div
             aria-hidden
             className="ring-deco left-[-140px] top-[60px] h-[340px] w-[340px] opacity-70"
@@ -357,42 +385,50 @@ export default function HomePage() {
           />
 
           <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-14">
-            {/* Retrato */}
-            <Reveal className="order-2 mx-auto w-full max-w-[340px] lg:order-1 lg:max-w-none">
-              <div className="relative">
-                <div className="portrait-glow" aria-hidden />
-                <div className="portrait-frame aspect-[3/4] w-full">
-                  <Image
-                    src="/angel.webp"
-                    alt="Retrato de Ángel, creador de Yzzz 777"
-                    fill
-                    priority
-                    sizes="(max-width: 1024px) 340px, 420px"
-                    className="object-cover object-top"
-                  />
-                  <div className="absolute bottom-3 left-3 right-3 z-10 flex items-center justify-between gap-2">
-                    <span className="chip !border-[var(--line-strong)] !bg-black/55 backdrop-blur">
-                      ÁNGEL · YZZZ 777
-                    </span>
-                    <span className="chip !border-[rgba(0,255,136,0.4)] !bg-black/55 text-[var(--brand)] backdrop-blur">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--brand)] status-online" />
-                      ONLINE
-                    </span>
+            {/* Retrato (parallax al hacer scroll) */}
+            <motion.div
+              style={allowMotion ? { y: portraitY, scale: portraitScale } : undefined}
+              className="order-2 mx-auto w-full max-w-[340px] lg:order-1 lg:max-w-none"
+            >
+              <Reveal>
+                <div className="relative">
+                  <div className="portrait-glow" aria-hidden />
+                  <div className="portrait-frame aspect-[3/4] w-full">
+                    <Image
+                      src="/angel.webp"
+                      alt="Retrato de Ángel, creador de Yzzz 777"
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 340px, 420px"
+                      className="object-cover object-top"
+                    />
+                    <div className="absolute bottom-3 left-3 right-3 z-10 flex items-center justify-between gap-2">
+                      <span className="chip !border-[var(--line-strong)] !bg-black/55 backdrop-blur">
+                        ÁNGEL · YZZZ 777
+                      </span>
+                      <span className="chip !border-[rgba(0,255,136,0.4)] !bg-black/55 text-[var(--brand)] backdrop-blur">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[var(--brand)] status-online" />
+                        ONLINE
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Reveal>
+              </Reveal>
+            </motion.div>
 
             {/* Texto */}
-            <div className="order-1 lg:order-2">
-              <Reveal delay={60}>
+            <motion.div
+              style={allowMotion ? { y: textY, opacity: textFade } : undefined}
+              className="order-1 lg:order-2"
+            >
+              <Reveal delay={60} blur>
                 <span className="eyebrow">
                   <span className="h-1.5 w-1.5 rounded-full bg-[var(--brand)]" />
                   {siteConfig.tagline}
                 </span>
               </Reveal>
 
-              <Reveal delay={120}>
+              <Reveal delay={120} blur>
                 <h1 className="mt-5 font-[family-name:var(--font-display)] text-[clamp(2.75rem,9vw,5rem)] font-bold leading-[0.95] tracking-tight">
                   Ángel
                 </h1>
@@ -437,7 +473,7 @@ export default function HomePage() {
               <Reveal delay={360} className="mt-8">
                 <BotStatusStrip />
               </Reveal>
-            </div>
+            </motion.div>
           </div>
 
           {/* Contador */}
@@ -460,7 +496,7 @@ export default function HomePage() {
         {/* ============================ ABOUT ============================ */}
         <section id="about" className="border-t border-[var(--line)] px-4 py-[var(--section-y)] sm:px-6">
           <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-            <Reveal>
+            <Reveal blur>
               <div className="section-head !mb-0">
                 <span className="eyebrow">01 — Sobre mí</span>
                 <h2>Qué hago y por qué</h2>
@@ -529,7 +565,7 @@ export default function HomePage() {
           className="border-t border-[var(--line)] bg-[var(--bg-raised)] px-4 py-[var(--section-y)] sm:px-6"
         >
           <div className="mx-auto max-w-7xl">
-            <Reveal>
+            <Reveal blur>
               <div className="section-head">
                 <span className="eyebrow">02 — Tecnologías</span>
                 <h2>Con qué trabajo</h2>
@@ -584,7 +620,7 @@ export default function HomePage() {
           className="border-t border-[var(--line)] px-4 py-[var(--section-y)] sm:px-6"
         >
           <div className="mx-auto max-w-7xl">
-            <Reveal>
+            <Reveal blur>
               <div className="section-head">
                 <span className="eyebrow">03 — Cybersecurity</span>
                 <h2>Seguridad con nivel honesto</h2>
@@ -639,7 +675,7 @@ export default function HomePage() {
           className="border-t border-[var(--line)] bg-[var(--bg-raised)] px-4 py-[var(--section-y)] sm:px-6"
         >
           <div className="mx-auto max-w-7xl">
-            <Reveal>
+            <Reveal blur>
               <div className="section-head">
                 <span className="eyebrow">04 — Projects</span>
                 <h2>Lo que he construido</h2>
@@ -734,7 +770,7 @@ export default function HomePage() {
             className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_50%_at_50%_0%,rgba(88,101,242,0.14),transparent_70%)]"
           />
           <div className="relative mx-auto max-w-7xl">
-            <Reveal>
+            <Reveal blur>
               <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div className="section-head !mb-0">
                   <span className="eyebrow" style={{ color: "#8f97ff" }}>
@@ -839,7 +875,7 @@ export default function HomePage() {
           className="border-t border-[var(--line)] bg-[var(--bg-raised)] px-4 py-[var(--section-y)] sm:px-6"
         >
           <div className="mx-auto max-w-7xl">
-            <Reveal>
+            <Reveal blur>
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div className="section-head !mb-0">
                   <span className="eyebrow">06 — Blog</span>
@@ -898,7 +934,7 @@ export default function HomePage() {
         {/* ============================ BIBLIOTECA ============================ */}
         <section id="biblioteca" className="border-t border-[var(--line)] px-4 py-[var(--section-y)] sm:px-6">
           <div className="mx-auto max-w-7xl">
-            <Reveal>
+            <Reveal blur>
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div className="section-head !mb-0">
                   <span className="eyebrow">07 — Biblioteca</span>

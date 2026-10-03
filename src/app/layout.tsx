@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import ScrollProgress from "@/components/ScrollProgress";
 import Providers from "@/components/Providers";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import ThemePicker from "@/components/ThemePicker";
@@ -80,6 +81,7 @@ export default function RootLayout({
         </a>
         <Providers>
           <ThemeProvider>
+            <ScrollProgress />
             <Navbar />
             <main id="contenido" className="pt-16">
               {children}

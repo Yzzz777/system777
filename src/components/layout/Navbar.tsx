@@ -3,6 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import { Menu, X, ChevronDown, LogOut, LayoutDashboard } from "lucide-react";
 import { useSession, signOut } from "@/components/Providers";
 import { siteConfig, navLinks } from "@/lib/config";
@@ -11,6 +13,7 @@ import SharinganEgg from "@/components/layout/SharinganEgg";
 
 export function Navbar() {
   const { data: session } = useSession();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
@@ -104,14 +107,31 @@ export function Navbar() {
         <div className="hidden items-center gap-0.5 lg:flex">
           {navLinks.map((link) => {
             const isOpen = expanded === link.label;
+            const active =
+              pathname === link.href ||
+              (link.href !== "/" && pathname.startsWith(`${link.href}/`));
             if (!link.children) {
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="rounded-lg px-3 py-2 text-[13.5px] text-[var(--text-2)] transition-colors hover:bg-white/5 hover:text-[var(--text)]"
+                  aria-current={active ? "page" : undefined}
+                  data-nav-link={link.href}
+                  className="relative rounded-lg px-3 py-2 text-[13.5px] transition-colors hover:bg-white/5 hover:text-[var(--text)]"
                 >
-                  {link.label}
+                  {active && (
+                    <motion.span
+                      layoutId="nav-pill"
+                      data-nav-pill
+                      className="absolute inset-0 rounded-lg bg-white/[0.07] ring-1 ring-[var(--line-strong)]"
+                      transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                    />
+                  )}
+                  <span
+                    className={cn("relative", active && "text-[var(--text)]")}
+                  >
+                    {link.label}
+                  </span>
                 </Link>
               );
             }
@@ -126,27 +146,51 @@ export function Navbar() {
                   type="button"
                   aria-expanded={isOpen}
                   aria-haspopup="true"
+                  data-nav-link={link.href}
                   onClick={() => setExpanded((prev) => (prev === link.label ? null : link.label))}
-                  className="flex items-center gap-1 rounded-lg px-3 py-2 text-[13.5px] text-[var(--text-2)] transition-colors hover:bg-white/5 hover:text-[var(--text)]"
+                  className={cn(
+                    "relative flex items-center gap-1 rounded-lg px-3 py-2 text-[13.5px] transition-colors hover:bg-white/5 hover:text-[var(--text)]",
+                    active && "text-[var(--text)]"
+                  )}
                 >
-                  {link.label}
+                  {active && (
+                    <motion.span
+                      layoutId="nav-pill"
+                      data-nav-pill
+                      className="absolute inset-0 rounded-lg bg-white/[0.07] ring-1 ring-[var(--line-strong)]"
+                      transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                    />
+                  )}
+                  <span className="relative">{link.label}</span>
                   <ChevronDown
                     aria-hidden
-                    className={cn("h-3 w-3 transition-transform duration-200", isOpen && "rotate-180")}
+                    className={cn(
+                      "relative h-3 w-3 transition-transform duration-200",
+                      isOpen && "rotate-180"
+                    )}
                   />
                 </button>
                 {isOpen && (
                   <div className="absolute left-0 top-full mt-1 w-52 overflow-hidden rounded-[14px] border border-[var(--line-strong)] bg-[var(--surface)] p-1.5 shadow-[var(--shadow-2)]">
-                    {link.children.map((child) => (
-                      <Link
-                        key={child.href}
-                        href={child.href}
-                        onClick={() => setExpanded(null)}
-                        className="block rounded-lg px-3 py-2 text-[13.5px] text-[var(--text-2)] transition-colors hover:bg-white/5 hover:text-[var(--text)]"
-                      >
-                        {child.label}
-                      </Link>
-                    ))}
+                    {link.children.map((child) => {
+                      const childActive = pathname === child.href;
+                      return (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          onClick={() => setExpanded(null)}
+                          aria-current={childActive ? "page" : undefined}
+                          className={cn(
+                            "block rounded-lg px-3 py-2 text-[13.5px] transition-colors hover:bg-white/5 hover:text-[var(--text)]",
+                            childActive
+                              ? "bg-white/[0.07] text-[var(--text)]"
+                              : "text-[var(--text-2)]"
+                          )}
+                        >
+                          {child.label}
+                        </Link>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -207,32 +251,49 @@ export function Navbar() {
       >
         <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto px-4 py-4">
           <ul className="space-y-1">
-            {navLinks.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className="block rounded-xl px-3 py-3 text-[15px] text-[var(--text-2)] transition-colors hover:bg-white/5 hover:text-[var(--text)]"
-                >
-                  {link.label}
-                </Link>
-                {link.children && (
-                  <ul className="mb-1 ml-3 space-y-0.5 border-l border-[var(--line)] pl-3">
-                    {link.children.map((child) => (
-                      <li key={child.href}>
-                        <Link
-                          href={child.href}
-                          onClick={() => setOpen(false)}
-                          className="block rounded-lg px-3 py-2 text-[13.5px] text-[var(--text-3)] transition-colors hover:text-[var(--text)]"
-                        >
-                          {child.label}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            ))}
+            {navLinks.map((link) => {
+              const active =
+                pathname === link.href ||
+                (link.href !== "/" && pathname.startsWith(`${link.href}/`));
+              return (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    onClick={() => setOpen(false)}
+                    aria-current={active ? "page" : undefined}
+                    data-nav-link={link.href}
+                    className={cn(
+                      "block rounded-xl px-3 py-3 text-[15px] transition-colors hover:bg-white/5 hover:text-[var(--text)]",
+                      active
+                        ? "bg-white/[0.06] text-[var(--text)]"
+                        : "text-[var(--text-2)]"
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                  {link.children && (
+                    <ul className="mb-1 ml-3 space-y-0.5 border-l border-[var(--line)] pl-3">
+                      {link.children.map((child) => (
+                        <li key={child.href}>
+                          <Link
+                            href={child.href}
+                            onClick={() => setOpen(false)}
+                            className={cn(
+                              "block rounded-lg px-3 py-2 text-[13.5px] transition-colors hover:bg-white/5 hover:text-[var(--text)]",
+                              pathname === child.href
+                                ? "text-[var(--text)]"
+                                : "text-[var(--text-3)]"
+                            )}
+                          >
+                            {child.label}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              );
+            })}
           </ul>
           <div className="mt-4 border-t border-[var(--line)] pt-4">
             {session ? (
