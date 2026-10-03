@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, ChevronDown, Terminal, LogOut, LayoutDashboard } from "lucide-react";
+import { Menu, X, ChevronDown, LogOut, LayoutDashboard } from "lucide-react";
 import { useSession, signOut } from "@/components/Providers";
 import { siteConfig, navLinks } from "@/lib/config";
 import { cn } from "@/lib/utils";
@@ -62,8 +63,15 @@ export function Navbar() {
         className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6"
       >
         <Link href="/" className="group flex shrink-0 items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-[10px] border border-[var(--line)] bg-[var(--surface-2)] transition-colors group-hover:border-[rgba(0,255,136,0.35)]">
-            <Terminal aria-hidden className="h-4 w-4 text-[var(--brand)]" />
+          <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-[10px] border border-[var(--line)] bg-[var(--surface-2)] transition-colors group-hover:border-[rgba(0,255,136,0.35)]">
+            <Image
+              src="/logo.webp"
+              alt=""
+              width={32}
+              height={32}
+              priority
+              className="h-8 w-8 object-cover"
+            />
           </span>
           <span className="flex flex-col leading-none">
             <span className="font-[family-name:var(--font-display)] text-[15px] font-bold tracking-tight text-[var(--text)]">

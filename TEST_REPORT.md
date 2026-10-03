@@ -248,3 +248,73 @@ sin cookie → **0**.
 - Rutas principales 200; `/bot/dashboard` sin sesión → 307 `/login`;
   blog `POST` sin sesión → 401; `tsc` 0; `eslint` 0/0.
 - Commits: `49cf5b6` (remodelación), `d0ee2d6` (informe), este commit (pendientes).
+
+## 8. Capa visual/3D + fix del botón de Discord (03/10/2026)
+
+### 8.1 Bug: “el botón de iniciar sesión con Discord no sirve”
+
+- **Causa real (Playwright, `elementFromPoint`):** en `/login` un overlay
+  decorativo `absolute inset-0` (degradado verde) estaba **encima** del botón y
+  se tragaba el clic. El botón era visible pero imposible de pulsar.
+- **Segunda causa (local):** `GET /api/auth/discord` devolvía **500**
+  (`TypeError: immutable`) con `Response.redirect(URL)` en runtime edge.
+- **Arreglo:** overlay con `pointer-events-none` + `aria-hidden`, tarjeta con
+  `relative z-10`, y `NextResponse.redirect(url.toString(), 302)` en la ruta.
+- **Comprobado en local:** `elementFromPoint` sobre el botón → `BUTTON`;
+  clic → navegación a `https://discord.com/oauth2/authorize?client_id=1502804306125132057&redirect_uri=…/api/auth/discord/callback…`
+  (**302, sin errores de consola**). En producción la ruta ya respondía 302.
+- **Configuración Discord verificada por API** (con el token del bot):
+  aplicación *System 777* (id `1502804306125132057`) con `redirect_uris` =
+  `https://jrsystem7777.com/api/auth/callback/discord` y
+  `https://jrsystem7777.com/api/auth/discord/callback` → el callback esperado
+  **sí está registrado**. Callback probado: sin código → `307 /login?error=no_code`,
+  código falso → `307 /login?error=token_exchange`.
+
+### 8.2 Capa 3D (Skills: `3d-web-experience`, `react-three-fiber`)
+
+- Reinstalados `three@0.186.1`, `@react-three/fiber@9.8.1`, `@types/three`.
+- Nuevos: `src/components/three/{quality.ts,NetworkScene.tsx,HeroCanvas.tsx}`.
+- Grafo de red determinista (PRNG `mulberry32`, semilla fija), partículas, grid,
+  parallax con el puntero, deriva con el scroll, pulso de nodos; **sin
+  OrbitControls**; `dpr [1,1.75]` / `[1,1.25]` por tier.
+- `HeroCanvas`: `dynamic({ssr:false})`, carga diferida 180 ms, pausa con
+  IntersectionObserver (`frameloop="never"`), fallback CSS sin WebGL o con
+  `prefers-reduced-motion` (reacciona en caliente), `data-hero` para diagnóstico.
+- Integrado en el hero de `/` con `pointer-events-none` y contenido con
+  `relative z-10` (el canvas **nunca** intercepta clics: verificado con
+  `elementFromPoint` sobre “Ver proyectos” → `A`).
+- Verificación: con WebGL → **canvas montado** (`data-hero="scene"`); sin WebGL
+  → fallback estático. Capturas: `shots/scene-hero.png`, `shots/sys2.png`,
+  `shots/mob-hero.png`, `shots/mob-system777.png`.
+
+### 8.3 Marca, iconos y banner
+
+- Navbar: logo real `/logo.webp` (32 px) en lugar del icono genérico.
+- Iconos nuevos desde `profile.png` (logo del sitio): `src/app/favicon.ico`
+  (16–64), `src/app/icon.png` (512), `src/app/apple-icon.png` (180) — emitidos
+  correctamente en el `<head>`.
+- Banner `public/system777-banner.webp` (1181×472, 41 KB) en la sección
+  *System 777*, dentro de un `.panel`, responsive (341×136 en 375 px).
+- `System777StatusPanel`: muestra **“consultando…”** mientras no hay datos
+  (antes parpadeaba un “offline” transitorio falso).
+
+### 8.4 Docs de método
+
+`docs/TOOLS.md` (stack y decisiones), `docs/3D.md` (arquitectura de la escena y
+reglas de extensión), `docs/MOTION.md` (niveles, tokens, reveals, reglas duras).
+Skills instaladas en `.agents/skills/` con enlaces en `.opencode/skills/` y
+`.claude/skills/`: `3d-web-experience`, `react-three-fiber`,
+`design-motion-principles`, `high-end-visual-design`.
+
+### 8.5 Verificación de esta capa (preview local :3002)
+
+- `tsc --noEmit` **0**; `eslint src --max-warnings=0` **0/0**; `next build` OK.
+- Auditoría Playwright local (15 rutas × 6 anchos = **90 checks**): **0 overflow,
+  0 errores de consola, 0 sin `h1`**, enlaces 200, reduced-motion **0 ocultos**
+  (51 reveals), teclado (skip-link, dropdown, menú móvil, diálogo con `Esc`)
+  idéntico a producción.
+- Imágenes: **0 rotas** tras scroll (el conteo previo del test incluía lazy
+  sin cargar); CDN externo y `/_next/image` responden 200.
+- Menú móvil (375 px): abre/cierra, incluye “Entrar con Discord”, **0 overflow**.
+- **Pendiente: deploy (requiere aprobación).**
+

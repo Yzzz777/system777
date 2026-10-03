@@ -1,3 +1,5 @@
+import { NextResponse } from "next/server";
+
 export const runtime = "edge";
 
 export async function GET() {
@@ -5,7 +7,7 @@ export async function GET() {
   const redirectUri = "https://jrsystem7777.com/api/auth/discord/callback";
 
   if (!clientId) {
-    return new Response("Missing DISCORD_CLIENT_ID", { status: 500 });
+    return new NextResponse("Missing DISCORD_CLIENT_ID", { status: 500 });
   }
 
   const url = new URL("https://discord.com/api/oauth2/authorize");
@@ -14,5 +16,5 @@ export async function GET() {
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", "identify guilds email");
 
-  return Response.redirect(url);
+  return NextResponse.redirect(url.toString(), 302);
 }

@@ -36,6 +36,7 @@ import {
   CircleDot,
 } from "lucide-react";
 import StudyTimeCounter from "@/components/StudyTimeCounter";
+import HeroCanvas from "@/components/three/HeroCanvas";
 import { siteConfig } from "@/lib/config";
 import { useBotStats, formatUptime, NA } from "@/lib/useBotStats";
 
@@ -80,10 +81,16 @@ function Reveal({
     return () => io.disconnect();
   }, []);
 
-  const Component = Tag as React.ElementType;
+  type RevealProps = {
+    ref?: React.Ref<HTMLElement>;
+    style?: React.CSSProperties;
+    className?: string;
+    children?: ReactNode;
+  };
+  const Component = Tag as unknown as React.ComponentType<RevealProps>;
   return (
     <Component
-      ref={ref as never}
+      ref={ref}
       style={{ "--reveal-delay": `${delay}ms` } as React.CSSProperties}
       className={`reveal ${visible ? "is-visible" : ""} ${className}`}
     >
@@ -338,6 +345,7 @@ export default function HomePage() {
       <div className="relative z-10">
         {/* ============================ HERO ============================ */}
         <section className="relative overflow-hidden px-4 pb-16 pt-10 sm:px-6 sm:pt-16 lg:pb-24">
+          <HeroCanvas />
           <div
             aria-hidden
             className="ring-deco left-[-140px] top-[60px] h-[340px] w-[340px] opacity-70"
@@ -347,7 +355,7 @@ export default function HomePage() {
             className="ring-deco right-[-120px] top-[220px] h-[260px] w-[260px] opacity-60"
           />
 
-          <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-14">
+          <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-14">
             {/* Retrato */}
             <Reveal className="order-2 mx-auto w-full max-w-[340px] lg:order-1 lg:max-w-none">
               <div className="relative">
@@ -432,7 +440,7 @@ export default function HomePage() {
           </div>
 
           {/* Contador */}
-          <Reveal delay={120} className="mx-auto mt-12 max-w-7xl">
+          <Reveal delay={120} className="relative z-10 mx-auto mt-12 max-w-7xl">
             <div className="panel p-4 sm:p-6">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                 <span className="eyebrow">
@@ -762,6 +770,18 @@ export default function HomePage() {
               </div>
             </Reveal>
 
+            <Reveal delay={40} className="mt-6">
+              <div className="panel overflow-hidden p-0">
+                <Image
+                  src="/system777-banner.webp"
+                  alt="System 777 — banner del bot"
+                  width={1181}
+                  height={472}
+                  className="h-auto w-full"
+                />
+              </div>
+            </Reveal>
+
             <div className="mt-8 grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
               {/* Features */}
               <ul className="grid gap-3 sm:grid-cols-2">
@@ -1027,6 +1047,7 @@ export default function HomePage() {
    ========================================================= */
 function System777StatusPanel() {
   const { stats, loaded } = useBotStats(30000);
+  const ready = loaded && !!stats;
   const online = stats?.available !== false && stats?.online === true;
   const uptime = formatUptime(stats?.uptime);
 
@@ -1043,16 +1064,16 @@ function System777StatusPanel() {
     <div className="panel overflow-hidden">
       <div className="flex items-center gap-3 border-b border-[var(--line)] px-5 py-4">
         <span
-          className={`h-2.5 w-2.5 rounded-full ${online ? "bg-[var(--brand)] status-online" : "bg-[var(--text-3)]"}`}
+          className={`h-2.5 w-2.5 rounded-full ${ready && online ? "bg-[var(--brand)] status-online" : "bg-[var(--text-3)]"}`}
         />
         <span className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--text)]">
           {stats?.tag ? stats.tag : "System 777"}
         </span>
         <span
           className="chip ml-auto"
-          style={{ color: online ? "var(--brand)" : "var(--text-3)" }}
+          style={{ color: ready && online ? "var(--brand)" : "var(--text-3)" }}
         >
-          {!loaded ? "consultando…" : online ? "online" : "offline"}
+          {!ready ? "consultando…" : online ? "online" : "offline"}
         </span>
       </div>
       <dl className="grid grid-cols-2 sm:grid-cols-3">
