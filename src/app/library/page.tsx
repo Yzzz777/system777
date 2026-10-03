@@ -1,70 +1,197 @@
 "use client";
 
+import Link from "next/link";
+import {
+  Search,
+  Github,
+  FileCode,
+  BookOpen,
+  Gauge,
+  Terminal,
+  ArrowUpRight,
+  Mail,
+} from "lucide-react";
 import { useState } from "react";
-import { FileText, Download, Search, BookOpen, Code2, Terminal, Shield, Settings, Palette, FileCode } from "lucide-react";
-import { FadeIn, StaggerContainer, StaggerItem, HoverScale } from "@/components/ui/Animations";
 
-const files = [
-  { name: "Guia de Setup", desc: "Instrucciones de instalacion y configuracion de System 777", icon: Settings, size: "2.4 KB", downloads: 15, color: "#00FF88" },
-  { name: "Documentacion de Comandos", desc: "Lista completa de los 100+ comandos disponibles", icon: BookOpen, size: "8.1 KB", downloads: 42, color: "#5865F2" },
-  { name: "Configuracion Avanzada", desc: "Variables de entorno, permisos y configuracion del bot", icon: Terminal, size: "3.7 KB", downloads: 28, color: "#7C3AED" },
-  { name: "Guia de Seguridad", desc: "Anti-raid, anti-nuke, automod y proteccion de servidores", icon: Shield, size: "5.2 KB", downloads: 35, color: "#ED4245" },
-  { name: "Plantillas de Embeds", desc: "Plantillas listas para usar en embeds de Discord", icon: Palette, size: "4.1 KB", downloads: 19, color: "#EB459E" },
-  { name: "Codigo Fuente", desc: "Repositorio completo en GitHub con documentacion", icon: Code2, size: "N/A", downloads: 67, color: "#00C8FF" },
-  { name: "Scripts de Deploy", desc: "Scripts automatizados para deploy en VPS y Cloudflare", icon: FileCode, size: "1.8 KB", downloads: 12, color: "#FF6B6B" },
-  { name: "Template de Bot", desc: "Base para crear tu propio bot con la misma estructura", icon: FileText, size: "6.3 KB", downloads: 23, color: "#FEE75C" },
+type Resource = {
+  title: string;
+  desc: string;
+  href: string;
+  external: boolean;
+  icon: typeof Github;
+  color: string;
+  tag: string;
+};
+
+const resources: Resource[] = [
+  {
+    title: "Código fuente de System 777",
+    desc: "Repositorio público del bot: comandos, sistemas de protección, economía y dashboard.",
+    href: "https://github.com/Yzzz777/system-777",
+    external: true,
+    icon: Github,
+    color: "var(--system)",
+    tag: "GitHub",
+  },
+  {
+    title: "Código de este sitio",
+    desc: "Frontend, blog con base de datos, APIs y autenticación con Discord.",
+    href: "https://github.com/Yzzz777/system777",
+    external: true,
+    icon: FileCode,
+    color: "var(--brand)",
+    tag: "GitHub",
+  },
+  {
+    title: "Referencia de comandos",
+    desc: "Todos los comandos de System 777 con uso y descripción, filtrables por categoría.",
+    href: "/bot/commands",
+    external: false,
+    icon: BookOpen,
+    color: "var(--data)",
+    tag: "Página",
+  },
+  {
+    title: "Estado del bot",
+    desc: "Servidores, usuarios, ping y uptime en vivo desde la API pública.",
+    href: "/bot/status",
+    external: false,
+    icon: Gauge,
+    color: "var(--warn)",
+    tag: "Página",
+  },
+  {
+    title: "Planes premium",
+    desc: "Precios y beneficios exactos de Normal, Pro y Max, tal como están en el código.",
+    href: "/bot#premium",
+    external: false,
+    icon: Terminal,
+    color: "var(--system-2, #7C3AED)",
+    tag: "Sección",
+  },
+  {
+    title: "Sobre mí",
+    desc: "Quién soy, cómo trabajo y qué tecnología uso a diario.",
+    href: "/about",
+    external: false,
+    icon: BookOpen,
+    color: "var(--brand)",
+    tag: "Página",
+  },
 ];
 
 export default function LibraryPage() {
   const [search, setSearch] = useState("");
-
-  const filtered = files.filter((f) => f.name.toLowerCase().includes(search.toLowerCase()));
+  const q = search.trim().toLowerCase();
+  const filtered = resources.filter(
+    (r) => !q || r.title.toLowerCase().includes(q) || r.desc.toLowerCase().includes(q)
+  );
 
   return (
-    <div className="min-h-screen py-12">
-      <div className="mx-auto max-w-7xl px-4">
-        <FadeIn>
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-white sm:text-5xl">Biblioteca</h1>
-            <p className="mx-auto mt-4 max-w-2xl text-gray-400">Documentacion, guias y recursos para System 777</p>
-          </div>
-        </FadeIn>
+    <div className="relative px-4 pb-[var(--section-y)] pt-10 sm:px-6 sm:pt-14">
+      <div className="grid-bg" aria-hidden />
+      <div className="relative mx-auto max-w-5xl">
+        <div className="text-center">
+          <span className="eyebrow justify-center">Recursos</span>
+          <h1 className="mt-5 font-[family-name:var(--font-display)] text-[clamp(2rem,5.5vw,3.25rem)] font-bold tracking-tight">
+            Biblioteca
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-[var(--text-2)]">
+            Todo lo público que tengo: repositorios, documentación y páginas de referencia. Aquí
+            solo hay enlaces que existen.
+          </p>
+        </div>
 
-        <FadeIn delay={0.1}>
-          <div className="mx-auto mt-8 max-w-md">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-              <input type="text" placeholder="Buscar archivos..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 outline-none focus:border-[#00FF88]/50" />
-            </div>
+        <div className="mx-auto mt-8 max-w-md">
+          <div className="relative">
+            <Search
+              aria-hidden
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-3)]"
+            />
+            <label htmlFor="lib-search" className="sr-only">
+              Buscar recursos
+            </label>
+            <input
+              id="lib-search"
+              type="search"
+              placeholder="Buscar recurso…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="input !pl-10"
+            />
           </div>
-        </FadeIn>
+        </div>
 
-        <StaggerContainer className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((f) => {
-            const Icon = f.icon;
+        <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+          {filtered.map((r) => {
+            const inner = (
+              <>
+                <span
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-white/[0.05]"
+                  style={{ color: r.color }}
+                >
+                  <r.icon aria-hidden className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1.5 font-semibold text-[var(--text)]">
+                    {r.title}
+                    {r.external ? (
+                      <ArrowUpRight aria-hidden className="h-3.5 w-3.5 text-[var(--text-3)]" />
+                    ) : (
+                      <ArrowUpRight aria-hidden className="h-3.5 w-3.5 text-[var(--text-3)]" />
+                    )}
+                  </span>
+                  <span className="mt-1 block text-[13px] leading-relaxed text-[var(--text-3)]">
+                    {r.desc}
+                  </span>
+                </span>
+                <span className="chip shrink-0 self-start">{r.tag}</span>
+              </>
+            );
             return (
-              <StaggerItem key={f.name}>
-                <HoverScale>
-                  <div className="glass rounded-2xl p-5 flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: f.color + "15" }}>
-                      <Icon className="h-5 w-5" style={{ color: f.color }} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-semibold text-white">{f.name}</div>
-                      <p className="mt-1 text-xs text-gray-400 line-clamp-2">{f.desc}</p>
-                      <div className="mt-3 flex items-center gap-3 text-xs text-gray-500">
-                        <span>{f.size}</span>
-                        <span className="flex items-center gap-1"><Download className="h-3 w-3" /> {f.downloads}</span>
-                      </div>
-                    </div>
-                  </div>
-                </HoverScale>
-              </StaggerItem>
+              <li key={r.title} className="flex">
+                {r.external ? (
+                  <a
+                    href={r.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="panel panel-hover flex w-full items-start gap-3.5 p-5"
+                  >
+                    {inner}
+                  </a>
+                ) : (
+                  <Link href={r.href} className="panel panel-hover flex w-full items-start gap-3.5 p-5">
+                    {inner}
+                  </Link>
+                )}
+              </li>
             );
           })}
-        </StaggerContainer>
+        </ul>
 
-        {filtered.length === 0 && <div className="mt-20 text-center text-gray-400">No se encontraron archivos</div>}
+        {filtered.length === 0 && (
+          <div className="panel mt-6 p-10 text-center text-sm text-[var(--text-3)]">
+            Nada coincide con “{search}”.
+          </div>
+        )}
+
+        <div className="panel mt-8 flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-bold">¿Necesitas algo concreto?</h2>
+            <p className="mt-1 text-sm text-[var(--text-3)]">
+              Si falta documentación de algo que uso, pídela y la publico aquí.
+            </p>
+          </div>
+          <Link href="/contact" className="btn btn-ghost shrink-0">
+            <Mail aria-hidden className="h-4 w-4" />
+            Pedir recurso
+          </Link>
+        </div>
+
+        <p className="mt-6 text-center text-xs text-[var(--text-3)]">
+          Sin contadores de descargas ni archivos de ejemplo: se publican cuando haya archivos
+          reales.
+        </p>
       </div>
     </div>
   );

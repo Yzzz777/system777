@@ -35,37 +35,50 @@ function calcElapsed(startDate: Date) {
   return { years, months, days, hours, minutes, seconds };
 }
 
+const units = [
+  { key: "years", label: "AÑOS", color: "var(--brand)" },
+  { key: "months", label: "MESES", color: "var(--data)" },
+  { key: "days", label: "DÍAS", color: "#9b8cff" },
+  { key: "hours", label: "HORAS", color: "var(--warn)" },
+  { key: "minutes", label: "MIN", color: "#ff8f6b" },
+  { key: "seconds", label: "SEG", color: "#ff6bb5" },
+] as const;
+
 export default function StudyTimeCounter({ startDate }: StudyTimeCounterProps) {
-  const [elapsed, setElapsed] = useState(() => calcElapsed(new Date(startDate)));
+  const start = new Date(startDate);
+  const [elapsed, setElapsed] = useState(() => calcElapsed(start));
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setElapsed(calcElapsed(new Date(startDate)));
-    }, 1000);
+    setElapsed(calcElapsed(start));
+    const timer = setInterval(() => setElapsed(calcElapsed(start)), 1000);
     return () => clearInterval(timer);
-  }, [startDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [start.getTime()]);
 
-  const { years, months, days, hours, minutes, seconds } = elapsed;
-
-  const units = [
-    { value: years, label: "AÑOS", color: "#00FF88" },
-    { value: months, label: "MESES", color: "#00C8FF" },
-    { value: days, label: "DÍAS", color: "#7C3AED" },
-    { value: hours, label: "HORAS", color: "#FFD93D" },
-    { value: minutes, label: "MIN", color: "#FF6B6B" },
-    { value: seconds, label: "SEG", color: "#EB459E" },
-  ];
+  const summary = `Lleva ${elapsed.years} años, ${elapsed.months} meses y ${elapsed.days} días aprendiendo.`;
 
   return (
-    <div className="flex items-center gap-3 sm:gap-5">
-      {units.map((u) => (
-        <div key={u.label} className="text-center">
-          <div className="text-2xl sm:text-4xl font-black tabular-nums" style={{ color: u.color }}>
-            {String(u.value).padStart(2, "0")}
+    <div className="w-full" role="timer" aria-label="Tiempo aprendiendo">
+      <p className="sr-only">{summary}</p>
+      <div aria-hidden className="flex items-stretch gap-2 sm:gap-3">
+        {units.map((u) => (
+          <div
+            key={u.key}
+            className="flex min-w-0 flex-1 flex-col items-center rounded-[12px] border border-[var(--line)] bg-white/[0.02] px-1 py-2.5 sm:px-2 sm:py-3"
+          >
+            <span
+              suppressHydrationWarning
+              className="font-[family-name:var(--font-display)] text-xl font-bold tabular-nums leading-none sm:text-3xl"
+              style={{ color: u.color }}
+            >
+              {String(elapsed[u.key]).padStart(2, "0")}
+            </span>
+            <span className="mt-1.5 font-[family-name:var(--font-mono)] text-[8px] tracking-[0.14em] text-[var(--text-3)] sm:text-[10px]">
+              {u.label}
+            </span>
           </div>
-          <div className="text-[9px] sm:text-[11px] text-gray-500 mt-1 tracking-wider">{u.label}</div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

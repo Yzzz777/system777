@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Search, Terminal, Shield, Lock, Music, Coins, BarChart3, Gamepad2, MessageSquare, Globe, Crown } from "lucide-react";
 
 const ALL_COMMANDS = [
@@ -68,13 +67,6 @@ const ALL_COMMANDS = [
   { category: "Diversión", emoji: "🎮", icon: Gamepad2, color: "#FF6B6B", name: "rate", desc: "Califica algo del 1 al 10.", usage: "/rate [algo]" },
   { category: "Diversión", emoji: "🎮", icon: Gamepad2, color: "#FF6B6B", name: "ascii", desc: "Convierte texto a ASCII art.", usage: "/ascii [texto]" },
   { category: "Diversión", emoji: "🎮", icon: Gamepad2, color: "#FF6B6B", name: "urban", desc: "Definición de Urban Dictionary.", usage: "/urban [término]" },
-
-  { category: "Diversión", emoji: "🎮", icon: Gamepad2, color: "#FF6B6B", name: "love", desc: "Calcula el amor entre dos usuarios.", usage: "/love @user1 @user2" },
-  { category: "Diversión", emoji: "🎮", icon: Gamepad2, color: "#FF6B6B", name: "roast", desc: "Insulta aleatorio (con cariño).", usage: "/roast [@usuario]" },
-  { category: "Diversión", emoji: "🎮", icon: Gamepad2, color: "#FF6B6B", name: "compliment", desc: "Halago aleatorio.", usage: "/compliment [@usuario]" },
-  { category: "Diversión", emoji: "🎮", icon: Gamepad2, color: "#FF6B6B", name: "rate", desc: "Califica algo del 1 al 10.", usage: "/rate [algo]" },
-  { category: "Diversión", emoji: "🎮", icon: Gamepad2, color: "#FF6B6B", name: "ascii", desc: "Convierte texto a ASCII art.", usage: "/ascii [texto]" },
-  { category: "Diversión", emoji: "🎮", icon: Gamepad2, color: "#FF6B6B", name: "urban", desc: "Definición de Urban Dictionary.", usage: "/urban [término]" },
 ];
 
 const CATEGORIES = ["Todos", ...Array.from(new Set(ALL_COMMANDS.map((c) => c.category)))];
@@ -83,42 +75,66 @@ export default function BotCommandsPage() {
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [search, setSearch] = useState("");
 
+  const query = search.trim().toLowerCase();
   const filtered = ALL_COMMANDS.filter((cmd) => {
     const matchCat = activeCategory === "Todos" || cmd.category === activeCategory;
-    const matchSearch = !search || cmd.name.toLowerCase().includes(search.toLowerCase()) || cmd.desc?.toLowerCase().includes(search.toLowerCase());
+    const matchSearch =
+      !query || cmd.name.toLowerCase().includes(query) || cmd.desc.toLowerCase().includes(query);
     return matchCat && matchSearch;
   });
 
   return (
-    <main className="min-h-screen pt-24 pb-12 px-4">
-      <div className="max-w-6xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl font-black mb-4">
-            <span className="bg-gradient-to-r from-[#5865F2] to-[#7C3AED] bg-clip-text text-transparent">Comandos</span>
+    <div className="relative px-4 pb-[var(--section-y)] pt-10 sm:px-6 sm:pt-14">
+      <div className="relative mx-auto max-w-6xl">
+        <div className="text-center">
+          <span className="eyebrow justify-center" style={{ color: "#8f97ff" }}>
+            <Terminal aria-hidden className="h-3 w-3" />
+            Referencia pública
+          </span>
+          <h1 className="mt-5 font-[family-name:var(--font-display)] text-[clamp(2rem,5.5vw,3.25rem)] font-bold tracking-tight">
+            Comandos de System 777
           </h1>
-          <p className="text-gray-400 text-lg">{ALL_COMMANDS.length} comandos disponibles en System 777</p>
-        </motion.div>
+          <p className="mx-auto mt-4 max-w-2xl text-[var(--text-2)]">
+            {ALL_COMMANDS.length} entradas en esta referencia, organizadas por categoría. El bot
+            registra en Discord {""}
+            <span className="text-[var(--text)]">la lista real de comandos</span> desde su VPS.
+          </p>
+        </div>
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative mb-6">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-          <input
-            type="text"
-            placeholder="Buscar comando..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 outline-none focus:border-[#5865F2]/50 transition-colors"
-          />
-        </motion.div>
+        <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search
+              aria-hidden
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-3)]"
+            />
+            <label htmlFor="cmd-search" className="sr-only">
+              Buscar comando
+            </label>
+            <input
+              id="cmd-search"
+              type="search"
+              placeholder="Buscar comando o descripción…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-[12px] border border-[var(--line)] bg-white/[0.03] py-2.5 pl-10 pr-4 text-sm text-[var(--text)] placeholder:text-[var(--text-3)] outline-none transition-colors focus:border-[rgba(88,101,242,0.55)]"
+            />
+          </div>
+          <p className="shrink-0 font-[family-name:var(--font-mono)] text-xs text-[var(--text-3)]">
+            {filtered.length} resultado{filtered.length === 1 ? "" : "s"}
+          </p>
+        </div>
 
-        <div className="flex flex-wrap gap-2 mb-8">
+        <div className="mt-4 flex flex-wrap gap-2">
           {CATEGORIES.map((cat) => (
             <button
               key={cat}
+              type="button"
               onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+              aria-pressed={activeCategory === cat}
+              className={`rounded-[10px] border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
                 activeCategory === cat
-                  ? "bg-[#5865F2] text-white"
-                  : "bg-white/5 text-gray-400 hover:text-white border border-white/10"
+                  ? "border-[rgba(88,101,242,0.55)] bg-[rgba(88,101,242,0.16)] text-[#a9b0ff]"
+                  : "border-[var(--line)] bg-white/[0.03] text-[var(--text-3)] hover:text-[var(--text)]"
               }`}
             >
               {cat}
@@ -126,49 +142,40 @@ export default function BotCommandsPage() {
           ))}
         </div>
 
-        <p className="text-xs text-gray-600 mb-4">{filtered.length} comandos encontrados</p>
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`${activeCategory}-${search}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
-          >
-            {filtered.map((cmd, i) => (
-              <motion.div
-                key={cmd.name}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(i * 0.03, 0.3) }}
-                className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 hover:bg-white/[0.06] hover:border-white/0.12 transition-all hover:-translate-y-0.5"
-              >
-                <div className="flex items-start gap-3">
-                  <Terminal size={14} className="mt-0.5 flex-shrink-0" style={{ color: cmd.color }} />
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono font-bold text-white text-sm">/{cmd.name}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-gray-500">
-                        {cmd.emoji} {cmd.category}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1 leading-relaxed">{cmd.desc}</p>
-                    <code className="text-[10px] text-gray-600 mt-1 block">{cmd.usage}</code>
+        <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((cmd) => (
+            <li key={`${cmd.category}-${cmd.name}`} className="panel panel-hover h-full min-w-0 p-4">
+              <div className="flex min-w-0 items-start gap-2.5">
+                <Terminal
+                  aria-hidden
+                  className="mt-1 h-3.5 w-3.5 shrink-0"
+                  style={{ color: cmd.color }}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-[family-name:var(--font-mono)] text-sm font-bold text-[var(--text)]">
+                      /{cmd.name}
+                    </span>
+                    <span className="chip !text-[10px]">
+                      {cmd.emoji} {cmd.category}
+                    </span>
                   </div>
+                  <p className="mt-1.5 text-xs leading-relaxed text-[var(--text-3)]">{cmd.desc}</p>
+                  <code className="mt-1.5 block break-words font-[family-name:var(--font-mono)] text-[11px] text-[var(--data)]">
+                    {cmd.usage}
+                  </code>
                 </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </AnimatePresence>
+              </div>
+            </li>
+          ))}
+        </ul>
 
         {filtered.length === 0 && (
-          <div className="text-center py-20 text-gray-600">
-            No se encontraron comandos para &quot;{search}&quot;
+          <div className="panel mt-6 p-12 text-center text-sm text-[var(--text-3)]">
+            No hay comandos para “{search}” en esta referencia.
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }

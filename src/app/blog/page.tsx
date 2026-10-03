@@ -1,257 +1,450 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Search, Clock, User, Tag, ArrowRight, Upload, FileText, Image, Download, X, Plus, Eye, Edit3, Trash2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { FadeIn, StaggerContainer, StaggerItem, HoverScale } from "@/components/ui/Animations";
+import {
+  Search,
+  Clock,
+  ArrowRight,
+  Plus,
+  X,
+  Trash2,
+  Loader2,
+  PenLine,
+} from "lucide-react";
+import { getSession } from "@/lib/session";
+import { OWNER_DISCORD_ID } from "@/lib/adminAuth";
 
-interface BlogFile { id: string; filename: string; mime: string; size: number; downloads: number; }
-interface BlogPost { id: string; title: string; slug: string; excerpt: string; content: string; category: string; cover_url: string; author: string; published: boolean; created_at: string; files?: BlogFile[]; }
-
-const defaultPosts: BlogPost[] = [
-  { id: "1", title: "System 777: Todo lo que Puede Hacer tu Bot", slug: "system-777-features", excerpt: "Tour completo por las 100+ funcionalidades de System 777.", content: "", category: "Discord", cover_url: "", author: "System 777", published: true, created_at: "2026-03-01" },
-  { id: "2", title: "Protege tu Servidor de Discord", slug: "discord-bot-security", excerpt: "Anti-raid, anti-nuke, automod: como proteger tu comunidad.", content: "", category: "Ciberseguridad", cover_url: "", author: "System 777", published: true, created_at: "2026-02-20" },
-  { id: "3", title: "Deploy de Next.js 15 en Cloudflare Pages", slug: "nextjs-15-deploy", excerpt: "Paso a paso para desplegar Next.js 15 en Cloudflare.", content: "", category: "Programacion", cover_url: "", author: "System 777", published: true, created_at: "2026-02-10" },
-];
-
-const allCategories = ["Todos", "Discord", "Ciberseguridad", "Programacion", "Linux", "Archivos", "Proyectos"];
-const catColors: Record<string, string> = { Discord: "#5865F2", Ciberseguridad: "#ED4245", Programacion: "#00FF88", Linux: "#FCC624", Archivos: "#7C3AED", Proyectos: "#00C8FF", General: "#95A5A6" };
-
-function formatSize(bytes: number) {
-  if (bytes < 1024) return bytes + " B";
-  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
-  return (bytes / 1048576).toFixed(1) + " MB";
+interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  category: string;
+  cover_url?: string;
+  author: string;
+  published: boolean;
+  created_at: string;
 }
 
 export default function BlogPage() {
-  const [posts, setPosts] = useState<BlogPost[]>(defaultPosts);
-  const [selectedCategory, setSelectedCategory] = useState("Todos");
+  const [posts, setPosts] = useState<BlogPost[] | null>(null);
+  const [error, setError] = useState("");
+  const [category, setCategory] = useState("Todos");
   const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<BlogPost | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
-  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
-  const [form, setForm] = useState({ title: "", slug: "", excerpt: "", content: "", category: "General", cover_url: "" });
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [sending, setSending] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [form, setForm] = useState({ title: "", slug: "", excerpt: "", content: "", category: "General" });
+  const closeRef = useRef<HTMLButtonElement>(null);
 
-  const filtered = posts.filter((p) => {
-    const matchCat = selectedCategory === "Todos" || p.category === selectedCategory;
-    const matchSearch = p.title.toLowerCase().includes(search.toLowerCase()) || p.excerpt.toLowerCase().includes(search.toLowerCase());
+  useEffect(() => {
+    setIsOwner(getSession()?.id === OWNER_DISCORD_ID);
+    let alive = true;
+    fetch("/api/blog/posts")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("bad status"))))
+      .then((data) => {
+        if (alive && Array.isArray(data)) setPosts(data);
+        else if (alive) setPosts([]);
+      })
+      .catch(() => {
+        if (alive) {
+          setPosts([]);
+          setError("No se pudo cargar el blog.");
+        }
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const closeDialog = useCallback(() => setSelected(null), []);
+
+  useEffect(() => {
+    if (!selected) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && closeDialog();
+    document.addEventListener("keydown", onKey);
+    closeRef.current?.focus();
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [selected, closeDialog]);
+
+  const categories = ["Todos", ...Array.from(new Set((posts ?? []).map((p) => p.category || "General")))];
+  const filtered = (posts ?? []).filter((p) => {
+    const q = search.trim().toLowerCase();
+    const matchCat = category === "Todos" || (p.category || "General") === category;
+    const matchSearch = !q || p.title.toLowerCase().includes(q) || (p.excerpt || "").toLowerCase().includes(q);
     return matchCat && matchSearch;
   });
 
   const handleCreate = async () => {
-    if (!form.title || !form.slug) return;
-    const slug = form.slug || form.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    setFormError("");
+    if (!form.title.trim()) {
+      setFormError("El título es obligatorio.");
+      return;
+    }
+    const slug =
+      form.slug.trim() ||
+      form.title
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+    setSending(true);
     try {
-      const res = await fetch("/api/blog/posts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, slug, published: true }) });
+      const res = await fetch("/api/blog/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, slug, published: true }),
+      });
       const data = await res.json();
-      if (data.ok && data.post) {
-        if (selectedFiles.length > 0 && data.post.id) {
-          for (const file of selectedFiles) {
-            const fd = new FormData();
-            fd.append("file", file);
-            fd.append("postId", data.post.id);
-            await fetch("/api/blog/upload", { method: "POST", body: fd });
-          }
-        }
-        setPosts([{ ...data.post, files: [] }, ...posts]);
-        setForm({ title: "", slug: "", excerpt: "", content: "", category: "General", cover_url: "" });
-        setSelectedFiles([]);
+      if (res.ok && data.ok && data.post) {
+        setPosts((prev) => [data.post, ...(prev ?? [])]);
+        setForm({ title: "", slug: "", excerpt: "", content: "", category: "General" });
         setShowCreate(false);
+      } else {
+        setFormError(data.error || "No se pudo crear el post.");
       }
-    } catch {}
+    } catch {
+      setFormError("Error de red al crear el post.");
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`/api/blog/posts?id=${id}`, { method: "DELETE" });
-    setPosts(posts.filter((p) => p.id !== id));
-    setSelectedPost(null);
+    try {
+      const res = await fetch(`/api/blog/posts?id=${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setPosts((prev) => (prev ?? []).filter((p) => p.id !== id));
+        setSelected(null);
+      }
+    } catch {
+      /* noop */
+    }
   };
 
-  const handleDrop = (e: React.DragEvent) => { e.preventDefault(); setSelectedFiles([...selectedFiles, ...Array.from(e.dataTransfer.files)]); };
-
-  const isImage = (mime: string) => mime.startsWith("image/");
-
   return (
-    <div className="min-h-screen py-12">
-      <div className="mx-auto max-w-7xl px-4">
-        <FadeIn>
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-white sm:text-5xl">Blog</h1>
-            <p className="mx-auto mt-4 max-w-2xl text-gray-400">Articulos, archivos y recursos — todo listo para descargar</p>
-          </div>
-        </FadeIn>
+    <div className="relative px-4 pb-[var(--section-y)] pt-10 sm:px-6 sm:pt-14">
+      <div className="grid-bg" aria-hidden />
+      <div className="relative mx-auto max-w-6xl">
+        <div className="text-center">
+          <span className="eyebrow justify-center">Notas</span>
+          <h1 className="mt-5 font-[family-name:var(--font-display)] text-[clamp(2rem,5.5vw,3.25rem)] font-bold tracking-tight">
+            Blog
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-[var(--text-2)]">
+            Artículos escritos por mí, con base de datos real. Si no hay publicaciones, aquí no
+            aparecen textos de relleno.
+          </p>
+        </div>
 
-        {/* Controls */}
-        <FadeIn delay={0.1}>
-          <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-              <input type="text" placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 outline-none focus:border-[#00FF88]/50" />
-            </div>
-            <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-2 rounded-xl bg-[#00FF88] px-5 py-3 text-sm font-semibold text-black hover:bg-[#00CC6A] transition-colors">
-              <Plus className="h-4 w-4" /> Nuevo Post
+        {/* Controles */}
+        <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search
+              aria-hidden
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-3)]"
+            />
+            <label htmlFor="blog-search" className="sr-only">
+              Buscar artículos
+            </label>
+            <input
+              id="blog-search"
+              type="search"
+              placeholder="Buscar artículos…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-[12px] border border-[var(--line)] bg-white/[0.03] py-2.5 pl-10 pr-4 text-sm text-[var(--text)] placeholder:text-[var(--text-3)] outline-none transition-colors focus:border-[rgba(0,255,136,0.5)]"
+            />
+          </div>
+          {isOwner && (
+            <button
+              type="button"
+              onClick={() => setShowCreate((v) => !v)}
+              className="btn btn-primary !py-2.5"
+            >
+              <Plus aria-hidden className="h-4 w-4" />
+              Nuevo post
             </button>
-          </div>
-        </FadeIn>
-
-        {/* Categories */}
-        <FadeIn delay={0.15}>
-          <div className="mt-6 flex flex-wrap gap-2">
-            {allCategories.map((cat) => (
-              <button key={cat} onClick={() => setSelectedCategory(cat)} className={`rounded-full px-4 py-2 text-sm transition-colors ${selectedCategory === cat ? "bg-[#00FF88] text-black" : "border border-white/10 text-gray-400 hover:border-white/20 hover:text-white"}`}>
-                {cat}
-              </button>
-            ))}
-          </div>
-        </FadeIn>
-
-        {/* Create Form */}
-        <AnimatePresence>
-          {showCreate && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-              <div className="glass rounded-2xl p-6 mt-8 space-y-4">
-                <h3 className="text-lg font-bold text-white">Crear Nuevo Post</h3>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Titulo</label>
-                    <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-[#00FF88]/50" placeholder="Mi articulo" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Slug</label>
-                    <input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-[#00FF88]/50" placeholder="mi-articulo" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Excerpt</label>
-                  <input value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-[#00FF88]/50" placeholder="Descripcion corta..." />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Contenido</label>
-                  <textarea rows={4} value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-[#00FF88]/50" placeholder="Escribe tu articulo..." />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Categoria</label>
-                    <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-[#00FF88]/50">
-                      {allCategories.filter((c) => c !== "Todos").map((c) => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Cover URL (imagen)</label>
-                    <input value={form.cover_url} onChange={(e) => setForm({ ...form, cover_url: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-[#00FF88]/50" placeholder="https://..." />
-                  </div>
-                </div>
-
-                {/* File Upload Zone */}
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Archivos adjuntos</label>
-                  <div onDrop={handleDrop} onDragOver={(e) => e.preventDefault()} className="rounded-xl border-2 border-dashed border-white/10 p-6 text-center hover:border-[#00FF88]/30 transition-colors cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                    <Upload className="mx-auto h-8 w-8 text-gray-600 mb-2" />
-                    <p className="text-sm text-gray-400">Arrastra archivos aqui o click para seleccionar</p>
-                    <p className="text-xs text-gray-600 mt-1">Imagenes, PDFs, ZIPs, scripts, etc.</p>
-                    <input ref={fileInputRef} type="file" multiple className="hidden" onChange={(e) => setSelectedFiles([...selectedFiles, ...Array.from(e.target.files || [])])} />
-                  </div>
-                  {selectedFiles.length > 0 && (
-                    <div className="mt-3 space-y-2">
-                      {selectedFiles.map((f, i) => (
-                        <div key={i} className="flex items-center gap-3 rounded-lg bg-white/5 px-3 py-2">
-                          {f.type.startsWith("image/") ? <Image className="h-4 w-4 text-[#00C8FF]" /> : <FileText className="h-4 w-4 text-[#7C3AED]" />}
-                          <span className="text-sm text-white flex-1 truncate">{f.name}</span>
-                          <span className="text-xs text-gray-500">{formatSize(f.size)}</span>
-                          <button onClick={() => setSelectedFiles(selectedFiles.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-300"><X className="h-3 w-3" /></button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-3">
-                  <button onClick={handleCreate} disabled={uploading} className="flex items-center gap-2 rounded-xl bg-[#00FF88] px-6 py-2.5 text-sm font-semibold text-black hover:bg-[#00CC6A] disabled:opacity-50">
-                    {uploading ? "Subiendo..." : "Publicar"}
-                  </button>
-                  <button onClick={() => { setShowCreate(false); setSelectedFiles([]); }} className="rounded-xl border border-white/10 px-6 py-2.5 text-sm text-gray-400 hover:text-white">Cancelar</button>
-                </div>
-              </div>
-            </motion.div>
           )}
-        </AnimatePresence>
+        </div>
 
-        {/* Post Detail Modal */}
-        <AnimatePresence>
-          {selectedPost && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setSelectedPost(null)}>
-              <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="glass rounded-2xl p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <span className="text-xs rounded-full px-2 py-0.5 font-medium" style={{ backgroundColor: (catColors[selectedPost.category] || "#00FF88") + "15", color: catColors[selectedPost.category] || "#00FF88" }}>{selectedPost.category}</span>
-                    <h2 className="mt-2 text-2xl font-bold text-white">{selectedPost.title}</h2>
-                    <p className="text-sm text-gray-500 mt-1">{selectedPost.excerpt}</p>
-                  </div>
-                  <button onClick={() => setSelectedPost(null)} className="text-gray-500 hover:text-white"><X className="h-5 w-5" /></button>
-                </div>
-                {selectedPost.content && <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{selectedPost.content}</p>}
-                {selectedPost.files && selectedPost.files.length > 0 && (
-                  <div className="mt-6">
-                    <h4 className="text-sm font-bold text-white mb-3">Archivos adjuntos</h4>
-                    <div className="space-y-2">
-                      {selectedPost.files.map((f) => (
-                        <div key={f.id} className="flex items-center gap-3 rounded-xl bg-white/5 px-4 py-3">
-                          {isImage(f.mime) ? <Image className="h-4 w-4 text-[#00C8FF]" /> : <FileText className="h-4 w-4 text-[#7C3AED]" />}
-                          <span className="text-sm text-white flex-1 truncate">{f.filename}</span>
-                          <span className="text-xs text-gray-500">{formatSize(f.size)}</span>
-                          <span className="text-xs text-gray-500"><Download className="h-3 w-3 inline" /> {f.downloads}</span>
-                          <a href={`/api/blog/file/${f.id}`} download className="rounded-lg bg-[#00FF88]/10 px-3 py-1.5 text-xs font-medium text-[#00FF88] hover:bg-[#00FF88]/20">Descargar</a>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <div className="mt-6 flex gap-3">
-                  <button onClick={() => handleDelete(selectedPost.id)} className="flex items-center gap-1 rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-400 hover:bg-red-500/20"><Trash2 className="h-3 w-3" /> Eliminar</button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Posts Grid */}
-        <StaggerContainer className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((post) => (
-            <StaggerItem key={post.id}>
-              <HoverScale>
-                <div className="group glass rounded-2xl overflow-hidden cursor-pointer" onClick={() => setSelectedPost(post)}>
-                  {post.cover_url ? (
-                    <div className="h-40 overflow-hidden"><img src={post.cover_url} alt={post.title} className="w-full h-full object-cover" /></div>
-                  ) : (
-                    <div className="h-40 bg-gradient-to-br from-[#00FF88]/10 to-[#00C8FF]/10 relative">
-                      <div className="absolute inset-0 flex items-center justify-center"><Tag className="h-12 w-12 text-white/5" /></div>
-                    </div>
-                  )}
-                  <div className="p-6">
-                    <div className="flex items-center gap-3 text-xs">
-                      <span className="rounded-full px-2 py-0.5 font-medium" style={{ backgroundColor: (catColors[post.category] || "#00FF88") + "15", color: catColors[post.category] || "#00FF88" }}>{post.category}</span>
-                      <span className="flex items-center gap-1 text-gray-500"><Clock className="h-3 w-3" /> {new Date(post.created_at).toLocaleDateString("es-ES")}</span>
-                      {post.files && post.files.length > 0 && <span className="flex items-center gap-1 text-gray-500"><FileText className="h-3 w-3" /> {post.files.length} archivos</span>}
-                    </div>
-                    <h2 className="mt-3 text-lg font-semibold text-white group-hover:text-[#00FF88] transition-colors line-clamp-2">{post.title}</h2>
-                    <p className="mt-2 text-sm text-gray-400 line-clamp-2">{post.excerpt}</p>
-                    <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
-                      <span className="flex items-center gap-1"><User className="h-3 w-3" /> {post.author}</span>
-                      <span className="flex items-center gap-1 text-[#00FF88] group-hover:gap-2 transition-all">Ver <ArrowRight className="h-3 w-3" /></span>
-                    </div>
-                  </div>
-                </div>
-              </HoverScale>
-            </StaggerItem>
+        {/* Categorías */}
+        <div className="mt-4 flex flex-wrap gap-2">
+          {categories.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setCategory(c)}
+              aria-pressed={category === c}
+              className={`rounded-[10px] border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+                category === c
+                  ? "border-[rgba(0,255,136,0.45)] bg-[var(--brand-dim)] text-[var(--brand)]"
+                  : "border-[var(--line)] bg-white/[0.03] text-[var(--text-3)] hover:text-[var(--text)]"
+              }`}
+            >
+              {c}
+            </button>
           ))}
-        </StaggerContainer>
+        </div>
 
-        {filtered.length === 0 && <div className="mt-20 text-center text-gray-400">No se encontraron articulos</div>}
+        {/* Formulario owner */}
+        {showCreate && isOwner && (
+          <div className="panel mt-6 space-y-4 p-6">
+            <h2 className="text-lg font-bold">Crear artículo</h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="post-title" className="stat-label mb-1.5 block">
+                  Título
+                </label>
+                <input
+                  id="post-title"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  placeholder="Mi artículo"
+                  className="input"
+                />
+              </div>
+              <div>
+                <label htmlFor="post-slug" className="stat-label mb-1.5 block">
+                  Slug (opcional)
+                </label>
+                <input
+                  id="post-slug"
+                  value={form.slug}
+                  onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                  placeholder="mi-articulo"
+                  className="input"
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="post-excerpt" className="stat-label mb-1.5 block">
+                Extracto
+              </label>
+              <input
+                id="post-excerpt"
+                value={form.excerpt}
+                onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
+                placeholder="Descripción corta…"
+                className="input"
+              />
+            </div>
+            <div>
+              <label htmlFor="post-content" className="stat-label mb-1.5 block">
+                Contenido
+              </label>
+              <textarea
+                id="post-content"
+                rows={5}
+                value={form.content}
+                onChange={(e) => setForm({ ...form, content: e.target.value })}
+                placeholder="Escribe tu artículo…"
+                className="input resize-y"
+              />
+            </div>
+            <div>
+              <label htmlFor="post-category" className="stat-label mb-1.5 block">
+                Categoría
+              </label>
+              <select
+                id="post-category"
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                className="input"
+              >
+                {["General", "Discord", "Ciberseguridad", "Programación", "Linux", "Proyectos"].map(
+                  (c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  )
+                )}
+              </select>
+            </div>
+
+            {formError && (
+              <p role="alert" className="text-sm text-red-400">
+                {formError}
+              </p>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleCreate}
+                disabled={sending}
+                className="btn btn-primary"
+              >
+                {sending ? (
+                  <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+                ) : (
+                  <PenLine aria-hidden className="h-4 w-4" />
+                )}
+                Publicar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCreate(false);
+                  setFormError("");
+                }}
+                className="btn btn-ghost"
+              >
+                Cancelar
+              </button>
+            </div>
+            <p className="text-[11px] text-[var(--text-3)]">
+              El endpoint exige sesión de owner verificada contra Discord: sin ella devuelve 401.
+            </p>
+          </div>
+        )}
+
+        {/* Estado */}
+        {posts === null && !error && (
+          <div className="panel mt-8 p-10 text-center text-sm text-[var(--text-3)]">
+            Cargando artículos…
+          </div>
+        )}
+
+        {error && posts !== null && (
+          <div className="panel mt-8 p-10 text-center text-sm text-[var(--text-3)]">{error}</div>
+        )}
+
+        {posts !== null && filtered.length === 0 && !error && (
+          <div className="panel mt-8 p-10 text-center">
+            <p className="text-[var(--text-2)]">
+              {posts.length === 0
+                ? "Todavía no hay artículos publicados."
+                : "Ningún artículo coincide con la búsqueda."}
+            </p>
+            <p className="mt-2 text-xs text-[var(--text-3)]">
+              {posts.length === 0
+                ? "Estoy escribiendo el primero; aparecerá aquí."
+                : "Prueba con otra palabra o categoría."}
+            </p>
+          </div>
+        )}
+
+        {/* Lista */}
+        {filtered.length > 0 && (
+          <ul className="mt-8 grid gap-4 sm:grid-cols-2">
+            {filtered.map((post) => (
+              <li key={post.id} className="flex">
+                <article className="panel panel-hover flex h-full w-full flex-col p-6">
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <span className="chip">{post.category || "General"}</span>
+                    <time
+                      dateTime={post.created_at}
+                      className="flex items-center gap-1 font-[family-name:var(--font-mono)] text-[11px] text-[var(--text-3)]"
+                    >
+                      <Clock aria-hidden className="h-3 w-3" />
+                      {new Date(post.created_at).toLocaleDateString("es-ES")}
+                    </time>
+                    {!post.published && <span className="chip !text-[var(--warn)]">Borrador</span>}
+                  </div>
+                  <h2 className="mt-3 text-lg font-bold leading-snug">{post.title}</h2>
+                  {post.excerpt && (
+                    <p className="mt-2 flex-1 text-sm leading-relaxed text-[var(--text-2)]">
+                      {post.excerpt}
+                    </p>
+                  )}
+                  <div className="mt-4 flex items-center justify-between border-t border-[var(--line)] pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setSelected(post)}
+                      className="inline-flex items-center gap-1.5 text-sm text-[var(--brand)] hover:underline"
+                    >
+                      Leer
+                      <ArrowRight aria-hidden className="h-4 w-4" />
+                    </button>
+                    {isOwner && (
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(post.id)}
+                        className="inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300"
+                      >
+                        <Trash2 aria-hidden className="h-3.5 w-3.5" />
+                        Eliminar
+                      </button>
+                    )}
+                  </div>
+                </article>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
+
+      {/* Modal */}
+      {selected && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"
+          onClick={closeDialog}
+          role="presentation"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="post-dialog-title"
+            onClick={(e) => e.stopPropagation()}
+            className="panel max-h-[85vh] w-full max-w-2xl overflow-y-auto p-6 sm:p-8"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <span className="chip">{selected.category || "General"}</span>
+                <h2 id="post-dialog-title" className="mt-2 text-xl font-bold">
+                  {selected.title}
+                </h2>
+                <time
+                  dateTime={selected.created_at}
+                  className="mt-1 block font-[family-name:var(--font-mono)] text-[11px] text-[var(--text-3)]"
+                >
+                  {new Date(selected.created_at).toLocaleDateString("es-ES")} ·{" "}
+                  {selected.author || "Ángel"}
+                </time>
+              </div>
+              <button
+                ref={closeRef}
+                type="button"
+                onClick={closeDialog}
+                aria-label="Cerrar"
+                className="shrink-0 rounded-[8px] border border-[var(--line)] p-2 text-[var(--text-3)] transition-colors hover:text-[var(--text)]"
+              >
+                <X aria-hidden className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mt-5 whitespace-pre-wrap text-sm leading-relaxed text-[var(--text-2)]">
+              {selected.content || selected.excerpt || "Sin contenido todavía."}
+            </div>
+
+            {selected.cover_url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={selected.cover_url}
+                alt=""
+                className="mt-5 max-h-72 w-full rounded-[10px] object-cover"
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      <p className="relative mt-10 text-center text-xs text-[var(--text-3)]">
+        ¿Buscas documentación técnica?{" "}
+        <Link href="/library" className="text-[var(--brand)] hover:underline">
+          Ve a la biblioteca
+        </Link>
+      </p>
     </div>
   );
 }

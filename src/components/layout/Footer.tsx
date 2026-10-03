@@ -1,18 +1,17 @@
 import Link from "next/link";
-import { Terminal, Github, Instagram, MessageSquare } from "lucide-react";
+import { Terminal, Github, Instagram, MessageSquare, Music } from "lucide-react";
 import { siteConfig } from "@/lib/config";
 
 const footerLinks = {
-  Personal: [
+  Portafolio: [
     { label: "Inicio", href: "/" },
     { label: "Sobre mí", href: "/about" },
+    { label: "Proyectos", href: "/projects" },
     { label: "Tecnologías", href: "/technologies" },
     { label: "Cybersecurity", href: "/cybersecurity" },
-    { label: "Proyectos", href: "/projects" },
   ],
   Contenido: [
     { label: "Blog", href: "/blog" },
-    { label: "Anuncios", href: "/announcements" },
     { label: "Biblioteca", href: "/library" },
     { label: "Contacto", href: "/contact" },
   ],
@@ -26,56 +25,75 @@ const footerLinks = {
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/5 bg-[#0A0A0A]">
-      <div className="mx-auto max-w-7xl px-4 py-16">
-        <div className="grid gap-12 md:grid-cols-4">
+    <footer className="border-t border-[var(--line)] bg-[var(--bg-raised)]">
+      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <Link href="/" className="flex items-center gap-2 text-lg font-bold">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#00FF88]/10">
-                <Terminal className="h-4 w-4 text-[#00FF88]" />
-              </div>
-              <span className="bg-gradient-to-r from-[#00FF88] to-[#00C8FF] bg-clip-text text-transparent">
+            <Link href="/" className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-[10px] border border-[var(--line)] bg-[var(--surface-2)]">
+                <Terminal aria-hidden className="h-4 w-4 text-[var(--brand)]" />
+              </span>
+              <span className="font-[family-name:var(--font-display)] text-[15px] font-bold">
                 {siteConfig.name}
               </span>
             </Link>
-            <p className="mt-4 text-sm text-gray-400">
-              Programación, ciberseguridad, proyectos y System 777.
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-[var(--text-3)]">
+              {siteConfig.tagline}. Construyo herramientas reales: web, bots, automatización y
+              seguridad.
             </p>
-            <div className="mt-6 flex gap-3">
-              <a href={siteConfig.social.github} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#00FF88] transition-colors">
-                <Github className="h-5 w-5" />
-              </a>
-              <a href={siteConfig.social.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#00FF88] transition-colors">
-                <Instagram className="h-5 w-5" />
-              </a>
-              <a href={siteConfig.social.discord} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#00FF88] transition-colors">
-                <MessageSquare className="h-5 w-5" />
-              </a>
+            <div className="mt-5 flex gap-2">
+              {[
+                { href: siteConfig.social.github, label: "GitHub", Icon: Github },
+                { href: siteConfig.social.instagram, label: "Instagram", Icon: Instagram },
+                { href: siteConfig.social.tiktok, label: "TikTok", Icon: Music },
+                { href: siteConfig.social.discord, label: "Discord", Icon: MessageSquare },
+              ].map(({ href, label, Icon }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-[var(--line)] text-[var(--text-3)] transition-colors hover:border-[rgba(0,255,136,0.35)] hover:text-[var(--brand)]"
+                >
+                  <Icon aria-hidden className="h-4 w-4" />
+                </a>
+              ))}
             </div>
           </div>
+
           {Object.entries(footerLinks).map(([title, links]) => (
-            <div key={title}>
-              <h3 className="text-sm font-semibold text-white">{title}</h3>
-              <ul className="mt-4 space-y-3">
+            <nav key={title} aria-label={title}>
+              <h2 className="stat-label text-[var(--text-3)]">{title}</h2>
+              <ul className="mt-4 space-y-2.5">
                 {links.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} className="text-sm text-gray-400 hover:text-[#00FF88] transition-colors">
+                    <Link
+                      href={link.href}
+                      className="text-sm text-[var(--text-3)] transition-colors hover:text-[var(--brand)]"
+                    >
                       {link.label}
                     </Link>
                   </li>
                 ))}
               </ul>
-            </div>
+            </nav>
           ))}
         </div>
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/5 pt-8 md:flex-row">
-          <p className="text-xs text-gray-500">
-            &copy; {new Date().getFullYear()} {siteConfig.name}. Todos los derechos reservados.
+
+        <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-[var(--line)] pt-6 sm:flex-row sm:items-center">
+          <p className="text-xs text-[var(--text-3)]">
+            © {new Date().getFullYear()} {siteConfig.owner.name} — {siteConfig.name}. Todo el
+            contenido es propio.
           </p>
           <div className="flex gap-4">
-            <Link href="/privacy" className="text-xs text-gray-500 hover:text-gray-400">Privacidad</Link>
-            <Link href="/terms" className="text-xs text-gray-500 hover:text-gray-400">Términos</Link>
-            <span className="text-xs text-gray-500">Next.js · Cloudflare Pages</span>
+            <Link href="/privacy" className="text-xs text-[var(--text-3)] transition-colors hover:text-[var(--text-2)]">
+              Privacidad
+            </Link>
+            <Link href="/terms" className="text-xs text-[var(--text-3)] transition-colors hover:text-[var(--text-2)]">
+              Términos
+            </Link>
+            <span className="text-xs text-[var(--text-3)]">Next.js · Cloudflare Pages</span>
           </div>
         </div>
       </div>

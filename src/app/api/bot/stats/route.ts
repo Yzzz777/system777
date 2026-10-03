@@ -5,30 +5,35 @@ export const dynamic = "force-dynamic";
 
 const BOT_API = process.env.BOT_API_URL ?? "";
 
-const FALLBACK = {
-  tag: "System 777#0000",
-  avatar: "/avatar.png",
-  guilds: 50,
-  users: 5000,
-  ping: 0,
-  uptime: 0,
-  memory: "0",
-  online: true,
-  commands: 100,
+// Respuesta honesta cuando no hay datos reales: nunca inventamos cifras.
+const OFFLINE = {
+  available: false,
+  online: false,
+  tag: "System 777",
+  guilds: null,
+  users: null,
+  ping: null,
+  uptime: null,
+  memory: null,
+  commands: null,
 };
 
 export async function GET() {
   if (!BOT_API) {
-    return NextResponse.json(FALLBACK, {
-      headers: { "Cache-Control": "public, s-maxage=10, stale-while-revalidate=20" },
+    return NextResponse.json(OFFLINE, {
+      headers: { "Cache-Control": "public, s-maxage=5" },
     });
   }
   try {
     const r = await fetch(`${BOT_API}/api/public/stats`, { cache: "no-store" });
-    if (!r.ok) return NextResponse.json(FALLBACK, { headers: { "Cache-Control": "public, s-maxage=5" } });
+    if (!r.ok) {
+      return NextResponse.json(OFFLINE, { headers: { "Cache-Control": "public, s-maxage=5" } });
+    }
     const data = await r.json();
-    return NextResponse.json(data, { headers: { "Cache-Control": "public, s-maxage=10" } });
+    return NextResponse.json({ available: true, ...data }, {
+      headers: { "Cache-Control": "public, s-maxage=10" },
+    });
   } catch {
-    return NextResponse.json(FALLBACK, { headers: { "Cache-Control": "public, s-maxage=5" } });
+    return NextResponse.json(OFFLINE, { headers: { "Cache-Control": "public, s-maxage=5" } });
   }
 }

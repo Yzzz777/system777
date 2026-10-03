@@ -1,121 +1,103 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Activity, Server, Users, Zap, Clock, HardDrive, Wifi, WifiOff } from "lucide-react";
-
-interface BotStatus {
-  status: string;
-  ping: number;
-  uptime: { seconds: number; formatted: string };
-  guilds: number;
-  users: number;
-  commands: { total: number; used: number; topCommand: string | null };
-  memory: { heapMB: string; rssMB: string };
-  version: string;
-  nodeVersion: string;
-}
-
-function formatUptime(seconds: number): string {
-  const d = Math.floor(seconds / 86400);
-  const h = Math.floor((seconds % 86400) / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  if (d > 0) return `${d}d ${h}h ${m}m`;
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
-}
+import {
+  Activity,
+  Server,
+  Users,
+  Zap,
+  Clock,
+  Terminal,
+  Wifi,
+  WifiOff,
+} from "lucide-react";
+import { useBotStats, isOnline, formatUptime, NA } from "@/lib/useBotStats";
 
 export default function BotStatusPage() {
-  const [status, setStatus] = useState<BotStatus | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { stats, loaded } = useBotStats(15000);
+  const online = isOnline(stats);
+  const uptime = formatUptime(stats?.uptime);
 
-  useEffect(() => {
-    const fetchStatus = async () => {
-      try {
-        const res = await fetch("/api/bot/stats");
-        if (res.ok) {
-          const data = await res.json();
-          setStatus({
-            status: data.online ? "online" : "offline",
-            ping: data.ping,
-            uptime: { seconds: data.uptime, formatted: formatUptime(data.uptime) },
-            guilds: data.guilds,
-            users: data.users,
-            commands: { total: data.commands || 0, used: 0, topCommand: null },
-            memory: { heapMB: data.memory || "0", rssMB: "0" },
-            version: "1.2.0",
-            nodeVersion: "v20",
-          });
-        }
-      } catch {}
-      setLoading(false);
-    };
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 15000);
-    return () => clearInterval(interval);
-  }, []);
-
-  if (loading) {
-    return (
-      <main className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#5865F2] border-t-transparent rounded-full animate-spin" />
-      </main>
-    );
-  }
-
-  const isOnline = status?.status === "online";
+  const items = [
+    { icon: Zap, label: "Ping", value: stats?.ping != null ? `${stats.ping} ms` : NA, desc: "Latencia reportada por el bot" },
+    { icon: Clock, label: "Uptime", value: uptime ?? NA, desc: "Tiempo activo desde el último reinicio" },
+    { icon: Server, label: "Servidores", value: stats?.guilds != null ? String(stats.guilds) : NA, desc: "Guilds donde está el bot" },
+    { icon: Users, label: "Usuarios", value: stats?.users != null ? stats.users.toLocaleString("es") : NA, desc: "Usuarios alcanzados" },
+    { icon: Terminal, label: "Comandos", value: stats?.commands != null ? String(stats.commands) : NA, desc: "Comandos registrados en Discord" },
+    { icon: Activity, label: "API", value: !loaded ? "consultando…" : stats?.available === false ? "sin respuesta" : "respondiendo", desc: "Endpoint de estadísticas públicas" },
+  ];
 
   return (
-    <main className="min-h-screen pt-24 pb-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl font-black mb-4">
-            <span className="bg-gradient-to-r from-[#5865F2] to-[#7C3AED] bg-clip-text text-transparent">Estado del Bot</span>
+    <div className="relative px-4 pb-[var(--section-y)] pt-10 sm:px-6 sm:pt-14">
+      <div className="relative mx-auto max-w-4xl">
+        <div className="text-center">
+          <span className="eyebrow justify-center">
+            <Activity aria-hidden className="h-3 w-3" />
+            Monitoreo público
+          </span>
+          <h1 className="mt-5 font-[family-name:var(--font-display)] text-[clamp(2rem,5.5vw,3.25rem)] font-bold tracking-tight">
+            Estado del bot
           </h1>
-          <p className="text-gray-400 text-lg">Monitoreo en tiempo real de System 777</p>
-        </motion.div>
+          <p className="mx-auto mt-4 max-w-xl text-[var(--text-2)]">
+            Datos en vivo de System 777, actualizados cada 15 segundos.
+          </p>
+        </div>
 
-        {/* Status indicator */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl p-8 mb-8 text-center">
-          <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-full ${isOnline ? "bg-green-500/10 border border-green-500/20" : "bg-red-500/10 border border-red-500/20"}`}>
-            {isOnline ? <Wifi size={20} className="text-green-400" /> : <WifiOff size={20} className="text-red-400" />}
-            <span className={`text-lg font-bold ${isOnline ? "text-green-400" : "text-red-400"}`}>
-              {isOnline ? "En Línea" : "Fuera de Línea"}
+        {/* Indicador */}
+        <div className="panel mt-8 p-6 text-center sm:p-8">
+          <span
+            className={`inline-flex items-center gap-3 rounded-full border px-5 py-2.5 ${
+              online
+                ? "border-[rgba(0,255,136,0.35)] bg-[rgba(0,255,136,0.08)] text-[var(--brand)]"
+                : "border-[var(--line-strong)] bg-white/[0.03] text-[var(--text-3)]"
+            }`}
+          >
+            {online ? (
+              <Wifi aria-hidden className="h-5 w-5" />
+            ) : (
+              <WifiOff aria-hidden className="h-5 w-5" />
+            )}
+            <span className="text-lg font-bold">
+              {!loaded ? "Consultando…" : online ? "En línea" : "Fuera de línea"}
             </span>
-          </div>
-          {status && (
-            <p className="mt-4 text-sm text-gray-500">Versión {status.version} · Node {status.nodeVersion}</p>
-          )}
-        </motion.div>
+          </span>
+          <p className="mt-4 font-[family-name:var(--font-mono)] text-[13px] text-[var(--text-3)]">
+            {stats?.tag ?? "System 777"}
+          </p>
+        </div>
 
-        {status ? (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-            {[
-              { icon: <Zap size={20} />, label: "Ping", value: `${status.ping}ms`, color: "#5865F2", desc: "Latencia WebSocket" },
-              { icon: <Clock size={20} />, label: "Uptime", value: status.uptime.formatted, color: "#57F287", desc: "Tiempo activo" },
-              { icon: <Server size={20} />, label: "Servidores", value: status.guilds.toString(), color: "#7C3AED", desc: "Servidores activos" },
-              { icon: <Users size={20} />, label: "Usuarios", value: status.users.toLocaleString(), color: "#EB459E", desc: "Usuarios totales" },
-              { icon: <HardDrive size={20} />, label: "Memoria", value: `${status.memory.heapMB} MB`, color: "#FFD93D", desc: "Heap utilizado" },
-              { icon: <Activity size={20} />, label: "Comandos", value: `${status.commands.used} usados`, color: "#FF8C42", desc: `${status.commands.total} registrados` },
-            ].map((item, i) => (
-              <motion.div key={item.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.05 }} className="glass rounded-xl p-5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 rounded-lg bg-white/5" style={{ color: item.color }}>{item.icon}</div>
-                  <span className="text-sm text-gray-400">{item.label}</span>
-                </div>
-                <div className="text-2xl font-black text-white">{item.value}</div>
-                <div className="text-xs text-gray-600 mt-1">{item.desc}</div>
-              </motion.div>
-            ))}
+        {/* Métricas */}
+        <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((item) => (
+            <li key={item.label} className="panel p-5">
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-[rgba(88,101,242,0.16)]">
+                  <item.icon aria-hidden className="h-4 w-4 text-[#8f97ff]" />
+                </span>
+                <span className="stat-label">{item.label}</span>
+              </div>
+              <p className="mt-3 font-[family-name:var(--font-mono)] text-xl text-[var(--text)]">
+                {item.value}
+              </p>
+              <p className="mt-1 text-xs text-[var(--text-3)]">{item.desc}</p>
+            </li>
+          ))}
+        </ul>
+
+        {!loaded ? null : stats?.available === false ? (
+          <div className="panel mt-4 p-8 text-center">
+            <WifiOff aria-hidden className="mx-auto h-8 w-8 text-[var(--text-3)]" />
+            <p className="mt-4 text-[var(--text-2)]">No se pudo conectar a la API del bot</p>
+            <p className="mt-2 text-sm text-[var(--text-3)]">
+              Puede estar caído el servicio o sin configurar la variable de entorno. Aquí no se
+              muestran cifras inventadas.
+            </p>
           </div>
-        ) : (
-          <div className="glass rounded-2xl p-12 text-center">
-            <WifiOff size={40} className="text-gray-700 mx-auto mb-4" />
-            <p className="text-gray-500 mb-2">No se pudo conectar al bot</p>
-            <p className="text-xs text-gray-600">El bot podría estar offline o la URL de la API no está configurada.</p>
-          </div>
-        )}
+        ) : null}
+
+        <p className="mt-6 text-center text-xs text-[var(--text-3)]">
+          Fuente: API pública del bot vía <code className="text-[var(--data)]">/api/bot/stats</code>
+        </p>
       </div>
-    </main>
+    </div>
   );
 }

@@ -1,95 +1,134 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { FadeIn, StaggerContainer, StaggerItem, HoverScale } from "@/components/ui/Animations";
+import Image from "next/image";
+import { Layers } from "lucide-react";
 
-const techStack = [
-  { name: "JavaScript", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg", category: "Lenguajes", level: "Avanzado", color: "#F7DF1E" },
-  { name: "TypeScript", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg", category: "Lenguajes", level: "Intermedio", color: "#3178C6" },
-  { name: "Python", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg", category: "Lenguajes", level: "Avanzado", color: "#3776AB" },
-  { name: "C", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/c/c-original.svg", category: "Lenguajes", level: "Basico", color: "#A8B9CC" },
-  { name: "C++", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/cplusplus/cplusplus-original.svg", category: "Lenguajes", level: "Basico", color: "#00599C" },
-  { name: "C#", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/csharp/csharp-original.svg", category: "Lenguajes", level: "Basico", color: "#68217A" },
-  { name: "Java", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg", category: "Lenguajes", level: "Basico", color: "#ED8B00" },
-  { name: "HTML5", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg", category: "Frontend", level: "Avanzado", color: "#E34F26" },
-  { name: "CSS3", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg", category: "Frontend", level: "Avanzado", color: "#1572B6" },
-  { name: "React", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg", category: "Frontend", level: "Intermedio", color: "#61DAFB" },
-  { name: "Next.js", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nextjs/nextjs-original.svg", category: "Frontend", level: "Intermedio", color: "#FFFFFF" },
-  { name: "Node.js", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg", category: "Backend", level: "Intermedio", color: "#339933" },
-  { name: "PostgreSQL", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg", category: "Bases de datos", level: "Intermedio", color: "#4169E1" },
-  { name: "MySQL", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg", category: "Bases de datos", level: "Intermedio", color: "#4479A1" },
-  { name: "Redis", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/redis/redis-original.svg", category: "Bases de datos", level: "Basico", color: "#DC382D" },
-  { name: "Linux", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linux/linux-original.svg", category: "DevOps", level: "Avanzado", color: "#FCC624" },
-  { name: "Docker", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg", category: "DevOps", level: "Intermedio", color: "#2496ED" },
-  { name: "Git", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg", category: "Herramientas", level: "Avanzado", color: "#F05032" },
-  { name: "Cloudflare", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/cloudflare/cloudflare-original.svg", category: "DevOps", level: "Intermedio", color: "#F38020" },
-  { name: "Discord.js", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/discordjs/discordjs-original.svg", category: "Herramientas", level: "Avanzado", color: "#5865F2" },
+type Level = "Uso a diario" | "Uso habitual" | "Aprendiendo";
+
+const techStack: { name: string; icon: string; category: string; level: Level; note: string }[] = [
+  { name: "JavaScript", icon: "javascript", category: "Lenguajes", level: "Uso a diario", note: "Bots, scripts y frontend" },
+  { name: "TypeScript", icon: "typescript", category: "Lenguajes", level: "Uso habitual", note: "Next.js y APIs del sitio" },
+  { name: "Python", icon: "python", category: "Lenguajes", level: "Uso habitual", note: "Automatización y utilidades" },
+  { name: "C", icon: "c", category: "Lenguajes", level: "Aprendiendo", note: "Base y sistemas" },
+  { name: "C++", icon: "cplusplus", category: "Lenguajes", level: "Aprendiendo", note: "Base y sistemas" },
+  { name: "C#", icon: "csharp", category: "Lenguajes", level: "Aprendiendo", note: "Proyectos puntuales" },
+  { name: "Java", icon: "java", category: "Lenguajes", level: "Aprendiendo", note: "Lectura de código" },
+
+  { name: "HTML5", icon: "html5", category: "Frontend", level: "Uso a diario", note: "Estructura y accesibilidad" },
+  { name: "CSS3", icon: "css3", category: "Frontend", level: "Uso a diario", note: "Tailwind y diseño propio" },
+  { name: "React", icon: "react", category: "Frontend", level: "Uso habitual", note: "Base de este sitio" },
+  { name: "Next.js", icon: "nextjs", category: "Frontend", level: "Uso habitual", note: "App Router, ISR, edge" },
+  { name: "Tailwind CSS", icon: "tailwindcss", category: "Frontend", level: "Uso a diario", note: "Sistema de diseño v4" },
+
+  { name: "Node.js", icon: "nodejs", category: "Backend", level: "Uso a diario", note: "Bot, APIs y dashboard" },
+  { name: "PostgreSQL", icon: "postgresql", category: "Bases de datos", level: "Uso habitual", note: "Neon en producción" },
+  { name: "MySQL", icon: "mysql", category: "Bases de datos", level: "Aprendiendo", note: "Consultas y esquemas" },
+  { name: "Redis", icon: "redis", category: "Bases de datos", level: "Aprendiendo", note: "Caché y colas" },
+
+  { name: "Linux", icon: "linux", category: "Infraestructura", level: "Uso a diario", note: "Ubuntu en el VPS" },
+  { name: "Docker", icon: "docker", category: "Infraestructura", level: "Aprendiendo", note: "Contenedores y despliegues" },
+  { name: "Cloudflare", icon: "cloudflare", category: "Infraestructura", level: "Uso habitual", note: "DNS, túneles y Pages" },
+  { name: "PM2", icon: "pm2", category: "Infraestructura", level: "Uso habitual", note: "Procesos 24/7 del bot" },
+
+  { name: "Git", icon: "git", category: "Herramientas", level: "Uso a diario", note: "Versionado y despliegues" },
+  { name: "Discord.js", icon: "discordjs", category: "Herramientas", level: "Uso a diario", note: "System 777" },
 ];
 
 const categories = [...new Set(techStack.map((t) => t.category))];
-const levels = ["Avanzado", "Intermedio", "Basico"];
+const levels: Level[] = ["Uso a diario", "Uso habitual", "Aprendiendo"];
 
-const levelColors: Record<string, string> = {
-  Avanzado: "#00FF88",
-  Intermedio: "#00C8FF",
-  Basico: "#7C3AED",
+const levelColors: Record<Level, string> = {
+  "Uso a diario": "var(--brand)",
+  "Uso habitual": "var(--data)",
+  Aprendiendo: "var(--warn)",
 };
+
+const devicon = (name: string) =>
+  `https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/${name}/${name}-original.svg`;
 
 export default function TechnologiesPage() {
   return (
-    <div className="min-h-screen py-12">
-      <div className="mx-auto max-w-7xl px-4">
-        <FadeIn>
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-white sm:text-5xl">Tecnologias</h1>
-            <p className="mx-auto mt-4 max-w-2xl text-gray-400">Las herramientas y lenguajes que uso para crear System 777 y mis proyectos</p>
-          </div>
-        </FadeIn>
+    <div className="relative px-4 pb-[var(--section-y)] pt-10 sm:px-6 sm:pt-14">
+      <div className="grid-bg" aria-hidden />
+      <div className="relative mx-auto max-w-6xl">
+        <div className="text-center">
+          <span className="eyebrow justify-center">
+            <Layers aria-hidden className="h-3 w-3" />
+            Stack real
+          </span>
+          <h1 className="mt-5 font-[family-name:var(--font-display)] text-[clamp(2rem,5.5vw,3.25rem)] font-bold tracking-tight">
+            Tecnologías
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-[var(--text-2)]">
+            Herramientas que uso en proyectos reales, con una autoevaluación honesta de cuánto las
+            manejo. No hay porcentajes inflados.
+          </p>
+        </div>
 
-        {/* Stats */}
-        <FadeIn delay={0.1}>
-          <div className="mx-auto mt-12 grid max-w-3xl grid-cols-3 gap-6">
-            {levels.map((level) => {
-              const count = techStack.filter((t) => t.level === level).length;
-              return (
-                <div key={level} className="glass rounded-2xl p-6 text-center">
-                  <div className="text-3xl font-bold" style={{ color: levelColors[level] }}>{count}</div>
-                  <div className="mt-1 text-sm text-gray-400">{level}</div>
-                </div>
-              );
-            })}
-          </div>
-        </FadeIn>
+        {/* Leyenda */}
+        <div className="mx-auto mt-8 flex max-w-3xl flex-wrap justify-center gap-3">
+          {levels.map((level) => (
+            <span key={level} className="chip">
+              <span
+                className="h-1.5 w-1.5 rounded-full"
+                style={{ background: levelColors[level] }}
+              />
+              <span style={{ color: levelColors[level] }}>{level}</span>
+              <span className="text-[var(--text-3)]">
+                · {techStack.filter((t) => t.level === level).length}
+              </span>
+            </span>
+          ))}
+        </div>
 
-        {/* Categories */}
-        {categories.map((cat, ci) => (
-          <FadeIn key={cat} delay={0.15 + ci * 0.05}>
-            <div className="mt-16">
-              <h2 className="mb-8 text-2xl font-bold text-white">{cat}</h2>
-              <StaggerContainer className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {techStack
-                  .filter((t) => t.category === cat)
-                  .map((tech) => (
-                    <StaggerItem key={tech.name}>
-                      <HoverScale>
-                        <div className="glass rounded-2xl p-5 flex items-center gap-4">
-                          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white/5">
-                            <img src={tech.icon} alt={tech.name} className="h-8 w-8" style={{ filter: tech.name === "Next.js" ? "invert(1)" : undefined }} />
-                          </div>
-                          <div className="min-w-0">
-                            <div className="font-semibold text-white">{tech.name}</div>
-                            <div className="mt-1 text-xs font-medium" style={{ color: levelColors[tech.level] }}>
-                              {tech.level}
-                            </div>
-                          </div>
-                        </div>
-                      </HoverScale>
-                    </StaggerItem>
-                  ))}
-              </StaggerContainer>
+        {/* Categorías */}
+        {categories.map((cat) => (
+          <section key={cat} className="mt-12">
+            <div className="mb-4 flex items-baseline justify-between gap-4">
+              <h2 className="text-xl font-bold sm:text-2xl">{cat}</h2>
+              <span className="font-[family-name:var(--font-mono)] text-xs text-[var(--text-3)]">
+                {techStack.filter((t) => t.category === cat).length} tecnologías
+              </span>
             </div>
-          </FadeIn>
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {techStack
+                .filter((t) => t.category === cat)
+                .map((tech) => (
+                  <li key={tech.name} className="panel panel-hover flex items-center gap-4 p-4">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] border border-[var(--line)] bg-white/[0.03]">
+                      <Image
+                        src={devicon(tech.icon)}
+                        alt=""
+                        width={22}
+                        height={22}
+                        loading="lazy"
+                        className="h-[22px] w-[22px] object-contain"
+                      />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate font-semibold text-[var(--text)]">
+                        {tech.name}
+                      </span>
+                      <span className="mt-0.5 flex flex-wrap items-center gap-2">
+                        <span
+                          className="font-[family-name:var(--font-mono)] text-[11px]"
+                          style={{ color: levelColors[tech.level] }}
+                        >
+                          {tech.level}
+                        </span>
+                        <span className="truncate text-xs text-[var(--text-3)]">{tech.note}</span>
+                      </span>
+                    </span>
+                  </li>
+                ))}
+            </ul>
+          </section>
         ))}
+
+        <p className="mt-12 text-center text-xs text-[var(--text-3)]">
+          Los niveles son autoevaluación, no certificaciones. Si algo está aquí es porque lo usé en
+          un proyecto propio o lo estoy estudiando activamente.
+        </p>
       </div>
     </div>
   );

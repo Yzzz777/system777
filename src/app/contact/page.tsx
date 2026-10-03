@@ -1,139 +1,197 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Mail, MessageCircle, Send, Loader2, CheckCircle, MapPin, Github, Instagram, ArrowUpRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { useState } from "react";
+import Link from "next/link";
+import { Send, Loader2, CheckCircle, MessageSquare, Github, Mail, ArrowUpRight } from "lucide-react";
 import { siteConfig } from "@/lib/config";
-import { FadeIn } from "@/components/ui/Animations";
-
-const socials = [
-  { name: "GitHub", icon: Github, href: siteConfig.social.github, color: "#FFFFFF", desc: "Codigo y proyectos" },
-  { name: "Discord", icon: MessageCircle, href: siteConfig.social.discord, color: "#5865F2", desc: "Unete al servidor" },
-  { name: "Instagram", icon: Instagram, href: siteConfig.social.instagram, color: "#E4405F", desc: "Sigueme" },
-  { name: "Email", icon: Mail, href: "mailto:contacto@jrsystem7777.com", color: "#00FF88", desc: "Escríbeme directo" },
-];
 
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
-  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
-
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => setSuccess(false), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [success]);
+  const [form, setForm] = useState({ name: "", message: "" });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("/api/contact", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: form.name, email: "web", subject: "Discord", message: form.message }),
+      });
       const data = await res.json();
       if (res.ok && data.success) {
         setSuccess(true);
-        setError("");
-        setForm({ name: "", email: "", subject: "", message: "" });
+        setForm({ name: "", message: "" });
       } else {
         setError(data.error || "Error al enviar. Intenta de nuevo.");
       }
     } catch {
-      setError("Error al enviar. Intenta de nuevo.");
+      setError("Error de red al enviar. Intenta de nuevo.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen py-12">
-      <div className="mx-auto max-w-7xl px-4">
-        <FadeIn>
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-white sm:text-5xl">Contacto</h1>
-            <p className="mx-auto mt-4 max-w-2xl text-gray-400">Tienes un proyecto, pregunta o simplemente quieres saludar</p>
-          </div>
-        </FadeIn>
+    <div className="relative px-4 pb-[var(--section-y)] pt-10 sm:px-6 sm:pt-14">
+      <div className="grid-bg" aria-hidden />
+      <div className="relative mx-auto max-w-5xl">
+        <div className="text-center">
+          <span className="eyebrow justify-center">
+            <Mail aria-hidden className="h-3 w-3" />
+            Contacto
+          </span>
+          <h1 className="mt-5 font-[family-name:var(--font-display)] text-[clamp(2rem,5.5vw,3.25rem)] font-bold tracking-tight">
+            Escríbeme
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-[var(--text-2)]">
+            El formulario envía el mensaje directo a mi Discord. También puedes escribirme por
+            ahí o dejarme un mensaje en GitHub.
+          </p>
+        </div>
 
-        <div className="mt-16 grid gap-12 lg:grid-cols-2">
-          {/* Social */}
-          <FadeIn delay={0.1}>
-            <div>
-              <h2 className="text-2xl font-bold text-white">Redes</h2>
-              <div className="mt-8 space-y-4">
-                {socials.map((s) => {
-                  const Icon = s.icon;
-                  return (
-                    <a key={s.name} href={s.href} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-4 rounded-2xl glass p-5 transition-all hover:border-white/20">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl" style={{ backgroundColor: s.color + "15" }}>
-                        <Icon className="h-5 w-5" style={{ color: s.color }} />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-white">{s.name}</div>
-                        <div className="text-xs text-gray-500">{s.desc}</div>
-                      </div>
-                      <ArrowUpRight className="h-4 w-4 text-gray-600 group-hover:text-white transition-colors" />
-                    </a>
-                  );
-                })}
+        <div className="mt-10 grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+          {/* Formulario */}
+          <div className="panel p-6 sm:p-8">
+            {success ? (
+              <div className="flex flex-col items-center py-10 text-center">
+                <CheckCircle aria-hidden className="h-12 w-12 text-[var(--brand)]" />
+                <h2 className="mt-4 text-xl font-bold">Mensaje enviado</h2>
+                <p className="mt-2 text-sm text-[var(--text-2)]">
+                  Llegó por Discord. Te respondo lo antes posible.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setSuccess(false)}
+                  className="btn btn-primary mt-6"
+                >
+                  Enviar otro
+                </button>
               </div>
-
-              <div className="mt-8 flex items-center gap-3 rounded-2xl glass p-5">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#00C8FF]/10">
-                  <MapPin className="h-5 w-5 text-[#00C8FF]" />
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-[var(--brand-dim)]">
+                    <MessageSquare aria-hidden className="h-5 w-5 text-[var(--brand)]" />
+                  </span>
+                  <div>
+                    <h2 className="text-lg font-bold">Mensaje directo</h2>
+                    <p className="text-xs text-[var(--text-3)]">
+                      Se envía por Discord al owner del sitio
+                    </p>
+                  </div>
                 </div>
+
                 <div>
-                  <div className="text-sm font-medium text-white">Ubicacion</div>
-                  <div className="text-xs text-gray-500">Disponible en linea</div>
+                  <label htmlFor="contact-name" className="stat-label mb-1.5 block">
+                    Tu nombre
+                  </label>
+                  <input
+                    id="contact-name"
+                    type="text"
+                    required
+                    maxLength={80}
+                    autoComplete="name"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    placeholder="¿Cómo te llamas?"
+                    className="input"
+                  />
                 </div>
+
+                <div>
+                  <label htmlFor="contact-message" className="stat-label mb-1.5 block">
+                    Mensaje
+                  </label>
+                  <textarea
+                    id="contact-message"
+                    required
+                    rows={6}
+                    maxLength={2000}
+                    value={form.message}
+                    onChange={(e) => setForm({ ...form, message: e.target.value })}
+                    placeholder="Cuéntame lo que necesites…"
+                    className="input resize-y"
+                  />
+                </div>
+
+                {error && (
+                  <p role="alert" className="rounded-[10px] border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+                    {error}
+                  </p>
+                )}
+
+                <button type="submit" disabled={loading} className="btn btn-primary w-full">
+                  {loading ? (
+                    <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send aria-hidden className="h-4 w-4" />
+                  )}
+                  {loading ? "Enviando…" : "Enviar por Discord"}
+                </button>
+
+                <p className="text-[11px] text-[var(--text-3)]">
+                  Sin newsletter ni spam: solo uso el mensaje para responderte.
+                </p>
+              </form>
+            )}
+          </div>
+
+          {/* Vías directas */}
+          <div className="space-y-3">
+            <a
+              href={siteConfig.social.discord}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="panel panel-hover flex items-center gap-3.5 p-5"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[rgba(88,101,242,0.16)]">
+                <MessageSquare aria-hidden className="h-5 w-5 text-[#8f97ff]" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-semibold">Discord</span>
+                <span className="mt-0.5 block text-[13px] text-[var(--text-3)]">
+                  La vía más rápida para responder
+                </span>
+              </span>
+              <ArrowUpRight aria-hidden className="h-4 w-4 shrink-0 text-[var(--text-3)]" />
+            </a>
+
+            <a
+              href={siteConfig.social.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="panel panel-hover flex items-center gap-3.5 p-5"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-white/[0.05]">
+                <Github aria-hidden className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-semibold">GitHub</span>
+                <span className="mt-0.5 block text-[13px] text-[var(--text-3)]">
+                  Issues y pull requests en los repos
+                </span>
+              </span>
+              <ArrowUpRight aria-hidden className="h-4 w-4 shrink-0 text-[var(--text-3)]" />
+            </a>
+
+            <div className="panel p-5">
+              <span className="eyebrow">Antes de escribir</span>
+              <ul className="mt-3 space-y-2 text-[13px] text-[var(--text-3)]">
+                <li>· Respondo cuando puedo, no soy una empresa con soporte 24/7.</li>
+                <li>· Para bugs del bot, indica servidor y comando exacto.</li>
+                <li>· No hago auditorías ni pentesting a terceros.</li>
+              </ul>
+              <div className="mt-4">
+                <Link href="/bot" className="text-sm text-[var(--brand)] hover:underline">
+                  Ver System 777 →
+                </Link>
               </div>
             </div>
-          </FadeIn>
-
-          {/* Form */}
-          <FadeIn delay={0.2}>
-            <div className="glass rounded-2xl p-8">
-              {success ? (
-                <div className="flex flex-col items-center py-12">
-                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200 }}>
-                    <CheckCircle className="h-16 w-16 text-[#00FF88]" />
-                  </motion.div>
-                  <h3 className="mt-4 text-xl font-bold text-white">Mensaje Enviado</h3>
-                  <p className="mt-2 text-sm text-gray-400">Te responderé pronto.</p>
-                  <button onClick={() => setSuccess(false)} className="mt-6 rounded-xl bg-[#00FF88] px-6 py-2.5 text-sm font-semibold text-black hover:bg-[#00CC6A]">Enviar Otro</button>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  <h2 className="text-xl font-bold text-white">Escríbeme</h2>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-1.5 block text-sm font-medium text-gray-300">Nombre</label>
-                      <input type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-[#00FF88]/50" placeholder="Tu nombre" />
-                    </div>
-                    <div>
-                      <label className="mb-1.5 block text-sm font-medium text-gray-300">Correo</label>
-                      <input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-[#00FF88]/50" placeholder="tu@email.com" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-300">Asunto</label>
-                    <input type="text" required value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-[#00FF88]/50" placeholder="¿Sobre que?" />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-300">Mensaje</label>
-                    <textarea required rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-[#00FF88]/50" placeholder="Cuentame..." />
-                  </div>
-                  {error && <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-400">{error}</div>}
-                  <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#00FF88] py-3 text-sm font-semibold text-black transition-all hover:bg-[#00CC6A] disabled:opacity-50">
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    {loading ? "Enviando..." : "Enviar Mensaje"}
-                  </button>
-                </form>
-              )}
-            </div>
-          </FadeIn>
+          </div>
         </div>
       </div>
     </div>
