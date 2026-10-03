@@ -16,6 +16,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import Sharingan from "./Sharingan";
 import type { Tier } from "./quality";
 
 type Vec2 = { x: number; y: number };
@@ -236,6 +237,7 @@ function Graph({
 export default function NetworkScene({ tier, active = true }: { tier: Tier; active?: boolean }) {
   const pointer = useRef<Vec2>({ x: 0, y: 0 });
   const scroll = useRef(0);
+  const shareAct = useRef(0);
 
   useEffect(() => {
     const onMove = (e: PointerEvent) => {
@@ -264,7 +266,9 @@ export default function NetworkScene({ tier, active = true }: { tier: Tier; acti
       style={{ pointerEvents: "none" }}
       aria-hidden="true"
     >
+      <ambientLight intensity={2.4} />
       <Graph tier={tier} pointer={pointer} scroll={scroll} />
+      <Sharingan pointer={pointer} activeRef={shareAct} />
     </Canvas>
   );
 }

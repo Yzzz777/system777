@@ -318,3 +318,35 @@ Skills instaladas en `.agents/skills/` con enlaces en `.opencode/skills/` y
 - Menú móvil (375 px): abre/cierra, incluye “Entrar con Discord”, **0 overflow**.
 - **Pendiente: deploy (requiere aprobación).**
 
+## 9. Animaciones 3D de Sasuke/Sharingan + verificación final (03/10/2026)
+
+Todo procedural (materiales y `THREE.Shape`/SVG propios): **sin assets
+oficiales de la obra**, sólo referencias estéticas.
+
+- **Sharingan 3D en el hero** (`three/Sharingan.tsx`): disco, iris, pupila y 3
+  tomoe; giro pasivo; al acercar el puntero se activa (giro ×15, pulso y halo
+  rojo). Posicionado en la esquina superior derecha, detrás del contenido
+  (`z-10`), reescala en móvil y queda en fallback con `prefers-reduced-motion`.
+- **Chidori** (`three/ChidoriArcs.tsx`): casillos púrpura/cian que parpadean en
+  el borde del ojo sólo mientras está activo.
+- **Easter egg** (`layout/SharinganEgg.tsx`): Konami o **3 clics en el logo** →
+  sharingan SVG a pantalla completa (2.4 s, `pointer-events-none`); no aparece
+  con reduced-motion.
+- **Banner System 777 con tilt 3D** (`TiltBanner.tsx`): inclinación con el
+  puntero (≤7°/10°, escala 1.03), desactivada sin hover o con reduced-motion.
+
+### Verificación (preview local, build final)
+
+- `tsc --noEmit` **0** · `eslint src --max-warnings=0` **0/0** · `next build` OK.
+- Auditoría Playwright 15 rutas × 6 anchos = **90 checks**: **0 overflow**, `h1`
+  en todas, enlaces **200**, único error de consola el **404 esperado** de la
+  ruta inexistente de la prueba.
+- Escena: escritorio y móvil → `init → scene`, `canvas=1`, **0 errores de
+  consola**; CTA sobre el canvas → `elementFromPoint` = `A Ver proyectos`.
+- Reduced-motion: `data-hero=reduced`, `canvas=0`, reveals **51/51 visibles**,
+  Konami → **0 egg**.
+- Interacciones: egg **1 → se cierra solo**; tilt `rotateX(1.85deg)
+  rotateY(3.49deg) scale(1.03)`; diálogo de proyectos (`/projects`) **abre con
+  foco en “Cerrar”** y `Esc` lo cierra; menú móvil opera; imágenes **0 rotas**
+  (22/22 devicons cargan; el conteo del test con espera corta era transitorio).
+

@@ -7,6 +7,7 @@ import { Menu, X, ChevronDown, LogOut, LayoutDashboard } from "lucide-react";
 import { useSession, signOut } from "@/components/Providers";
 import { siteConfig, navLinks } from "@/lib/config";
 import { cn } from "@/lib/utils";
+import SharinganEgg from "@/components/layout/SharinganEgg";
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -14,6 +15,21 @@ export function Navbar() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const navRef = useRef<HTMLElement | null>(null);
+  const eggClicks = useRef(0);
+  const eggTimer = useRef<number | undefined>(undefined);
+
+  const onLogoClick = () => {
+    eggClicks.current += 1;
+    window.clearTimeout(eggTimer.current);
+    if (eggClicks.current >= 3) {
+      eggClicks.current = 0;
+      window.dispatchEvent(new CustomEvent("system777:sharingan"));
+      return;
+    }
+    eggTimer.current = window.setTimeout(() => {
+      eggClicks.current = 0;
+    }, 900);
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -48,6 +64,7 @@ export function Navbar() {
   }, [open]);
 
   return (
+    <>
     <header
       ref={navRef}
       data-scrolled={scrolled ? "true" : "false"}
@@ -62,7 +79,7 @@ export function Navbar() {
         aria-label="Navegación principal"
         className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6"
       >
-        <Link href="/" className="group flex shrink-0 items-center gap-2.5">
+        <Link href="/" onClick={onLogoClick} className="group flex shrink-0 items-center gap-2.5">
           <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-[10px] border border-[var(--line)] bg-[var(--surface-2)] transition-colors group-hover:border-[rgba(0,255,136,0.35)]">
             <Image
               src="/logo.webp"
@@ -251,5 +268,7 @@ export function Navbar() {
         </div>
       </div>
     </header>
+    <SharinganEgg />
+    </>
   );
 }

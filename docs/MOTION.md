@@ -50,3 +50,20 @@ Clase `.reveal` / `.reveal.is-visible` en `globals.css`, activada por
 - Hamburger → X: componente `Navbar` (`open ? <X/> : <Menu/>`) con transición.
 - Estados (`status-online`): pulso de opacidad, 2 s, sin movimiento de
   posición.
+
+## Easter egg (Sharingan)
+
+- Disparadores: **código Konami** o **3 clics seguidos en el logo** de la navbar
+  (evento `system777:sharingan`).
+- Animación: SVG procedural centrado con `egg-pop` (2.4 s: entra, pulsa, sale) y
+  `egg-spin` (1.5 s/rev); `pointer-events-none` para no tocar la página.
+- `prefers-reduced-motion: reduce` → **no se muestra jamás** (el componente sale
+  antes de pintar y la ruta 3D tampoco monta escena).
+
+## Banner con inclinación 3D
+
+`TiltBanner.tsx`: el banner de System 777 se inclina con el puntero
+(`rotateX`/`rotateY` ≤ 7°/10° + escala 1.03), amortiguado con
+`cubic-bezier(0.22, 1, 0.36, 1)`; sólo con `hover: hover` y sin
+`prefers-reduced-motion`.
+

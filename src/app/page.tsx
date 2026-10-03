@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import StudyTimeCounter from "@/components/StudyTimeCounter";
 import HeroCanvas from "@/components/three/HeroCanvas";
+import TiltBanner from "@/components/TiltBanner";
 import { siteConfig } from "@/lib/config";
 import { useBotStats, formatUptime, NA } from "@/lib/useBotStats";
 
@@ -771,15 +772,7 @@ export default function HomePage() {
             </Reveal>
 
             <Reveal delay={40} className="mt-6">
-              <div className="panel overflow-hidden p-0">
-                <Image
-                  src="/system777-banner.webp"
-                  alt="System 777 — banner del bot"
-                  width={1181}
-                  height={472}
-                  className="h-auto w-full"
-                />
-              </div>
+              <TiltBanner src="/system777-banner.webp" alt="System 777 — banner del bot" />
             </Reveal>
 
             <div className="mt-8 grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">

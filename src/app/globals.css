@@ -476,3 +476,26 @@ select.input option { background: var(--surface, #0b0f14); color: var(--text); }
   .card-3d:hover { transform: none; }
   .panel-hover:hover { transform: none; }
 }
+
+/* =========================================================
+   EASTER EGG — sharingan (ver SharinganEgg.tsx)
+   ========================================================= */
+@keyframes egg-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes egg-pop {
+  0% { opacity: 0; transform: scale(0.55); }
+  22% { opacity: 1; transform: scale(1.07); }
+  78% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.14); }
+}
+.egg-pop {
+  animation: egg-pop 2.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: opacity, transform;
+}
+.egg-spin {
+  display: block;
+  transform-origin: 50% 50%;
+  animation: egg-spin 1.5s linear infinite;
+  will-change: transform;
+}
