@@ -183,3 +183,68 @@ La autorización de owner usa `src/lib/adminAuth.ts`: verifica el `id` contra la
 | Creación de posts sin auth | abierta | **401** |
 | `defaultPosts` del blog | 10 posts falsos | BD real |
 | Títulos/descripciones únicos | genéricos | **13 rutas con metadata propia** |
+
+---
+
+## 7. Pendientes resueltos (segundo despliegue, 03/10/2026)
+
+### 7.1 Dependencias sin uso retiradas
+
+`npm uninstall` de **9 paquetes con 0 importaciones** en el código:
+`three`, `@react-three/drei`, `@react-three/fiber`, `@studio-freight/lenis`,
+`gsap`, `html2canvas`, `jspdf`, `stripe`, `zod`.
+
+`dependencies` queda en 11 paquetes, todos usados:
+`@neondatabase/serverless, bcryptjs, clsx, framer-motion, lucide-react, next,
+next-auth, react, react-dom, resend, tailwind-merge`.
+
+### 7.2 Dashboard `/bot/dashboard` — 14 avisos → 0
+
+- 12 `react-hooks/exhaustive-deps`: loaders (`loadLogs`, `loadOpenTickets`,
+  `loadCases`, `loadBans`, `load`) envueltos en `useCallback` con sus
+  dependencias reales y añadidos a los `useEffect`; los efectos en línea pasan
+  de `[]` a `[api]` / `[api, guildId]`. Sin bucles (los `api`/`showToast` ya
+  eran `useCallback` estables).
+- 1 `@next/next/no-img-element`: imagen de panel con URL arbitraria del bot —
+  comentada la regla con la justificación (next/image exige dominios permitidos).
+- Verificado: `npx eslint src` → **0 errores 0 avisos** (antes 14), `tsc` 0.
+- UI comprobada con Playwright (cookie firmada): `h1 "Selecciona un servidor"`,
+  30 servidores cargados, **0 overflow** en 1440 y 375 (capturas
+  `/tmp/opencode/shots/dash-1440.png` y `dash-375.png`).
+
+### 7.3 Sesión firmada (HMAC-SHA256) — endurecimiento
+
+- Nuevo `src/lib/sessionCrypto.ts`: cookie `payload-base64.firma`, secreto
+  `AUTH_SECRET` (presente en `.env` y en las variables de Cloudflare Pages).
+- Firmadores actualizados: `api/auth/discord/callback`, `api/auth/session`,
+  `api/auth/token`, `api/auth/login`, `api/auth/[...nextauth]`,
+  `api/bot/proxy` (tras refrescar el token).
+- Verificadores actualizados: `middleware.ts` (antes sólo comprobaba presencia,
+  **cualquiera podía fabricar una cookie y ver el panel**), `adminAuth.ts`,
+  `api/auth/session`, `api/auth/token`, `api/auth/[...nextauth]`,
+  `api/bot/guilds`, `api/bot/proxy`.
+- **Efecto: todas las cookies antiguas quedan invalidadas → hay que volver a
+  iniciar sesión con Discord una vez.**
+- Pruebas en local y en producción: cookie firmada → `/bot/dashboard` **200**;
+  cookie sin firma, con firma falsa o basura → **307 → /login**; sin cookie →
+  307 → `/login`; `/api/auth/session` sin cookie → `null`.
+
+### 7.4 Bug funcional: el admin del blog nunca aparecía
+
+La cookie es `HttpOnly`, así que `getSession()` (lectura de `document.cookie`)
+devolvía `null` siempre y el botón **“Nuevo post”** jamás se mostraba ni al
+owner. Ahora `/blog` detecta al owner consultando `/api/auth/session` (verificado
+en servidor). Eliminado `src/lib/session.ts` (huérfano) y `OWNER_DISCORD_ID`
+movido a `src/lib/owner.ts` (client-safe).
+
+Comprobado con Playwright: con cookie válida → **1 botón “Nuevo post”**;
+sin cookie → **0**.
+
+### 7.5 Verificación final en producción (post-deploy)
+
+- Auditoría completa Playwright en https://jrsystem7777.com:
+  **90 checks → 0 overflow, 0 errores de consola, 0 sin `h1`, 0 enlaces
+  rotos**, reduced-motion OK, **0 imágenes rotas**.
+- Rutas principales 200; `/bot/dashboard` sin sesión → 307 `/login`;
+  blog `POST` sin sesión → 401; `tsc` 0; `eslint` 0/0.
+- Commits: `49cf5b6` (remodelación), `d0ee2d6` (informe), este commit (pendientes).

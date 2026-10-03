@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifySession, signSession } from "@/lib/sessionCrypto";
 
 export const runtime = "edge";
 
@@ -23,8 +24,8 @@ async function refreshDiscordToken(refreshToken: string): Promise<{ accessToken:
   } catch { return null; }
 }
 
-function parseCookie(cookie: string): Record<string, unknown> | null {
-  try { return JSON.parse(atob(cookie)); } catch { return null; }
+function parseCookie(cookie: string): Promise<Record<string, unknown> | null> {
+  return verifySession(cookie);
 }
 
 async function getAuthHeaders(req: NextRequest): Promise<{ headers: Record<string, string>; updatedSession?: string }> {
@@ -32,7 +33,7 @@ async function getAuthHeaders(req: NextRequest): Promise<{ headers: Record<strin
   const cookie = req.cookies.get("system777_session")?.value;
   if (!cookie) return { headers };
 
-  const session = parseCookie(cookie);
+  const session = await parseCookie(cookie);
   if (!session) return { headers };
 
   if (session.accessToken && session.expiresAt && Date.now() < (session.expiresAt as number)) {
@@ -45,7 +46,7 @@ async function getAuthHeaders(req: NextRequest): Promise<{ headers: Record<strin
     if (refreshed) {
       const updated = { ...session, accessToken: refreshed.accessToken, expiresAt: refreshed.expiresAt };
       headers["Authorization"] = `Bearer ${refreshed.accessToken}`;
-      return { headers, updatedSession: btoa(JSON.stringify(updated)) };
+      return { headers, updatedSession: await signSession(updated as unknown as Record<string, unknown>) };
     }
   }
 

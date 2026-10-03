@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { ensureUsersTable, findUserByEmail, createActivityLog } from "@/lib/db";
+import { signSession } from "@/lib/sessionCrypto";
 
 export const runtime = "edge";
 
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
       expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
     };
 
-    const jwt = btoa(JSON.stringify(sessionData));
+    const jwt = await signSession(sessionData as unknown as Record<string, unknown>);
 
     const response = NextResponse.json({
       success: true,

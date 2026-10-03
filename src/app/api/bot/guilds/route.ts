@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifySession } from "@/lib/sessionCrypto";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -42,12 +43,8 @@ async function refreshDiscordToken(refreshToken: string): Promise<string | null>
   }
 }
 
-function parseSessionCookie(cookie: string): Record<string, unknown> | null {
-  try {
-    return JSON.parse(atob(cookie));
-  } catch {
-    return null;
-  }
+function parseSessionCookie(cookie: string): Promise<Record<string, unknown> | null> {
+  return verifySession(cookie);
 }
 
 export async function GET(req: NextRequest) {
@@ -69,7 +66,7 @@ export async function GET(req: NextRequest) {
 
     const sessionCookie = req.cookies.get("system777_session")?.value;
     if (sessionCookie) {
-      const session = parseSessionCookie(sessionCookie);
+      const session = await parseSessionCookie(sessionCookie);
       if (session) {
         if (session.accessToken && session.expiresAt && Date.now() < (session.expiresAt as number)) {
           accessToken = session.accessToken as string;

@@ -12,8 +12,7 @@ import {
   Loader2,
   PenLine,
 } from "lucide-react";
-import { getSession } from "@/lib/session";
-import { OWNER_DISCORD_ID } from "@/lib/adminAuth";
+import { OWNER_DISCORD_ID } from "@/lib/owner";
 
 interface BlogPost {
   id: string;
@@ -42,8 +41,15 @@ export default function BlogPage() {
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    setIsOwner(getSession()?.id === OWNER_DISCORD_ID);
     let alive = true;
+    // El owner se detecta en el servidor: la cookie es HttpOnly y no puede
+    // leerse desde JavaScript, así que se consulta /api/auth/session.
+    fetch("/api/auth/session")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (alive) setIsOwner(data?.user?.id === OWNER_DISCORD_ID);
+      })
+      .catch(() => {});
     fetch("/api/blog/posts")
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error("bad status"))))
       .then((data) => {

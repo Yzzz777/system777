@@ -1086,6 +1086,24 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
   const [ticketsLoading, setTicketsLoading] = useState(false);
   const LOGS_PER_PAGE = 15;
 
+  const loadLogs = useCallback(async () => {
+    setLogsLoading(true);
+    try {
+      const res = await api(`guild/${guildId}/tickets/logs`);
+      if (res?.logs) setTicketLogs(res.logs);
+    } catch {}
+    setLogsLoading(false);
+  }, [api, guildId]);
+
+  const loadOpenTickets = useCallback(async () => {
+    setTicketsLoading(true);
+    try {
+      const res = await api(`guild/${guildId}/tickets/list`);
+      if (res?.tickets) setOpenTickets(res.tickets);
+    } catch {}
+    setTicketsLoading(false);
+  }, [api, guildId]);
+
   useEffect(() => {
     if (activeTicketTab === "stats") {
       api(`public/ticket/${guildId}/stats`).then((s: any) => { if (s?.stats) setTicketStats(s.stats); }).catch(() => {});
@@ -1096,31 +1114,13 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
     if (activeTicketTab === "manage") {
       loadOpenTickets();
     }
-  }, [activeTicketTab, api, guildId]);
+  }, [activeTicketTab, api, guildId, loadLogs, loadOpenTickets]);
 
   useEffect(() => {
     if (!logsAutoRefresh || activeTicketTab !== "logs") return;
     const i = setInterval(loadLogs, 5000);
     return () => clearInterval(i);
-  }, [logsAutoRefresh, activeTicketTab]);
-
-  const loadLogs = async () => {
-    setLogsLoading(true);
-    try {
-      const res = await api(`guild/${guildId}/tickets/logs`);
-      if (res?.logs) setTicketLogs(res.logs);
-    } catch {}
-    setLogsLoading(false);
-  };
-
-  const loadOpenTickets = async () => {
-    setTicketsLoading(true);
-    try {
-      const res = await api(`guild/${guildId}/tickets/list`);
-      if (res?.tickets) setOpenTickets(res.tickets);
-    } catch {}
-    setTicketsLoading(false);
-  };
+  }, [logsAutoRefresh, activeTicketTab, loadLogs]);
 
   const closeTicketFromDashboard = async (channelId: string) => {
     try {
@@ -1352,6 +1352,7 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
                           </div>
                           <p className="text-[#b5bac1] text-xs mb-3 whitespace-pre-wrap">{ticketCfg.panelDesc || "Selecciona el tipo de ticket."}</p>
                           {ticketCfg.panelImage && (
+                            /* eslint-disable-next-line @next/next/no-img-element -- imagen con URL arbitraria configurada por el servidor; next/image exige dominios permitidos */
                             <img src={ticketCfg.panelImage} alt="" className="w-full h-20 object-cover rounded-lg mb-3" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                           )}
                           {ticketCategories.filter((c: any) => c.status !== "inactive").length > 0 && (
@@ -1768,8 +1769,8 @@ function ModerationSection({ guildId, api }: { guildId: string; api: any }) {
   const [form, setForm] = useState({ userId: "", reason: "", duration: "5", deleteDays: "0" });
   const [cases, setCases] = useState<any[]>([]);
   const [loadingCases, setLoadingCases] = useState(false);
-  const loadCases = async () => { setLoadingCases(true); const d = await api(`cases/${guildId}`); setCases(d?.cases || []); setLoadingCases(false); };
-  useEffect(() => { loadCases(); }, []);
+  const loadCases = useCallback(async () => { setLoadingCases(true); const d = await api(`cases/${guildId}`); setCases(d?.cases || []); setLoadingCases(false); }, [api, guildId]);
+  useEffect(() => { loadCases(); }, [loadCases]);
   const doAction = async (action: string) => {
     const res = await api(`guild/${guildId}/action`, { method: "POST", body: JSON.stringify({ action, userId: form.userId, reason: form.reason, duration: action === "timeout" ? Number(form.duration) : undefined, deleteDays: action === "ban" ? Number(form.deleteDays) : undefined }) });
     if (res?.ok) loadCases();
@@ -1815,7 +1816,7 @@ function LevelsSection({ config, channels, roles, saveConfig, api, guildId }: an
   const [lvl, setLvl] = useState(config?.levels || { enabled: false, xpPerMessage: 15, xpPerVoiceMin: 10, announceChannel: "", multiplier: "1", levelUpMsg: "¡{user} subió al nivel {level}!", ignoreBots: true, resetRoles: false, rewards: [], xpChannels: [], levelUpColor: "#F5C518", levelUpTitle: "🎉 ¡Subiste de nivel!", levelUpThumbnail: true, levelUpFooter: "", levelUpImage: "" });
   const [top, setTop] = useState<any[]>([]);
   const [newReward, setNewReward] = useState({ level: 0, roleId: "" });
-  useEffect(() => { api(`guild/${guildId}/levels/top`).then((d: any) => setTop(d?.top || [])); }, []);
+  useEffect(() => { api(`guild/${guildId}/levels/top`).then((d: any) => setTop(d?.top || [])); }, [api, guildId]);
   const multiplierOpts = [{ value: "1", label: "1× Normal" }, { value: "1.5", label: "1.5× Boost" }, { value: "2", label: "2× Doble XP" }, { value: "3", label: "3× Triple XP" }];
   const colorPresets = [
     { value: "#F5C518", label: "🟡 Dorado" },
@@ -1894,7 +1895,7 @@ function LevelsSection({ config, channels, roles, saveConfig, api, guildId }: an
 function EconomySection({ config, saveConfig, api, guildId }: any) {
   const [eco, setEco] = useState(config?.economy || { enabled: false, currencySingular: "coin", currencyPlural: "coins", emoji: "🪙", initialBalance: 100, dailyReward: 50, workReward: 100, dailyCooldown: 24, workCooldown: 1, allowRob: true, maxRobPercent: 20, slotsMultiplier: 5, minSlotBet: 10, maxSlotBet: 1000 });
   const [top, setTop] = useState<any[]>([]);
-  useEffect(() => { api(`guild/${guildId}/economy/top`).then((d: any) => setTop(d?.top || [])); }, []);
+  useEffect(() => { api(`guild/${guildId}/economy/top`).then((d: any) => setTop(d?.top || [])); }, [api, guildId]);
   return (
     <div className="space-y-6">
       <div><h2 className="text-xl font-black text-white mb-1">💰 Economía</h2><p className="text-sm text-gray-500">Monedas, trabajo, apuestas y más.</p></div>
@@ -1962,7 +1963,7 @@ function VerificationSection({ config, channels, roles, saveConfig, api, guildId
 
 function BotControlSection({ api, stats }: { api: any; stats: any }) {
   const [power, setPower] = useState({ online: false, ping: 0 });
-  useEffect(() => { api("power").then((d: any) => setPower(d || {})); }, []);
+  useEffect(() => { api("power").then((d: any) => setPower(d || {})); }, [api]);
   const doPower = async (action: string) => { await api("power", { method: "POST", body: JSON.stringify({ action }) }); setTimeout(() => api("power").then((d: any) => setPower(d || {})), 3000); };
   return (
     <div className="space-y-6">
@@ -1990,8 +1991,8 @@ function BotControlSection({ api, stats }: { api: any; stats: any }) {
 function GlobalBansSection({ api }: { api: any }) {
   const [form, setForm] = useState({ userId: "", reason: "" });
   const [bans, setBans] = useState<any>({});
-  const loadBans = async () => { const d = await api("globalbans"); if (d) setBans(d); };
-  useEffect(() => { loadBans(); }, []);
+  const loadBans = useCallback(async () => { const d = await api("globalbans"); if (d) setBans(d); }, [api]);
+  useEffect(() => { loadBans(); }, [loadBans]);
   const addBan = async () => { await api("globalbans", { method: "POST", body: JSON.stringify(form) }); setForm({ userId: "", reason: "" }); loadBans(); };
   const removeBan = async (id: string) => { await api(`globalbans/${id}`, { method: "DELETE" }); loadBans(); };
   return (
@@ -2037,8 +2038,8 @@ function IPBansSection({ api }: { api: any }) {
   const [lookupIp, setLookupIp] = useState("");
   const [bannedIps, setBannedIps] = useState<any>({});
   const [lookupResult, setLookupResult] = useState<any>(null);
-  const loadBans = async () => { const d = await api("ipban"); if (d?.bannedIps) setBannedIps(d.bannedIps); };
-  useEffect(() => { loadBans(); }, []);
+  const loadBans = useCallback(async () => { const d = await api("ipban"); if (d?.bannedIps) setBannedIps(d.bannedIps); }, [api]);
+  useEffect(() => { loadBans(); }, [loadBans]);
   const banIp = async () => { await api("ipban", { method: "POST", body: JSON.stringify(ipForm) }); setIpForm({ ip: "", reason: "" }); loadBans(); };
   const unbanIp = async (ip: string) => { await api(`ipban/${ip}`, { method: "DELETE" }); loadBans(); };
   const lookupUser = async () => { const d = await api(`ipregistry/${lookupId}`); setLookupResult(d); };
@@ -2078,8 +2079,8 @@ function StaffSection({ api }: { api: any }) {
   const [form, setForm] = useState({ userId: "", rank: "helper", note: "" });
   const [staff, setStaff] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
-  const load = async () => { const d = await api("staff"); if (d?.staff) setStaff(d.staff); const l = await api("staff/logs?limit=50"); if (l?.logs) setLogs(l.logs); };
-  useEffect(() => { load(); }, []);
+  const load = useCallback(async () => { const d = await api("staff"); if (d?.staff) setStaff(d.staff); const l = await api("staff/logs?limit=50"); if (l?.logs) setLogs(l.logs); }, [api]);
+  useEffect(() => { load(); }, [load]);
   const add = async () => { await api("staff/add", { method: "POST", body: JSON.stringify(form) }); setForm({ userId: "", rank: "helper", note: "" }); load(); };
   const remove = async (id: string) => { await api(`staff/${id}`, { method: "DELETE" }); load(); };
   return (
@@ -2110,7 +2111,7 @@ function StaffSection({ api }: { api: any }) {
 
 function AnalyticsSection({ api }: { api: any }) {
   const [data, setData] = useState<any>(null);
-  useEffect(() => { api("analytics").then((d: any) => setData(d)); }, []);
+  useEffect(() => { api("analytics").then((d: any) => setData(d)); }, [api]);
   return (
     <div className="space-y-6">
       <div><h2 className="text-xl font-black text-white mb-1">📊 Analytics</h2><p className="text-sm text-gray-500">Estadísticas de uso del bot.</p></div>
@@ -2143,7 +2144,7 @@ function PremiumAdminSection({ api }: { api: any }) {
   useEffect(() => {
     api("premium/users").then((d: any) => setUsers(d?.users || []));
     api("premium/codes").then((d: any) => setCodes(d?.codes || []));
-  }, []);
+  }, [api]);
   const grant = async () => { await api("premium/grant", { method: "POST", body: JSON.stringify(grantForm) }); setGrantForm({ userId: "", plan: "Sharingan", days: 30 }); };
   const revoke = async (id: string) => { await api("premium/revoke", { method: "POST", body: JSON.stringify({ userId: id }) }); };
   const genCode = async () => { await api("premium/codes/generate", { method: "POST", body: JSON.stringify(codeForm) }); api("premium/codes").then((d: any) => setCodes(d?.codes || [])); };
@@ -2244,9 +2245,9 @@ function JarvisSection({ api, stats }: { api: any; stats: any }) {
 function BotLogsSection({ api }: { api: any }) {
   const [logs, setLogs] = useState<any[]>([]);
   const [autoRefresh, setAutoRefresh] = useState(false);
-  const load = async () => { const d = await api("logs"); if (Array.isArray(d)) setLogs(d); };
-  useEffect(() => { load(); }, []);
-  useEffect(() => { if (!autoRefresh) return; const i = setInterval(load, 5000); return () => clearInterval(i); }, [autoRefresh]);
+  const load = useCallback(async () => { const d = await api("logs"); if (Array.isArray(d)) setLogs(d); }, [api]);
+  useEffect(() => { load(); }, [load]);
+  useEffect(() => { if (!autoRefresh) return; const i = setInterval(load, 5000); return () => clearInterval(i); }, [autoRefresh, load]);
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">

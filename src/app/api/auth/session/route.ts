@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifySession, signSession } from "@/lib/sessionCrypto";
 
 export const runtime = "edge";
+
+type SessionData = {
+  id?: string;
+  username?: string;
+  global_name?: string;
+  avatar?: string;
+  email?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: number;
+};
 
 async function refreshDiscordToken(refreshToken: string): Promise<{ accessToken: string; expiresAt: number } | null> {
   const clientId = process.env.DISCORD_CLIENT_ID;
@@ -32,7 +44,13 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    let sessionData = JSON.parse(atob(cookie));
+    const parsed = await verifySession(cookie);
+    if (!parsed) {
+      const res = NextResponse.json(null);
+      res.cookies.set("system777_session", "", { path: "/", maxAge: 0 });
+      return res;
+    }
+    let sessionData = parsed as SessionData;
 
     if (sessionData.expiresAt && Date.now() > sessionData.expiresAt) {
       if (sessionData.refreshToken) {
@@ -50,9 +68,9 @@ export async function GET(req: NextRequest) {
               role: "OWNER",
               username: sessionData.username,
             },
-            expires: new Date(sessionData.expiresAt).toISOString(),
+            expires: new Date(sessionData.expiresAt ?? Date.now()).toISOString(),
           });
-          response.cookies.set("system777_session", btoa(JSON.stringify(sessionData)), {
+          response.cookies.set("system777_session", await signSession(sessionData as unknown as Record<string, unknown>), {
             path: "/",
             httpOnly: true,
             secure: true,
@@ -78,7 +96,7 @@ export async function GET(req: NextRequest) {
         role: "OWNER",
         username: sessionData.username,
       },
-      expires: new Date(sessionData.expiresAt).toISOString(),
+      expires: new Date(sessionData.expiresAt ?? Date.now()).toISOString(),
     });
   } catch {
     return NextResponse.json(null);

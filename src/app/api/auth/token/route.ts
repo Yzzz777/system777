@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifySession, signSession } from "@/lib/sessionCrypto";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -33,7 +34,9 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const session = JSON.parse(atob(sessionCookie));
+    const parsed = await verifySession(sessionCookie);
+    if (!parsed) return NextResponse.json({ token: null });
+    const session = parsed as { accessToken?: string; expiresAt?: number; refreshToken?: string };
 
     if (session.accessToken && session.expiresAt && Date.now() < (session.expiresAt as number)) {
       return NextResponse.json({ token: session.accessToken });
@@ -44,7 +47,7 @@ export async function GET(req: NextRequest) {
       if (refreshed) {
         const updated = { ...session, accessToken: refreshed, expiresAt: Date.now() + 3600 * 1000 };
         const res = NextResponse.json({ token: refreshed });
-        res.cookies.set("system777_session", btoa(JSON.stringify(updated)), {
+        res.cookies.set("system777_session", await signSession(updated as unknown as Record<string, unknown>), {
           path: "/",
           httpOnly: true,
           secure: true,

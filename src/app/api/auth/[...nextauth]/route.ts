@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifySession, signSession } from "@/lib/sessionCrypto";
 
 export const runtime = "edge";
 
@@ -37,7 +38,9 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    let sessionData = JSON.parse(atob(cookie));
+    const parsed = await verifySession(cookie);
+    if (!parsed) return NextResponse.json(null);
+    let sessionData = parsed as { accessToken?: string; expiresAt?: number; refreshToken?: string; id?: string; username?: string; global_name?: string; avatar?: string; email?: string; role?: string; name?: string };
 
     if (sessionData.expiresAt && Date.now() > sessionData.expiresAt) {
       if (sessionData.refreshToken) {
@@ -56,9 +59,9 @@ export async function GET(req: NextRequest) {
               username: sessionData.username,
             },
             accessToken: sessionData.accessToken,
-            expires: new Date(sessionData.expiresAt).toISOString(),
+            expires: new Date(sessionData.expiresAt ?? Date.now()).toISOString(),
           });
-          response.cookies.set("system777_session", btoa(JSON.stringify(sessionData)), {
+          response.cookies.set("system777_session", await signSession(sessionData as unknown as Record<string, unknown>), {
             path: "/",
             httpOnly: true,
             secure: true,
@@ -87,7 +90,7 @@ export async function GET(req: NextRequest) {
         username: sessionData.username,
       },
       accessToken: sessionData.accessToken || null,
-      expires: new Date(sessionData.expiresAt).toISOString(),
+      expires: new Date(sessionData.expiresAt ?? Date.now()).toISOString(),
     });
   } catch {
     return NextResponse.json(null);

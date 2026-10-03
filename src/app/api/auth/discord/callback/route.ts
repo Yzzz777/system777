@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { signSession } from "@/lib/sessionCrypto";
 
 export const runtime = "edge";
 
@@ -61,7 +62,7 @@ export async function GET(req: NextRequest) {
       expiresAt: Date.now() + tokens.expires_in * 1000,
     };
 
-    const jwt = btoa(JSON.stringify(sessionData));
+    const jwt = await signSession(sessionData as unknown as Record<string, unknown>);
 
     const response = NextResponse.redirect(new URL("/bot/dashboard", req.url));
     response.cookies.set("system777_session", jwt, {
