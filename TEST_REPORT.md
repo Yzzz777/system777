@@ -127,3 +127,59 @@ La autorización de owner usa `src/lib/adminAuth.ts`: verifica el `id` contra la
 - **Fases 1-8 completadas**: design system, layout/SEO, navbar/footer, hero+contador, páginas del portafolio, System 777 con stats reales, blog con API+auth, biblioteca y contacto honestos, responsive 320→1920, a11y y motion controlados, testing Playwright.
 - **Servidor de preview**: producción en `http://localhost:3002`.
 - **Deploy**: NO realizado. Esperando la frase **“Aprobado para deploy”**.
+
+---
+
+## 6. Deploy y verificación en producción (03/10/2026)
+
+**Ruta de deploy:** commit `49cf5b6` → push a `origin/main` → GitHub Actions
+(`Deploy to Cloudflare Pages`, run 37143899788 → **success**) → build con
+`@cloudflare/next-on-pages` → `wrangler pages deploy` → Cloudflare Pages.
+
+- Producción: **https://jrsystem7777.com** (deploy instantáneo de Pages)
+- Snapshot del deploy: **https://8690fc2c.system777.pages.dev**
+- Commit: `49cf5b6 feat: remodelacion a portafolio personal - SEO, a11y, responsive, blog con auth y stats reales`
+- CI/CD verificado: el pipeline automático también terminó en `success`, así que
+  los próximos pushes a `main` despliegan solos.
+
+### 6.1 Comprobaciones en vivo (curl)
+
+| URL | Estado |
+|---|---|
+| `/` `/about` `/technologies` `/cybersecurity` `/projects` `/blog` `/library` `/contact` `/bot` `/bot/commands` `/bot/status` `/login` `/privacy` `/terms` | **200** |
+| `/no-existe-xyz` | **404** correcto |
+| `/sitemap.xml`, `/robots.txt` | **200** |
+| `GET /api/bot/stats` | **200** con datos reales: `System 777#7585`, guilds 30, users 582, ping 54 ms, uptime 8946 s |
+| `GET /api/blog/posts` | **200** `[]` |
+| `POST /api/blog/posts`, `POST /api/blog/upload` sin sesión | **401** |
+| `POST /api/contact` | `{"success":true}` |
+| Título de home | `Ángel — Yzzz 777 · Developer, Systems & Cybersecurity` (nuevo) |
+| Precios premium en `/bot` | `$4.99/mes`, `$9.99/mes`, `$19.99/mes` (reales) |
+
+### 6.2 Auditoría Playwright contra producción (mismo harness)
+
+- **90 checks** (15 rutas × 6 anchos 320-1920): **0 overflow, 0 sin `h1`, 0 errores
+  de consola** (únicos avisos: los 404 esperados de la ruta de prueba).
+- **15 enlaces internos: 0 rotos.**
+- `prefers-reduced-motion`: 50 reveals, **0 ocultos**.
+- Dropdown por teclado en vivo: `focus=false → Enter=true` con
+  `Inicio/Comandos/Estado/Dashboard → Escape=false` ✅
+- Menú móvil (375 px) en vivo (capturas `/tmp/opencode/shots/live375-*.png`):
+  cerrado → hamburguesa `aria-expanded=false→true` con los 14 enlaces →
+  **Escape lo cierra** y devuelve el foco al botón ✅
+- Diálogo de proyecto: `role=dialog` + `aria-modal` + foco en “Cerrar” + Escape ✅
+- Imágenes: 23/23 cargadas sin peticiones fallidas (el recuento inicial de
+  “rotas” era un muestreo prematuro; re-verificado en frío = 0).
+
+### 6.3 Resultado final
+
+| Métrica | Antes | Después (producción) |
+|---|---|---|
+| Errores de consola en rutas públicas | presentes | **0** |
+| Overflow horizontal (90 checks) | sí (`/bot/commands` 1620>1440) | **0** |
+| Rutas sin `h1` | `/bot/status` | **0** |
+| Enlaces internos rotos | 4 | **0** |
+| Datos inventados en `/bot` | `100+`, `27`, `99.9%` | datos en vivo |
+| Creación de posts sin auth | abierta | **401** |
+| `defaultPosts` del blog | 10 posts falsos | BD real |
+| Títulos/descripciones únicos | genéricos | **13 rutas con metadata propia** |
