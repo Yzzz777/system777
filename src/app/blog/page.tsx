@@ -211,7 +211,7 @@ export default function BlogPage() {
         {showCreate && isOwner && (
           <div className="panel mt-6 space-y-4 p-6">
             <h2 className="text-lg font-bold">Crear artículo</h2>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="post-title" className="stat-label mb-1.5">
                   Título
@@ -323,7 +323,7 @@ export default function BlogPage() {
 
         {/* Estado */}
         {posts === null && !error && (
-          <ul className="mt-8 grid gap-4 sm:grid-cols-2" aria-busy="true" aria-label="Cargando artículos">
+          <ul className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2" aria-busy="true" aria-label="Cargando artículos">
             {[0, 1].map((i) => (
               <li key={i} className="panel p-6">
                 <div className="flex items-center gap-2">
@@ -362,7 +362,7 @@ export default function BlogPage() {
 
         {/* Lista */}
         {filtered.length > 0 && (
-          <ul className="mt-8 grid gap-4 sm:grid-cols-2">
+          <ul className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {filtered.map((post) => (
               <li key={post.id} className="flex">
                 <article className="panel panel-hover flex h-full w-full flex-col p-6">

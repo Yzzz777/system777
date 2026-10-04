@@ -70,7 +70,7 @@ export default function BotStatusPage() {
         </div>
 
         {/* Métricas */}
-        <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => (
             <li key={item.label}>
               <Card className="h-full p-5">

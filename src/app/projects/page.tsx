@@ -363,7 +363,7 @@ export default function ProjectsPage() {
           </p>
         </div>
 
-        <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((p) => (
             <li key={p.title} className="flex">
               <article className="panel panel-hover flex h-full w-full flex-col p-6">

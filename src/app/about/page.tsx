@@ -68,7 +68,7 @@ export default function AboutPage() {
     <div className="bg-vignette" aria-hidden />
       <div className="relative mx-auto max-w-6xl">
         {/* Cabecera */}
-        <div className="grid items-center gap-8 sm:grid-cols-[minmax(0,240px)_minmax(0,1fr)]">
+        <div className="grid grid-cols-1 items-center gap-8 sm:grid-cols-[minmax(0,240px)_minmax(0,1fr)]">
           <div className="relative mx-auto w-full max-w-[240px]">
             <div className="portrait-frame aspect-[3/4] w-full">
               <Image
@@ -121,7 +121,7 @@ export default function AboutPage() {
             <h2>Tres frentes, un mismo stack</h2>
             <p>Todo lo que ves en este sitio cae en una de estas categorías.</p>
           </div>
-          <ul className="grid gap-4 md:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {whatIDo.map((w) => (
               <li key={w.title} className="panel panel-hover flex h-full flex-col p-6">
                 <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-[var(--brand-dim)]">
@@ -143,7 +143,7 @@ export default function AboutPage() {
 
         {/* Historia honesta */}
         <section className="mt-16">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div className="panel p-6 sm:p-8">
               <span className="eyebrow">02 — Cómo empecé</span>
               <div className="mt-5 space-y-4 text-[1.0625rem] leading-relaxed text-[var(--text-2)]">

@@ -58,7 +58,7 @@ export default function ContactPage() {
           </p>
         </div>
 
-        <div className="mt-10 grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+        <div className="mt-10 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
           {/* Formulario */}
           <div className="panel p-6 sm:p-8">
             {success ? (

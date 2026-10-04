@@ -386,7 +386,7 @@ export default function HomePage() {
             className="ring-deco right-[-120px] top-[220px] h-[260px] w-[260px] opacity-60"
           />
 
-          <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-14">
+          <div className="relative z-10 mx-auto grid grid-cols-1 max-w-7xl items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-14">
             {/* Retrato (parallax al hacer scroll) */}
             <motion.div
               style={allowMotion ? { y: portraitY, scale: portraitScale } : undefined}
@@ -495,7 +495,7 @@ export default function HomePage() {
 
         {/* ============================ ABOUT ============================ */}
         <section id="about" className="border-t border-[rgba(0,229,255,0.14)] px-4 py-[var(--section-y)] sm:px-6">
-          <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+          <div className="mx-auto grid grid-cols-1 max-w-7xl gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
             <Reveal blur>
               <div className="section-head !mb-0">
                 <span className="eyebrow">01 — Sobre mí</span>
@@ -537,7 +537,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <ul className="grid gap-3 sm:grid-cols-2">
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {[
                   { icon: Globe, label: "Construyo", value: "Sitios, dashboards y APIs" },
                   { icon: Terminal, label: "Automatizo", value: "Bots, scripts y despliegues" },
@@ -576,7 +576,7 @@ export default function HomePage() {
               </div>
             </Reveal>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {techGroups.map((group, gi) => (
                 <Reveal key={group.title} delay={gi * 70}>
                   <div className="panel h-full p-5">
@@ -631,7 +631,7 @@ export default function HomePage() {
               </div>
             </Reveal>
 
-            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {cyberAreas.map((a, i) => (
                 <Reveal as="li" key={a.title} delay={(i % 4) * 60}>
                   <div className="panel panel-hover h-full p-5">
@@ -686,7 +686,7 @@ export default function HomePage() {
               </div>
             </Reveal>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {projects.map((p, i) => (
                 <Reveal key={p.name} delay={(i % 2) * 80}>
                   <article className="panel panel-hover flex h-full flex-col p-6">
@@ -819,9 +819,9 @@ export default function HomePage() {
               <TiltBanner src="/system777-banner.webp" alt="System 777 — banner del bot" />
             </Reveal>
 
-            <div className="mt-8 grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+            <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
               {/* Features */}
-              <ul className="grid gap-3 sm:grid-cols-2">
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {systemFeatures.map((f, i) => (
                   <Reveal as="li" key={f.title} delay={(i % 2) * 60}>
                     <div className="panel h-full p-5">
@@ -899,7 +899,7 @@ export default function HomePage() {
             <div className="mt-8">
               {posts === null ? (
                 <ul
-                  className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                  className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
                   aria-busy="true"
                   aria-label="Cargando publicaciones"
                 >
@@ -925,7 +925,7 @@ export default function HomePage() {
                   </p>
                 </div>
               ) : (
-                <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {posts.slice(0, 3).map((p, i) => (
                     <Reveal as="li" key={p.id} delay={i * 60}>
                       <Link href="/blog" className="panel panel-hover block h-full p-5">
@@ -975,7 +975,7 @@ export default function HomePage() {
               </div>
             </Reveal>
 
-            <ul className="mt-8 grid gap-4 sm:grid-cols-2">
+            <ul className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
               {libraryResources.map((r, i) => {
                 const inner = (
                   <>

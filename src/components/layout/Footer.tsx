@@ -29,7 +29,7 @@ export function Footer() {
   return (
     <footer className="border-t border-[rgba(0,229,255,0.18)] bg-[var(--bg-raised)] shadow-[0_-14px_44px_rgba(0,229,255,0.05)]">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <Link href="/" className="flex items-center gap-2.5">
               <span className="flex h-8 w-8 items-center justify-center rounded-[10px] border border-[var(--line)] bg-[var(--surface-2)]">

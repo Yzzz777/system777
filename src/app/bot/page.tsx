@@ -206,7 +206,7 @@ export default function BotHomePage() {
             </p>
           </div>
 
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((f) => (
               <li key={f.title} className="panel panel-hover h-full p-5">
                 <div className="flex items-center gap-3">
@@ -231,7 +231,7 @@ export default function BotHomePage() {
             <p>Precios y beneficios tal como están definidos en el código del bot.</p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {premiumPlans.map((plan) => (
               <Card
                 key={plan.name}

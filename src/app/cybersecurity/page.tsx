@@ -131,7 +131,7 @@ export default function CybersecurityPage() {
         {/* Áreas */}
         <section className="mt-12">
           <h2 className="mb-4 text-xl font-bold sm:text-2xl">Áreas</h2>
-          <ul className="grid gap-3 sm:grid-cols-2">
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {areas.map((a) => (
               <li key={a.title} className="panel panel-hover flex h-full flex-col p-5">
                 <div className="flex items-start justify-between gap-3">
@@ -159,7 +159,7 @@ export default function CybersecurityPage() {
         </section>
 
         {/* Estudiando */}
-        <section className="mt-12 grid gap-4 lg:grid-cols-2">
+        <section className="mt-12 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div className="panel p-6">
             <span className="eyebrow">
               <GraduationCap aria-hidden className="h-3 w-3" />
