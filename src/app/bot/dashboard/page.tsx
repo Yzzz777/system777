@@ -1393,32 +1393,58 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
                         <span className="text-white text-sm font-semibold">System 777</span>
                         <span className="bg-[#00E5FF] text-[#02141a] text-[9px] px-1.5 py-0.5 rounded font-semibold">APP</span>
                       </div>
-                      <div className="rounded-xl overflow-hidden" style={{ background: "#2b2d31", border: `2px solid ${ticketCfg.panelColor || "#00E5FF"}` }}>
-                        <div className="h-1.5" style={{ background: ticketCfg.panelColor || "#00E5FF" }} />
-                        <div className="p-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: (ticketCfg.panelColor || "#00E5FF") + "25" }}>
-                              <Ticket size={14} style={{ color: ticketCfg.panelColor || "#00E5FF" }} />
+                      <div className="rounded-md overflow-hidden flex" style={{ background: "#2b2d31" }}>
+                        <div className="w-1 shrink-0" style={{ background: ticketCfg.panelColor || "#00E5FF" }} />
+                        <div className="flex-1 min-w-0 p-3 flex gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              {config?.guild?.icon ? (
+                                /* eslint-disable-next-line @next/next/no-img-element -- icono del servidor obtenido del bot (URL arbitraria de Discord CDN) */
+                                <img src={config.guild.icon} alt="" className="w-5 h-5 rounded-full object-cover" />
+                              ) : (
+                                <span className="text-[11px]">🎮</span>
+                              )}
+                              <span className="text-white text-xs font-semibold">{config?.guild?.name || "Servidor"}</span>
                             </div>
-                            <span className="text-white font-bold text-sm">{ticketCfg.panelTitle || "Soporte"}</span>
-                          </div>
-                          <p className="text-[#b5bac1] text-xs mb-3 whitespace-pre-wrap">{ticketCfg.panelDesc || "Selecciona el tipo de ticket."}</p>
-                          {ticketCfg.panelImage && (
-                            /* eslint-disable-next-line @next/next/no-img-element -- imagen con URL arbitraria configurada por el servidor; next/image exige dominios permitidos */
-                            <img src={ticketCfg.panelImage} alt="" className="w-full h-20 object-cover rounded-lg mb-3" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                          )}
-                          {ticketCategories.filter((c: any) => c.status !== "inactive").length > 0 && (
-                            <div className="space-y-1.5">
-                              {ticketCategories.filter((c: any) => c.status !== "inactive").slice(0, 5).map((cat: any) => (
-                                <div key={cat.id} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-white/5 cursor-pointer transition-colors" style={{ background: "rgba(255,255,255,0.03)" }}>
-                                  <span className="text-sm">{fmtEmoji(cat.emoji, "🎫")}</span>
-                                  <span className="text-white text-xs font-medium">{cat.label}</span>
-                                  {cat.description && <span className="text-[#80848e] text-[10px] ml-auto truncate max-w-[120px]">{cat.description}</span>}
+                            <div className="text-[#f2f3f5] font-semibold text-sm mb-1 break-words">{ticketCfg.panelTitle || "Soporte"}</div>
+                            <p className="text-[#dbdee1] text-xs mb-2 whitespace-pre-wrap break-words">{ticketCfg.panelDesc || "Selecciona el tipo de ticket."}</p>
+                            {ticketCfg.panelImage && (
+                              /* eslint-disable-next-line @next/next/no-img-element -- imagen con URL arbitraria configurada por el servidor; next/image exige dominios permitidos */
+                              <img src={ticketCfg.panelImage} alt="" className="w-full h-20 object-cover rounded mb-3" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                            )}
+                            {ticketCategories.filter((c: any) => c.status !== "inactive").length > 0 && (
+                              <div className="mb-1">
+                                <div className="text-white text-xs font-semibold mb-0.5">📂 Categorías Disponibles</div>
+                                <div className="space-y-0.5">
+                                  {ticketCategories.filter((c: any) => c.status !== "inactive").slice(0, 6).map((cat: any) => (
+                                    <div key={cat.id} className="text-[#dbdee1] text-[11px] break-words">
+                                      {fmtEmoji(cat.emoji, "🎫")} <span className="font-semibold text-white">{cat.label}</span>{cat.description ? ` — ${cat.description}` : ""}
+                                    </div>
+                                  ))}
+                                  {ticketCategories.filter((c: any) => c.status !== "inactive").length > 6 && (
+                                    <div className="text-[#949ba4] text-[11px]">+{ticketCategories.filter((c: any) => c.status !== "inactive").length - 6} categorías más…</div>
+                                  )}
                                 </div>
-                              ))}
+                              </div>
+                            )}
+                            <div className="flex items-center gap-1.5 mt-2">
+                              <div className="w-4 h-4 rounded-full flex items-center justify-center text-white font-black shrink-0" style={{ background: ticketCfg.panelColor || "#00E5FF", fontSize: 6 }}>777</div>
+                              <span className="text-[#949ba4] text-[10px] truncate">System 777 · Soporte • Powered by System 777 · hoy a las {new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</span>
                             </div>
+                          </div>
+                          {config?.guild?.icon && (
+                            /* eslint-disable-next-line @next/next/no-img-element -- thumbnail del servidor desde Discord CDN */
+                            <img src={config.guild.icon} alt="" className="w-14 h-14 rounded-lg object-cover shrink-0 self-start" />
                           )}
                         </div>
+                      </div>
+                      <div className="mt-1.5 rounded border border-[#4e5058] bg-[#1e1f22] px-3 py-2.5 flex items-center justify-between">
+                        <span className="text-[#949ba4] text-xs truncate">📂 Selecciona el tipo de soporte...</span>
+                        <span className="text-[#949ba4] text-xs shrink-0 ml-2">▼</span>
+                      </div>
+                      <div className="mt-1.5 flex gap-2">
+                        <span className="px-3 py-1.5 rounded bg-[#5865F2] text-white text-xs font-medium select-none">📩 Abrir Ticket</span>
+                        <span className="px-3 py-1.5 rounded bg-[#4e5058] text-white text-xs font-medium select-none">📋 Reglas</span>
                       </div>
                     </div>
                   </div>
