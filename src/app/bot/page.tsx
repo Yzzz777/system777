@@ -24,6 +24,10 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useBotStats, isOnline, formatUptime, NA } from "@/lib/useBotStats";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const BOT_CLIENT_ID = process.env.NEXT_PUBLIC_BOT_CLIENT_ID ?? "1502804306125132057";
 const INVITE_URL = `https://discord.com/oauth2/authorize?client_id=${BOT_CLIENT_ID}&permissions=8&integration_type=0&scope=applications.commands+bot`;
@@ -108,9 +112,13 @@ function LiveStats() {
         <span className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--text)]">
           {stats?.tag ?? "System 777"}
         </span>
-        <span className="chip ml-auto" style={{ color: online ? "var(--brand)" : "var(--text-3)" }}>
-          {!loaded ? "consultando…" : online ? "online" : "offline"}
-        </span>
+        {!loaded ? (
+          <Skeleton className="ml-auto h-5 w-16" aria-label="Consultando estado" />
+        ) : (
+          <Badge variant="outline" className="ml-auto font-mono" style={{ color: online ? "var(--brand)" : "var(--text-3)" }}>
+            {online ? "online" : "offline"}
+          </Badge>
+        )}
       </div>
       <dl className="grid grid-cols-2 divide-x divide-y divide-[var(--line)] sm:grid-cols-3 lg:grid-cols-5 lg:divide-y-0">
         {items.map((it) => (
@@ -120,7 +128,11 @@ function LiveStats() {
               <span className="stat-label">{it.label}</span>
             </dt>
             <dd className="mt-1.5 font-[family-name:var(--font-mono)] text-[15px] text-[var(--text)]">
-              {it.value}
+              {!loaded ? (
+                <Skeleton className="h-4 w-16" aria-label={`Cargando ${it.label}`} />
+              ) : (
+                it.value
+              )}
             </dd>
           </div>
         ))}
@@ -160,19 +172,19 @@ export default function BotHomePage() {
             estadísticas. Invítalo gratis o explora sus comandos antes.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <a href={INVITE_URL} target="_blank" rel="noopener noreferrer" className="btn btn-system">
+            <Button variant="system" render={<a href={INVITE_URL} target="_blank" rel="noopener noreferrer" />}>
               Invitar al servidor
-              <ArrowRight aria-hidden className="h-4 w-4" />
-            </a>
-            <Link href="/bot/commands" className="btn btn-ghost">
+              <ArrowRight aria-hidden />
+            </Button>
+            <Button variant="outline" render={<Link href="/bot/commands" />}>
               Ver comandos
-            </Link>
-            <Link href="/bot/status" className="btn btn-ghost">
+            </Button>
+            <Button variant="outline" render={<Link href="/bot/status" />}>
               Estado en vivo
-            </Link>
-            <Link href="/bot/dashboard" className="btn btn-ghost">
+            </Button>
+            <Button variant="outline" render={<Link href="/bot/dashboard" />}>
               Dashboard
-            </Link>
+            </Button>
           </div>
         </div>
 
@@ -221,14 +233,14 @@ export default function BotHomePage() {
 
           <div className="grid gap-4 md:grid-cols-3">
             {premiumPlans.map((plan) => (
-              <div
+              <Card
                 key={plan.name}
-                className={`panel flex h-full flex-col p-6 ${plan.featured ? "ring-1 ring-[rgba(88,101,242,0.45)]" : ""}`}
+                className={`h-full flex-col p-6 ${plan.featured ? "border-[rgba(88,101,242,0.45)] ring-1 ring-[rgba(88,101,242,0.45)]" : ""}`}
               >
                 <div className="flex items-center gap-2">
                   <plan.icon aria-hidden className="h-5 w-5" style={{ color: plan.color }} />
                   <h3 className="text-lg font-bold">{plan.name}</h3>
-                  {plan.featured && <span className="chip ml-auto">Popular</span>}
+                  {plan.featured && <Badge className="ml-auto font-mono">Popular</Badge>}
                 </div>
                 <p className="mt-3 font-[family-name:var(--font-mono)] text-2xl" style={{ color: plan.color }}>
                   {plan.price}
@@ -241,7 +253,7 @@ export default function BotHomePage() {
                     </li>
                   ))}
                 </ul>
-              </div>
+              </Card>
             ))}
           </div>
         </section>
@@ -257,13 +269,13 @@ export default function BotHomePage() {
               bot y los logs son públicos.
             </p>
             <div className="flex flex-wrap justify-center gap-3">
-              <a href={INVITE_URL} target="_blank" rel="noopener noreferrer" className="btn btn-system">
+              <Button variant="system" render={<a href={INVITE_URL} target="_blank" rel="noopener noreferrer" />}>
                 Añadir gratis
-                <ArrowUpRight aria-hidden className="h-4 w-4" />
-              </a>
-              <Link href="/contact" className="btn btn-ghost">
+                <ArrowUpRight aria-hidden />
+              </Button>
+              <Button variant="outline" render={<Link href="/contact" />}>
                 Hablar con el creador
-              </Link>
+              </Button>
             </div>
           </div>
         </section>

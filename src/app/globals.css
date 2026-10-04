@@ -1,4 +1,8 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
 
 /* =========================================================
    YZZZ 777 — DESIGN SYSTEM
@@ -76,6 +80,41 @@
   --font-display: var(--font-space-grotesk), "Space Grotesk", system-ui, sans-serif;
   --font-body: var(--font-inter), "Inter", system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  /* --- shadcn/ui → mapeados a los tokens de identidad YZZZ 777 ---
+     El sitio es oscuro por defecto (sin clase .dark): los componentes
+     shadcn heredan exactamente los mismos colores que .panel/.btn/.chip */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --popover: var(--surface-2);
+  --popover-foreground: var(--text);
+  --primary: var(--brand);
+  --primary-foreground: #04120b;
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--text-2);
+  --muted: var(--surface-2);
+  --muted-foreground: var(--text-3);
+  --accent: rgba(0, 255, 136, 0.1);
+  --accent-foreground: var(--text);
+  --destructive: var(--err);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--brand);
+  --chart-1: var(--brand);
+  --chart-2: var(--data);
+  --chart-3: var(--system);
+  --chart-4: var(--system-2);
+  --chart-5: var(--warn);
+  --radius: 0.875rem;
+  --sidebar: var(--bg-raised);
+  --sidebar-foreground: var(--text);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: #04120b;
+  --sidebar-accent: var(--surface-2);
+  --sidebar-accent-foreground: var(--text);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--brand);
 }
 
 @theme {
@@ -565,4 +604,89 @@ select.input option { background: var(--surface, #0b0f14); color: var(--text); }
 .egg-pop {
   animation: egg-pop 3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   will-change: opacity, transform;
+}
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* Mismo bloque que :root — el sitio no usa la clase .dark, así que los
+   valores dark: de los componentes shadcn nunca “ganan” por error. */
+.dark {
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --popover: var(--surface-2);
+  --popover-foreground: var(--text);
+  --primary: var(--brand);
+  --primary-foreground: #04120b;
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--text-2);
+  --muted: var(--surface-2);
+  --muted-foreground: var(--text-3);
+  --accent: rgba(0, 255, 136, 0.1);
+  --accent-foreground: var(--text);
+  --destructive: var(--err);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--brand);
+  --sidebar: var(--bg-raised);
+  --sidebar-foreground: var(--text);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: #04120b;
+  --sidebar-accent: var(--surface-2);
+  --sidebar-accent-foreground: var(--text);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--brand);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
 }

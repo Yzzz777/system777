@@ -4,6 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { Send, Loader2, CheckCircle, MessageSquare, Github, Mail, ArrowUpRight } from "lucide-react";
 import { siteConfig } from "@/lib/config";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
@@ -63,13 +67,9 @@ export default function ContactPage() {
                 <p className="mt-2 text-sm text-[var(--text-2)]">
                   Llegó por Discord. Te respondo lo antes posible.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setSuccess(false)}
-                  className="btn btn-primary mt-6"
-                >
+                <Button type="button" onClick={() => setSuccess(false)} className="mt-6">
                   Enviar otro
-                </button>
+                </Button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
@@ -89,7 +89,7 @@ export default function ContactPage() {
                   <label htmlFor="contact-name" className="stat-label mb-1.5 block">
                     Tu nombre
                   </label>
-                  <input
+                  <Input
                     id="contact-name"
                     type="text"
                     required
@@ -98,7 +98,6 @@ export default function ContactPage() {
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     placeholder="¿Cómo te llamas?"
-                    className="input"
                   />
                 </div>
 
@@ -106,7 +105,7 @@ export default function ContactPage() {
                   <label htmlFor="contact-message" className="stat-label mb-1.5 block">
                     Mensaje
                   </label>
-                  <textarea
+                  <Textarea
                     id="contact-message"
                     required
                     rows={6}
@@ -114,24 +113,24 @@ export default function ContactPage() {
                     value={form.message}
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
                     placeholder="Cuéntame lo que necesites…"
-                    className="input resize-y"
+                    className="resize-y"
                   />
                 </div>
 
                 {error && (
-                  <p role="alert" className="rounded-[10px] border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
-                    {error}
-                  </p>
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
                 )}
 
-                <button type="submit" disabled={loading} className="btn btn-primary w-full">
+                <Button type="submit" disabled={loading} className="w-full">
                   {loading ? (
                     <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
                   ) : (
                     <Send aria-hidden className="h-4 w-4" />
                   )}
                   {loading ? "Enviando…" : "Enviar por Discord"}
-                </button>
+                </Button>
 
                 <p className="text-[11px] text-[var(--text-3)]">
                   Sin newsletter ni spam: solo uso el mensaje para responderte.

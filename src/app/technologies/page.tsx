@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { Layers } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 type Level = "Uso a diario" | "Uso habitual" | "Aprendiendo";
 
@@ -43,6 +45,12 @@ const levelColors: Record<Level, string> = {
   Aprendiendo: "var(--warn)",
 };
 
+const levelHints: Record<Level, string> = {
+  "Uso a diario": "Uso en proyectos reales casi todos los días.",
+  "Uso habitual": "Lo uso con soltura, aunque no todos los días.",
+  Aprendiendo: "Estudiándolo: lo justo para leer código y hacer ejercicios.",
+};
+
 const devicon = (name: string) =>
   `https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/${name}/${name}-original.svg`;
 
@@ -68,16 +76,27 @@ export default function TechnologiesPage() {
         {/* Leyenda */}
         <div className="mx-auto mt-8 flex max-w-3xl flex-wrap justify-center gap-3">
           {levels.map((level) => (
-            <span key={level} className="chip">
-              <span
-                className="h-1.5 w-1.5 rounded-full"
-                style={{ background: levelColors[level] }}
-              />
-              <span style={{ color: levelColors[level] }}>{level}</span>
-              <span className="text-[var(--text-3)]">
-                · {techStack.filter((t) => t.level === level).length}
-              </span>
-            </span>
+            <Tooltip key={level}>
+              <TooltipTrigger
+                render={
+                  <Badge
+                    variant="outline"
+                    tabIndex={0}
+                    className="cursor-default font-mono"
+                  />
+                }
+              >
+                <span
+                  className="h-1.5 w-1.5 rounded-full"
+                  style={{ background: levelColors[level] }}
+                />
+                <span style={{ color: levelColors[level] }}>{level}</span>
+                <span className="text-[var(--text-3)]">
+                  · {techStack.filter((t) => t.level === level).length}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{levelHints[level]}</TooltipContent>
+            </Tooltip>
           ))}
         </div>
 

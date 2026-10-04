@@ -1,18 +1,25 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
   Github,
   Globe,
   Bot,
   Shield,
   Terminal,
-  X,
   Folder,
   File,
   ChevronRight,
   ArrowUpRight,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface FileNode {
   name: string;
@@ -215,35 +222,20 @@ function FileTree({ nodes, depth = 0, open, toggle }: {
 }
 
 function ProjectDialog({ project, onClose }: { project: Project; onClose: () => void }) {
-  const closeRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState<Record<string, boolean>>({ "0-YZ": true, "1-pc_client": true });
   const toggle = (key: string) => setOpen((s) => ({ ...s, [key]: !s[key] }));
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    closeRef.current?.focus();
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [onClose]);
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"
-      onClick={onClose}
-      role="presentation"
+    <Dialog
+      open
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onClose();
+      }}
     >
-      <div
-        role="dialog"
-        aria-modal="true"
+      <DialogContent
+        showCloseButton={false}
         aria-labelledby="project-dialog-title"
-        onClick={(e) => e.stopPropagation()}
-        className="panel max-h-[85vh] w-full max-w-3xl overflow-y-auto p-6 sm:p-8"
+        className="max-h-[85vh] overflow-y-auto p-6 sm:max-w-3xl sm:p-8"
       >
         <div className="flex items-start justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
@@ -262,37 +254,56 @@ function ProjectDialog({ project, onClose }: { project: Project; onClose: () => 
               )}
             </span>
             <div className="min-w-0">
-              <h2 id="project-dialog-title" className="truncate text-xl font-bold">
+              <DialogTitle
+                id="project-dialog-title"
+                className="truncate font-[family-name:var(--font-display)] text-xl font-bold"
+              >
                 {project.title}
-              </h2>
+              </DialogTitle>
               <span className="stat-label" style={{ color: project.color }}>
                 {project.kind} · {project.status}
               </span>
             </div>
           </div>
-          <button
-            ref={closeRef}
-            type="button"
-            onClick={onClose}
+          <DialogClose
             aria-label="Cerrar"
-            className="shrink-0 rounded-[8px] border border-[var(--line)] p-2 text-[var(--text-3)] transition-colors hover:text-[var(--text)]"
+            render={
+              <Button
+                variant="outline"
+                size="icon-sm"
+                className="shrink-0 text-[var(--text-3)] hover:text-[var(--text)]"
+              />
+            }
           >
-            <X aria-hidden className="h-4 w-4" />
-          </button>
+            <svg
+              aria-hidden
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </DialogClose>
         </div>
 
-        <p className="mt-5 text-sm leading-relaxed text-[var(--text-2)]">{project.desc}</p>
+        <p className="text-sm leading-relaxed text-[var(--text-2)]">{project.desc}</p>
 
-        <ul className="mt-4 flex flex-wrap gap-1.5">
+        <ul className="flex flex-wrap gap-1.5">
           {project.tags.map((t) => (
-            <li key={t} className="chip">
-              {t}
+            <li key={t}>
+              <Badge variant="outline" className="font-mono">
+                {t}
+              </Badge>
             </li>
           ))}
         </ul>
 
         {project.hasTree && (
-          <div className="mt-6">
+          <div>
             <h3 className="stat-label mb-2">Estructura del proyecto (tamaños reales)</h3>
             <div className="max-h-72 overflow-y-auto rounded-[10px] border border-[var(--line)] bg-black/30 p-3">
               <FileTree nodes={projectTree} open={open} toggle={toggle} />
@@ -303,30 +314,33 @@ function ProjectDialog({ project, onClose }: { project: Project; onClose: () => 
           </div>
         )}
 
-        <div className="mt-6 flex flex-wrap gap-2 border-t border-[var(--line)] pt-4">
+        <div className="flex flex-wrap gap-2 border-t border-[var(--line)] pt-4">
           {project.github && (
-            <a
-              href={project.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-ghost !px-3.5 !py-2 !text-[13px]"
+            <Button
+              variant="outline"
+              size="sm"
+              render={
+                <a href={project.github} target="_blank" rel="noopener noreferrer" />
+              }
             >
-              <Github aria-hidden className="h-3.5 w-3.5" />
+              <Github aria-hidden />
               Ver en GitHub
-            </a>
+            </Button>
           )}
           {project.live && (
-            <a href={project.live} className="btn btn-primary !px-3.5 !py-2 !text-[13px]">
-              <Globe aria-hidden className="h-3.5 w-3.5" />
+            <Button size="sm" render={<a href={project.live} />}>
+              <Globe aria-hidden />
               {project.liveLabel ?? "Ver en vivo"}
-            </a>
+            </Button>
           )}
           {!project.live && !project.github && (
-            <span className="chip">Información próximamente</span>
+            <Badge variant="outline" className="font-mono">
+              Información próximamente
+            </Badge>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -367,15 +381,16 @@ export default function ProjectsPage() {
                       <Shield aria-hidden className="h-5 w-5" />
                     )}
                   </span>
-                  <span
-                    className="chip shrink-0"
+                  <Badge
+                    variant="outline"
+                    className="shrink-0 font-mono"
                     style={{
                       color: p.color,
                       borderColor: `color-mix(in srgb, ${p.color} 35%, transparent)`,
                     }}
                   >
                     {p.status}
-                  </span>
+                  </Badge>
                 </div>
 
                 <span className="stat-label mt-4" style={{ color: p.color }}>
@@ -386,31 +401,30 @@ export default function ProjectsPage() {
 
                 <ul className="mt-4 flex flex-wrap gap-1.5">
                   {p.tags.map((t) => (
-                    <li key={t} className="chip">
-                      {t}
+                    <li key={t}>
+                      <Badge variant="outline" className="font-mono">
+                        {t}
+                      </Badge>
                     </li>
                   ))}
                 </ul>
 
                 <div className="mt-5 flex flex-wrap gap-2 border-t border-[var(--line)] pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setSelected(p)}
-                    className="btn btn-ghost !px-3.5 !py-2 !text-[13px]"
-                  >
+                  <Button variant="outline" size="sm" onClick={() => setSelected(p)}>
                     Detalles
-                    <ArrowUpRight aria-hidden className="h-3.5 w-3.5" />
-                  </button>
+                    <ArrowUpRight aria-hidden />
+                  </Button>
                   {p.github && (
-                    <a
-                      href={p.github}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn btn-ghost !px-3.5 !py-2 !text-[13px]"
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      render={
+                        <a href={p.github} target="_blank" rel="noopener noreferrer" />
+                      }
                     >
-                      <Github aria-hidden className="h-3.5 w-3.5" />
+                      <Github aria-hidden />
                       GitHub
-                    </a>
+                    </Button>
                   )}
                 </div>
               </article>

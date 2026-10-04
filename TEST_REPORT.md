@@ -407,3 +407,72 @@ PIL (`save_all`, quality 78, loop 0).
 `/tmp/opencode/shots/` · `hero-2`, `hero-eye-active`, `hero-mobile`,
 `egg-final` (activación real fullscreen), `tech-section`, `proj-dialog`,
 `mob-f2`.
+
+---
+
+## 11. Integración de shadcn/ui (04/10/2026)
+
+Librería de componentes **shadcn/ui** con preset **base-nova** (`@base-ui/react`),
+instalada solo donde encaja y **adaptada a la identidad visual actual** (no se
+copia el aspecto de plantilla): tokens `--bg/--brand/--line…`, foco verde
+`rgba(0,255,136,…)`, variantes `dark:` irrelevantes (el sitio no usa `.dark`).
+
+### Componentes (21 en `src/components/ui/`)
+
+`alert` · `avatar` · `badge` · `button` (variantes `default/outline/ghost/
+system/destructive…`) · `card` · `dialog` · `dropdown-menu` · `input` ·
+`label` · `scroll-area` · `select` · `separator` · `sheet` · `sidebar` ·
+`skeleton` · `sonner` · `switch` · `table` · `tabs` · `textarea` · `tooltip`.
+
+Adaptados a identidad: `button` (glow brand + variante `system` Discord),
+`input`/`textarea` (borde foco brand), `tooltip` (delay 300 ms vía
+`TooltipProvider`), `card`, `sonner` (tema oscuro, esquina inferior derecha).
+
+Dependencias nuevas: `@base-ui/react`, `class-variance-authority`, `cn`,
+`shadcn`, `tw-animate-css`, `next-themes`, `sonner`. Config en `components.json`.
+
+### Dónde se integra
+
+| Página/componente | shadcn usado |
+|---|---|
+| `app/layout.tsx` | `TooltipProvider` + `Toaster` (sonner) |
+| Home (`app/page.tsx`) | `Button`, `Badge`, `Skeleton` (estado del bot) |
+| `Navbar` | `DropdownMenu` + `Avatar` + `Button` (menú “Entrar”) |
+| `Footer` | `Tooltip` (iconos sociales) + `Separator` |
+| `projects` | `Dialog` (detalle), `Badge` (estado/tech), `Button` |
+| `contact` | `Input`, `Textarea`, `Button`, `Alert` (error) |
+| `login` | `Button` variante `system`, `Alert`; panel `.glass` se mantiene |
+| `blog` | `Input`, `Textarea`, `Select` (categoría), `Button` |
+| `library` | `Input`, `Badge`, `Button` |
+| `technologies` | `Badge` (leyenda por nivel) + `Tooltip` (`levelHints`) |
+| `bot` (landing) | `Button`, `Badge`, `Skeleton`, `Card` (planes) |
+| `bot/status` | `Card` + `Skeleton` por métrica |
+| `bot/commands` | `Input`, `Tabs`, `Badge`, `Tooltip` + toast al copiar |
+| `bot/dashboard` | `Switch` (toggles), `Select` (tiempo/idioma/canal), `Input`, `Textarea`, `Table` (jerarquía + casos), `sonner` (toasts) |
+| `terms`/`privacy` | solo `FadeIn` preexistente |
+
+**NO integrados (decisión justificada)**: sidebar propia del dashboard (skip),
+`activeTab` con `AnimatePresence` (no es markup de `Tabs`), `MultiChannelSelect`
+y `input[type=color]` (nativos, suficientes), paneles `.panel`/`.glass` (son
+primitivas de identidad). Instalados pero sin uso: `sheet`, `sidebar`,
+`scroll-area` (reserva).
+
+### Verificación (build local, `next start -p 3002`)
+
+- `tsc --noEmit` **0** · `eslint src --max-warnings=0` **0/0** · `next build` OK.
+- **Auditoría live 90 checks**: solo “bad” = 6 tests intencionales de 404;
+  enlaces 15/15, imágenes 0 rotas, reduced-motion **51/51 visibles**.
+- **motion-check PASS** · **rm-crawl exit 0** (9 rutas, 0 errores).
+- **shadcn-verify 0 errores de consola** en todas las rutas: toast de comandos,
+  dashboard (31 botones sidebar, tabla shadcn, 10 switches, popup Select con
+  7 items y `Esc` cierra), form blog, 0 overflow móvil.
+- **contact/login**: Input/Textarea con valor controlado y foco
+  `rgba(0,255,136,0.55)`, botón `system` `rgb(88,101,242)`, **0 errores** de
+  consola.
+- **Diálogo `/projects`**: `aria-modal`, foco en “Cerrar”, `Esc` cierra.
+
+### Capturas
+
+`/tmp/opencode/shots/shadcn/` · `dash-jerarquia`, `dash-modulos`,
+`dash-select-open`, `dash-servers`, `commands-toast`, `blog-form`,
+`dcontact-v2`, `dlogin`, `dhome-mid`, `dprojects`, `dbot-status`.

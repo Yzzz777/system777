@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Terminal, Github, Instagram, MessageSquare, Music } from "lucide-react";
 import { siteConfig } from "@/lib/config";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Separator } from "@/components/ui/separator";
 
 const footerLinks = {
   Portafolio: [
@@ -48,16 +50,22 @@ export function Footer() {
                 { href: siteConfig.social.tiktok, label: "TikTok", Icon: Music },
                 { href: siteConfig.social.discord, label: "Discord", Icon: MessageSquare },
               ].map(({ href, label, Icon }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-[var(--line)] text-[var(--text-3)] transition-colors hover:border-[rgba(0,255,136,0.35)] hover:text-[var(--brand)]"
-                >
-                  <Icon aria-hidden className="h-4 w-4" />
-                </a>
+                <Tooltip key={label}>
+                  <TooltipTrigger
+                    render={
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={label}
+                        className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-[var(--line)] text-[var(--text-3)] transition-colors hover:border-[rgba(0,255,136,0.35)] hover:text-[var(--brand)]"
+                      />
+                    }
+                  >
+                    <Icon aria-hidden className="h-4 w-4" />
+                  </TooltipTrigger>
+                  <TooltipContent>{label}</TooltipContent>
+                </Tooltip>
               ))}
             </div>
           </div>
@@ -81,7 +89,8 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-[var(--line)] pt-6 sm:flex-row sm:items-center">
+        <Separator className="mt-12" />
+        <div className="flex flex-col items-start justify-between gap-3 pt-6 sm:flex-row sm:items-center">
           <p className="text-xs text-[var(--text-3)]">
             © {new Date().getFullYear()} {siteConfig.owner.name} — {siteConfig.name}. Todo el
             contenido es propio.

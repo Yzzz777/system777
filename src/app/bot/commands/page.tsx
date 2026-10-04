@@ -1,7 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Terminal, Shield, Lock, Music, Coins, BarChart3, Gamepad2, MessageSquare, Globe, Crown } from "lucide-react";
+import {
+  Search,
+  Terminal,
+  Shield,
+  Lock,
+  Music,
+  Coins,
+  BarChart3,
+  Gamepad2,
+  MessageSquare,
+  Globe,
+  Crown,
+  Copy,
+} from "lucide-react";
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const ALL_COMMANDS = [
   { category: "Moderación", emoji: "🛡️", icon: Shield, color: "#5865F2", name: "ban", desc: "Banea a un usuario del servidor.", usage: "/ban @usuario [razón]" },
@@ -83,6 +102,15 @@ export default function BotCommandsPage() {
     return matchCat && matchSearch;
   });
 
+  const copyUsage = async (usage: string) => {
+    try {
+      await navigator.clipboard.writeText(usage);
+      toast.success("Comando copiado", { description: usage });
+    } catch {
+      toast.error("No se pudo copiar", { description: "Tu navegador bloqueó el portapapeles." });
+    }
+  };
+
   return (
     <div className="relative px-4 pb-[var(--section-y)] pt-10 sm:px-6 sm:pt-14">
       <div className="relative mx-auto max-w-6xl">
@@ -110,13 +138,13 @@ export default function BotCommandsPage() {
             <label htmlFor="cmd-search" className="sr-only">
               Buscar comando
             </label>
-            <input
+            <Input
               id="cmd-search"
               type="search"
               placeholder="Buscar comando o descripción…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-[12px] border border-[var(--line)] bg-white/[0.03] py-2.5 pl-10 pr-4 text-sm text-[var(--text)] placeholder:text-[var(--text-3)] outline-none transition-colors focus:border-[rgba(88,101,242,0.55)]"
+              className="pl-10 focus-visible:border-[rgba(88,101,242,0.55)] focus-visible:ring-[rgba(88,101,242,0.15)]"
             />
           </div>
           <p className="shrink-0 font-[family-name:var(--font-mono)] text-xs text-[var(--text-3)]">
@@ -124,57 +152,82 @@ export default function BotCommandsPage() {
           </p>
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setActiveCategory(cat)}
-              aria-pressed={activeCategory === cat}
-              className={`rounded-[10px] border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
-                activeCategory === cat
-                  ? "border-[rgba(88,101,242,0.55)] bg-[rgba(88,101,242,0.16)] text-[#a9b0ff]"
-                  : "border-[var(--line)] bg-white/[0.03] text-[var(--text-3)] hover:text-[var(--text)]"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          value={activeCategory}
+          onValueChange={(v) => setActiveCategory(v)}
+          className="mt-4"
+        >
+          <TabsList className="h-auto w-full flex-wrap justify-start gap-1.5 bg-transparent p-0 sm:w-fit">
+            {CATEGORIES.map((cat) => (
+              <TabsTrigger
+                key={cat}
+                value={cat}
+                className="h-8 flex-none border border-[var(--line)] bg-white/[0.03] px-3.5 text-[13px] text-[var(--text-3)] hover:bg-white/[0.06] hover:text-[var(--text)] data-active:border-[rgba(88,101,242,0.55)] data-active:bg-[rgba(88,101,242,0.16)] data-active:text-[#a9b0ff]"
+              >
+                {cat}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-        <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((cmd) => (
-            <li key={`${cmd.category}-${cmd.name}`} className="panel panel-hover h-full min-w-0 p-4">
-              <div className="flex min-w-0 items-start gap-2.5">
-                <Terminal
-                  aria-hidden
-                  className="mt-1 h-3.5 w-3.5 shrink-0"
-                  style={{ color: cmd.color }}
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-[family-name:var(--font-mono)] text-sm font-bold text-[var(--text)]">
-                      /{cmd.name}
-                    </span>
-                    <span className="chip !text-[10px]">
-                      {cmd.emoji} {cmd.category}
-                    </span>
+          <TabsContent value={activeCategory} className="mt-4 outline-none">
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {filtered.map((cmd) => (
+                <li
+                  key={`${cmd.category}-${cmd.name}`}
+                  className="panel panel-hover h-full min-w-0 p-4"
+                >
+                  <div className="flex min-w-0 items-start gap-2.5">
+                    <Terminal
+                      aria-hidden
+                      className="mt-1 h-3.5 w-3.5 shrink-0"
+                      style={{ color: cmd.color }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-[family-name:var(--font-mono)] text-sm font-bold text-[var(--text)]">
+                          /{cmd.name}
+                        </span>
+                        <Badge variant="outline" className="h-5 font-mono text-[10px]">
+                          {cmd.emoji} {cmd.category}
+                        </Badge>
+                      </div>
+                      <p className="mt-1.5 text-xs leading-relaxed text-[var(--text-3)]">
+                        {cmd.desc}
+                      </p>
+                      <div className="mt-1.5 flex items-start gap-1.5">
+                        <code className="min-w-0 flex-1 break-words font-[family-name:var(--font-mono)] text-[11px] text-[var(--data)]">
+                          {cmd.usage}
+                        </code>
+                        <Tooltip>
+                          <TooltipTrigger
+                            render={
+                              <Button
+                                variant="ghost"
+                                size="icon-xs"
+                                aria-label={`Copiar comando /${cmd.name}`}
+                                className="shrink-0 text-[var(--text-3)] hover:text-[var(--brand)]"
+                                onClick={() => copyUsage(cmd.usage)}
+                              />
+                            }
+                          >
+                            <Copy aria-hidden />
+                          </TooltipTrigger>
+                          <TooltipContent>Copiar comando</TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </div>
                   </div>
-                  <p className="mt-1.5 text-xs leading-relaxed text-[var(--text-3)]">{cmd.desc}</p>
-                  <code className="mt-1.5 block break-words font-[family-name:var(--font-mono)] text-[11px] text-[var(--data)]">
-                    {cmd.usage}
-                  </code>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+                </li>
+              ))}
+            </ul>
 
-        {filtered.length === 0 && (
-          <div className="panel mt-6 p-12 text-center text-sm text-[var(--text-3)]">
-            No hay comandos para “{search}” en esta referencia.
-          </div>
-        )}
+            {filtered.length === 0 && (
+              <div className="panel p-12 text-center text-sm text-[var(--text-3)]">
+                No hay comandos para “{search}” en esta referencia.
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

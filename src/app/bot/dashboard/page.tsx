@@ -16,6 +16,18 @@ import {
   Ticket, Smile, ShieldAlert, UserCheck, Globe, Eye, EyeOff, Clock,
   Volume2, Home, Play, Pause, Bell, ChevronDown,
 } from "lucide-react";
+import { toast as sonnerToast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const BOT_INVITE = "https://discord.com/oauth2/authorize?client_id=1502804306125132057&permissions=8&scope=bot%20applications.commands";
 const SUPPORT_SERVER = "https://discord.gg/system777";
@@ -95,67 +107,52 @@ const MEMBER_NAV = [
   ]},
 ];
 
-function Toast({ message, type, onClose }: { message: string; type: "success" | "error" | "info"; onClose: () => void }) {
-  const colors = { success: "bg-green-500/20 border-green-500/30 text-green-400", error: "bg-red-500/20 border-red-500/30 text-red-400", info: "bg-[#00C8FF]/20 border-[#00C8FF]/30 text-[#00C8FF]" };
-  return (
-    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl border ${colors[type]} flex items-center gap-2 backdrop-blur-xl`}>
-      <span className="text-sm">{message}</span>
-      <button onClick={onClose} className="ml-2 opacity-60 hover:opacity-100"><X size={14} /></button>
-    </motion.div>
-  );
-}
-
 function Toggle({ checked, onChange, label, onSave }: { checked: boolean; onChange: (v: boolean) => void; label: string; onSave?: () => void }) {
-  const doToggle = () => {
-    onChange(!checked);
+  const apply = (v: boolean) => {
+    onChange(v);
     if (onSave) setTimeout(onSave, 200);
   };
   return (
-    <label className="flex items-center justify-between p-3 rounded-xl bg-white/[0.06] hover:bg-[#00FF88]/10 transition-all cursor-pointer group" onClick={doToggle}>
+    <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white/[0.06] hover:bg-[#00FF88]/10 transition-all cursor-pointer group" onClick={() => apply(!checked)}>
       <span className="text-sm text-gray-200 group-hover:text-white transition-colors">{label}</span>
-      <div className={`relative w-11 h-6 rounded-full transition-all duration-300 ${checked ? "bg-[#00FF88] shadow-lg shadow-[#00FF88]/30" : "bg-white/10"}`}>
-        <motion.div animate={{ x: checked ? 20 : 0 }} transition={{ type: "spring", stiffness: 500, damping: 30 }} className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md" />
-      </div>
-    </label>
+      <Switch
+        checked={checked}
+        onCheckedChange={(v) => apply(v)}
+        onClick={(e) => e.stopPropagation()}
+        aria-label={label}
+      />
+    </div>
   );
 }
 
 function SelectInput({ value, onChange, options, label }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; label: string }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const btnRef = useRef<HTMLButtonElement>(null);
-  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
-  const selected = options.find(o => o.value === value);
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  useEffect(() => {
-    if (open && btnRef.current) {
-      const r = btnRef.current.getBoundingClientRect();
-      setPos({ top: r.bottom + 4, left: r.left, width: r.width });
-    }
-  }, [open]);
-
+  const matched = options.some((o) => o.value === value);
   return (
-    <div ref={ref} className="relative">
+    <div>
       <label className="block text-xs text-gray-500 mb-1.5">{label}</label>
-      <button ref={btnRef} type="button" onClick={() => setOpen(!open)} className="w-full px-4 py-3 rounded-xl bg-white/[0.08] border border-white/10 text-white text-sm flex items-center justify-between hover:border-[#00FF88]/30 transition-all">
-        <span className={selected?.value ? "text-white" : "text-gray-500"}>{selected?.label || "Seleccionar..."}</span>
-        <svg className={`w-4 h-4 text-gray-500 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-      </button>
-      {open && (
-        <div className="fixed z-[100] rounded-xl border border-white/10 shadow-2xl max-h-64 overflow-y-auto" style={{ background: "#1a1a2e", top: pos.top, left: pos.left, width: pos.width }}>
+      <Select
+        value={matched ? value : null}
+        items={options}
+        onValueChange={(v) => { if (typeof v === "string") onChange(v); }}
+      >
+        <SelectTrigger
+          aria-label={label}
+          className="w-full rounded-xl border-white/10 bg-white/[0.08] px-4 text-sm text-white hover:border-[#00FF88]/30 data-[size=default]:h-11 focus-visible:border-[#00FF88]/50 focus-visible:ring-[#00FF88]/20"
+        >
+          <SelectValue placeholder="Seleccionar..." />
+        </SelectTrigger>
+        <SelectContent className="rounded-xl border border-white/10 bg-[#1a1a2e] shadow-2xl">
           {options.map((o) => (
-            <button key={o.value} type="button" onClick={() => { onChange(o.value); setOpen(false); }} className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[#00FF88]/15 transition-colors ${value === o.value ? "text-[#00FF88] bg-[#00FF88]/10" : "text-gray-300"}`}>
+            <SelectItem
+              key={o.value}
+              value={o.value}
+              className="cursor-pointer py-2.5 pl-4 pr-8 text-gray-300 hover:bg-[#00FF88]/15 focus:bg-[#00FF88]/15 data-highlighted:bg-[#00FF88]/15 data-selected:bg-[#00FF88]/10 data-selected:text-[#00FF88]"
+            >
               {o.label}
-            </button>
+            </SelectItem>
           ))}
-        </div>
-      )}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
@@ -164,7 +161,14 @@ function TextInput({ value, onChange, label, placeholder, type = "text" }: { val
   return (
     <div>
       <label className="block text-xs text-gray-500 mb-1.5">{label}</label>
-      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="w-full px-3 py-2.5 rounded-xl bg-white/[0.08] border border-white/10 text-white text-sm outline-none focus:border-[#00FF88]/50 placeholder-gray-500" />
+      <Input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        aria-label={label}
+        className="rounded-xl border-white/10 bg-white/[0.08] text-white placeholder:text-gray-500 focus-visible:border-[#00FF88]/50 focus-visible:ring-[#00FF88]/20"
+      />
     </div>
   );
 }
@@ -173,7 +177,14 @@ function NumberInput({ value, onChange, label, min = 0 }: { value: number; onCha
   return (
     <div>
       <label className="block text-xs text-gray-500 mb-1.5">{label}</label>
-      <input type="number" value={value} min={min} onChange={(e) => onChange(Number(e.target.value))} className="w-full px-3 py-2.5 rounded-xl bg-white/[0.08] border border-white/10 text-white text-sm outline-none focus:border-[#00FF88]/50" />
+      <Input
+        type="number"
+        value={value}
+        min={min}
+        onChange={(e) => onChange(Number(e.target.value))}
+        aria-label={label}
+        className="rounded-xl border-white/10 bg-white/[0.08] text-white focus-visible:border-[#00FF88]/50 focus-visible:ring-[#00FF88]/20"
+      />
     </div>
   );
 }
@@ -212,7 +223,6 @@ export default function BotDashboardPage() {
   const [stats, setStats] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
   const [ownerData, setOwnerData] = useState<any>(null);
   const [hierarchy, setHierarchy] = useState<any[]>([]);
   const [hierarchyForm, setHierarchyForm] = useState({ userId: "", rank: "moderator", note: "" });
@@ -237,8 +247,9 @@ export default function BotDashboardPage() {
   const isOwner = OWNER_IDS.includes((session?.user as any)?.id || session?.user?.name || "");
 
   const showToast = useCallback((message: string, type: "success" | "error" | "info" = "info") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
+    if (type === "success") sonnerToast.success(message);
+    else if (type === "error") sonnerToast.error(message);
+    else sonnerToast(message);
   }, []);
 
   const authTokenRef = useRef<string | null>(null);
@@ -369,7 +380,7 @@ export default function BotDashboardPage() {
           <div className="flex gap-3 mb-8">
             <div className="relative flex-1 max-w-md">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-              <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar servidor..." className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#00FF88]/50" />
+              <Input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar servidor..." aria-label="Buscar servidor" className="rounded-xl border-white/10 bg-white/5 pl-10 pr-4 py-2.5 text-white focus-visible:border-[#00FF88]/50 focus-visible:ring-[#00FF88]/20" />
             </div>
             <button onClick={() => window.location.reload()} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-400 text-sm hover:bg-white/10"><RefreshCw size={14} /> Actualizar</button>
           </div>
@@ -416,7 +427,6 @@ export default function BotDashboardPage() {
 
   return (
     <div className="flex min-h-screen" style={{ background: "#0a0a12" }}>
-      <AnimatePresence>{toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}</AnimatePresence>
 
       {/* Mobile overlay */}
       {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
@@ -634,7 +644,7 @@ export default function BotDashboardPage() {
                 <div className="glass rounded-2xl p-6 space-y-4">
                   <h3 className="font-bold text-white">Agregar Staff</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <input value={hierarchyForm.userId} onChange={(e) => setHierarchyForm({ ...hierarchyForm, userId: e.target.value })} placeholder="User ID" className="px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm" />
+                    <Input value={hierarchyForm.userId} onChange={(e) => setHierarchyForm({ ...hierarchyForm, userId: e.target.value })} placeholder="User ID" aria-label="User ID" className="rounded-xl border-white/10 bg-white/5 text-white focus-visible:border-[#00FF88]/50 focus-visible:ring-[#00FF88]/20" />
                     <SelectInput value={hierarchyForm.rank} onChange={(v) => setHierarchyForm({ ...hierarchyForm, rank: v })} label="Rango" options={[
                       { value: "trial_staff", label: "🔰 Trial Staff" },
                       { value: "ticket_staff", label: "🎫 Ticket Staff" },
@@ -644,30 +654,41 @@ export default function BotDashboardPage() {
                       { value: "developer", label: "⚙️ Developer" },
                       { value: "co_owner", label: "💠 Co-Owner" },
                     ]} />
-                    <input value={hierarchyForm.note} onChange={(e) => setHierarchyForm({ ...hierarchyForm, note: e.target.value })} placeholder="Nota (opcional)" className="px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm" />
+                    <Input value={hierarchyForm.note} onChange={(e) => setHierarchyForm({ ...hierarchyForm, note: e.target.value })} placeholder="Nota (opcional)" aria-label="Nota (opcional)" className="rounded-xl border-white/10 bg-white/5 text-white focus-visible:border-[#00FF88]/50 focus-visible:ring-[#00FF88]/20" />
                   </div>
                   <button onClick={async () => { const r = await api("staff/add", { method: "POST", body: JSON.stringify(hierarchyForm) }); if (r?.ok !== false) { showToast("Staff agregado", "success"); const s = await api("staff"); if (s?.members) setHierarchy(Object.values(s.members)); } else showToast(r?.msg || "Error", "error"); }} className="px-4 py-2 rounded-xl bg-[#00FF88] text-white text-sm font-bold hover:bg-[#00CC6A]">Agregar</button>
                 </div>
               )}
               <div className="glass rounded-2xl overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead><tr className="border-b border-white/5"><th className="text-left px-4 py-3 text-gray-500">Miembro</th><th className="text-left px-4 py-3 text-gray-500">Rango</th><th className="text-left px-4 py-3 text-gray-500">Desde</th>{isOwner && <th className="text-left px-4 py-3 text-gray-500">Acciones</th>}</tr></thead>
-                  <tbody>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-white/5 hover:bg-transparent">
+                      <TableHead className="h-auto px-4 py-3 text-gray-500">Miembro</TableHead>
+                      <TableHead className="h-auto px-4 py-3 text-gray-500">Rango</TableHead>
+                      <TableHead className="h-auto px-4 py-3 text-gray-500">Desde</TableHead>
+                      {isOwner && <TableHead className="h-auto px-4 py-3 text-gray-500">Acciones</TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {hierarchy.map((m: any) => {
                       const ranks: Record<string, { icon: string; label: string; color: string }> = { owner: { icon: "👑", label: "Owner", color: "#FFD700" }, co_owner: { icon: "💠", label: "Co-Owner", color: "#FF8C00" }, developer: { icon: "⚙️", label: "Developer", color: "#9B59B6" }, admin: { icon: "🛡️", label: "Admin", color: "#E74C3C" }, moderator: { icon: "🔨", label: "Moderator", color: "#3498DB" }, support: { icon: "💬", label: "Support", color: "#2ECC71" }, premium_manager: { icon: "💎", label: "Premium Manager", color: "#F1C40F" }, ticket_staff: { icon: "🎫", label: "Ticket Staff", color: "#1ABC9C" }, trial_staff: { icon: "🔰", label: "Trial Staff", color: "#95A5A6" } };
                       const r = ranks[m.rank] || { icon: "?", label: m.rank, color: "#666" };
                       return (
-                        <tr key={m.userId} className="border-b border-white/5 hover:bg-white/[0.02]">
-                          <td className="px-4 py-3 text-white">{m.userId}</td>
-                          <td className="px-4 py-3"><span style={{ color: r.color }}>{r.icon} {r.label}</span></td>
-                          <td className="px-4 py-3 text-gray-500">{m.addedAt ? new Date(m.addedAt).toLocaleDateString() : "-"}</td>
-                          {isOwner && <td className="px-4 py-3"><button onClick={async () => { await api(`staff/${m.userId}`, { method: "DELETE" }); const s = await api("staff"); if (s?.members) setHierarchy(Object.values(s.members)); }} className="text-red-400 hover:text-red-300 text-xs">Remover</button></td>}
-                        </tr>
+                        <TableRow key={m.userId} className="border-white/5 hover:bg-white/[0.02]">
+                          <TableCell className="px-4 py-3 text-white">{m.userId}</TableCell>
+                          <TableCell className="px-4 py-3"><span style={{ color: r.color }}>{r.icon} {r.label}</span></TableCell>
+                          <TableCell className="px-4 py-3 text-gray-500">{m.addedAt ? new Date(m.addedAt).toLocaleDateString() : "-"}</TableCell>
+                          {isOwner && <TableCell className="px-4 py-3"><button onClick={async () => { await api(`staff/${m.userId}`, { method: "DELETE" }); const s = await api("staff"); if (s?.members) setHierarchy(Object.values(s.members)); }} className="text-red-400 hover:text-red-300 text-xs">Remover</button></TableCell>}
+                        </TableRow>
                       );
                     })}
-                    {hierarchy.length === 0 && <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-500">Sin staff asignado</td></tr>}
-                  </tbody>
-                </table>
+                    {hierarchy.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="px-4 py-8 text-center text-gray-500">Sin staff asignado</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
               </div>
             </div>
           )}
@@ -714,7 +735,7 @@ export default function BotDashboardPage() {
 
                 <div>
                   <label className="block text-xs text-gray-500 mb-1.5">Mensaje</label>
-                  <textarea value={botMsgInput} onChange={(e) => setBotMsgInput(e.target.value)} placeholder="Escribe tu mensaje aquí...&#10;&#10;Variables: {user}, {server}, {membercount}&#10;Menciones: @rol, @everyone, @here&#10;Emojis: <:nombre:id> o <a:nombre:id>" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#00FF88]/50 h-32 resize-none font-mono text-xs leading-relaxed" />
+                  <Textarea value={botMsgInput} onChange={(e) => setBotMsgInput(e.target.value)} placeholder="Escribe tu mensaje aquí...&#10;&#10;Variables: {user}, {server}, {membercount}&#10;Menciones: @rol, @everyone, @here&#10;Emojis: <:nombre:id> o <a:nombre:id>" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#00FF88]/50 h-32 min-h-0 resize-none font-mono text-xs leading-relaxed" />
                 </div>
 
                 {/* ── Menciones de roles ── */}
@@ -897,7 +918,7 @@ function WelcomeSection({ config, channels, roles, saveConfig, guildId }: { conf
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1.5">Mensaje de bienvenida</label>
-              <textarea value={welcome.message || ""} onChange={(e) => setWelcome({ ...welcome, message: e.target.value })} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#00FF88]/50 h-32 resize-none font-mono text-xs leading-relaxed" />
+              <Textarea value={welcome.message || ""} onChange={(e) => setWelcome({ ...welcome, message: e.target.value })} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#00FF88]/50 h-32 min-h-0 resize-none font-mono text-xs leading-relaxed" />
               <p className="text-xs text-gray-600 mt-1">Variables: {'{user}'} {'{server}'} {'{membercount}'} {'{servericon}'} | Markdown: **negrita** *cursiva*</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -963,7 +984,7 @@ function WelcomeSection({ config, channels, roles, saveConfig, guildId }: { conf
                 <Toggle checked={!!welcome.dmEnabled} onChange={(v) => setWelcome({ ...welcome, dmEnabled: v })} label="" />
               </div>
               {welcome.dmEnabled && (
-                <textarea value={welcome.dmMessage || ""} onChange={(e) => setWelcome({ ...welcome, dmMessage: e.target.value })} placeholder="¡Hola {user}! Bienvenido a {server}..." className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none h-20 resize-none" />
+                <Textarea value={welcome.dmMessage || ""} onChange={(e) => setWelcome({ ...welcome, dmMessage: e.target.value })} placeholder="¡Hola {user}! Bienvenido a {server}..." className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none h-20 min-h-0 resize-none" />
               )}
             </div>
 
@@ -1012,7 +1033,7 @@ function WelcomeSection({ config, channels, roles, saveConfig, guildId }: { conf
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1.5">Mensaje de despedida</label>
-              <textarea value={goodbye.message || ""} onChange={(e) => setGoodbye({ ...goodbye, message: e.target.value })} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none h-20 resize-none" />
+              <Textarea value={goodbye.message || ""} onChange={(e) => setGoodbye({ ...goodbye, message: e.target.value })} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none h-20 min-h-0 resize-none" />
             </div>
             <TextInput value={goodbye.image || ""} onChange={(v) => setGoodbye({ ...goodbye, image: v })} label="Imagen (opcional)" placeholder="https://..." />
             <button onClick={() => saveConfig(`guild/${guildId}/goodbye`, goodbye)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Save size={14} /> Guardar Despedida</button>
@@ -1306,14 +1327,14 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
                   <label className="text-xs text-gray-500">Descripción</label>
                   <span className="text-xs text-gray-600">{ticketCfg.panelDesc.length}/2000</span>
                 </div>
-                <textarea value={ticketCfg.panelDesc} onChange={(e) => setTicketCfg({ ...ticketCfg, panelDesc: e.target.value })} maxLength={2000} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#00FF88]/50 h-24 resize-none" />
+                <Textarea value={ticketCfg.panelDesc} onChange={(e) => setTicketCfg({ ...ticketCfg, panelDesc: e.target.value })} maxLength={2000} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#00FF88]/50 h-24 min-h-0 resize-none" />
               </div>
               <TextInput value={ticketCfg.panelImage} onChange={(v: string) => setTicketCfg({ ...ticketCfg, panelImage: v })} label="URL de imagen (opcional)" placeholder="https://..." />
               <div>
                 <label className="block text-xs text-gray-500 mb-2">Color del embed</label>
                 <div className="flex items-center gap-3">
                   <input type="color" value={ticketCfg.panelColor} onChange={(e) => setTicketCfg({ ...ticketCfg, panelColor: e.target.value })} className="w-10 h-10 rounded-lg border border-white/10 cursor-pointer" />
-                  <input type="text" value={ticketCfg.panelColor} onChange={(e) => setTicketCfg({ ...ticketCfg, panelColor: e.target.value })} className="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-mono outline-none focus:border-[#00FF88]/50" />
+                  <Input type="text" value={ticketCfg.panelColor} onChange={(e) => setTicketCfg({ ...ticketCfg, panelColor: e.target.value })} aria-label="Color hex del panel" className="flex-1 rounded-xl border-white/10 bg-white/5 px-3 py-2 font-mono text-sm text-white focus-visible:border-[#00FF88]/50 focus-visible:ring-[#00FF88]/20" />
                 </div>
                 <div className="flex gap-2 mt-2">
                   {colorSwatches.map((c) => (
@@ -1419,7 +1440,7 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
                 <TextInput value={catForm.label} onChange={(v: string) => setCatForm({ ...catForm, label: v })} label="Nombre" placeholder="Soporte Técnico" />
                 <TextInput value={catForm.emoji} onChange={(v: string) => setCatForm({ ...catForm, emoji: v })} label="Emoji" placeholder="🔧" />
               </div>
-              <div><label className="block text-xs text-gray-500 mb-1.5">Descripción</label><textarea value={catForm.description} onChange={(e) => setCatForm({ ...catForm, description: e.target.value })} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none h-16 resize-none" /></div>
+              <div><label className="block text-xs text-gray-500 mb-1.5">Descripción</label><Textarea value={catForm.description} onChange={(e) => setCatForm({ ...catForm, description: e.target.value })} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none h-16 min-h-0 resize-none" /></div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <TextInput value={catForm.color} onChange={(v: string) => setCatForm({ ...catForm, color: v })} label="Color" />
                 <SelectInput value={catForm.priority} onChange={(v: string) => setCatForm({ ...catForm, priority: v })} options={[{ value: "low", label: "🟢 Baja" }, { value: "medium", label: "🟡 Media" }, { value: "high", label: "🔴 Alta" }, { value: "urgent", label: "🚨 Urgente" }]} label="Prioridad" />
@@ -1755,7 +1776,7 @@ function ProtectionSection({ config, channels, saveConfig }: any) {
         <Toggle checked={!!prot.wordFilter?.enabled} onChange={(v) => u("wordFilter.enabled", v)} label="Activar filtro" />
         <div>
           <label className="block text-xs text-gray-500 mb-1.5">Palabras bloqueadas (una por línea)</label>
-          <textarea value={prot.wordFilter?.words || ""} onChange={(e) => u("wordFilter.words", e.target.value)} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none h-24 resize-none font-mono" />
+          <Textarea value={prot.wordFilter?.words || ""} onChange={(e) => u("wordFilter.words", e.target.value)} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none h-24 min-h-0 resize-none font-mono" />
         </div>
         <TextInput value={prot.wordFilter?.warningMessage || ""} onChange={(v) => u("wordFilter.warningMessage", v)} label="Mensaje de advertencia" />
         <SelectInput value={prot.wordFilter?.action || "delete"} onChange={(v) => u("wordFilter.action", v)} options={filterActions} label="Acción" />
@@ -1799,12 +1820,20 @@ function ModerationSection({ guildId, api }: { guildId: string; api: any }) {
           <button onClick={loadCases} className="text-xs text-gray-500 hover:text-white flex items-center gap-1"><RefreshCw size={12} /> Actualizar</button>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead><tr className="text-gray-500 text-xs"><th className="text-left py-2">#</th><th className="text-left py-2">Tipo</th><th className="text-left py-2">Usuario</th><th className="text-left py-2">Razón</th><th className="text-left py-2">Fecha</th></tr></thead>
-            <tbody>{cases.map((c: any, i: number) => (
-              <tr key={i} className="border-t border-white/5"><td className="py-2 text-gray-400">{c.caseNumber || i + 1}</td><td className="py-2"><span className="px-2 py-0.5 rounded text-xs bg-white/5">{c.type}</span></td><td className="py-2 text-gray-300">{c.targetId}</td><td className="py-2 text-gray-400 truncate max-w-[200px]">{c.reason}</td><td className="py-2 text-gray-500 text-xs">{new Date(c.timestamp).toLocaleDateString()}</td></tr>
-            ))}</tbody>
-          </table>
+          <Table>
+            <TableHeader>
+              <TableRow className="border-white/5 hover:bg-transparent">
+                <TableHead className="h-auto py-2 text-xs text-gray-500">#</TableHead>
+                <TableHead className="h-auto py-2 text-xs text-gray-500">Tipo</TableHead>
+                <TableHead className="h-auto py-2 text-xs text-gray-500">Usuario</TableHead>
+                <TableHead className="h-auto py-2 text-xs text-gray-500">Razón</TableHead>
+                <TableHead className="h-auto py-2 text-xs text-gray-500">Fecha</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>{cases.map((c: any, i: number) => (
+              <TableRow key={i} className="border-white/5 hover:bg-white/[0.02]"><TableCell className="py-2 text-gray-400">{c.caseNumber || i + 1}</TableCell><TableCell className="py-2"><span className="px-2 py-0.5 rounded text-xs bg-white/5">{c.type}</span></TableCell><TableCell className="py-2 text-gray-300">{c.targetId}</TableCell><TableCell className="py-2 text-gray-400 truncate max-w-[200px]">{c.reason}</TableCell><TableCell className="py-2 text-gray-500 text-xs">{new Date(c.timestamp).toLocaleDateString()}</TableCell></TableRow>
+            ))}</TableBody>
+          </Table>
         </div>
         {cases.length === 0 && <p className="text-gray-600 text-sm text-center py-4">Sin casos</p>}
       </div>
@@ -2025,7 +2054,7 @@ function BroadcastSection({ api, showToast }: { api: any; showToast: any }) {
     <div className="space-y-6">
       <div><h2 className="text-xl font-black text-white mb-1">📢 Broadcast</h2><p className="text-sm text-gray-500">Envía un mensaje a todos los servidores.</p></div>
       <div className="glass rounded-2xl p-6 space-y-4">
-        <div><label className="block text-xs text-gray-500 mb-1.5">Mensaje</label><textarea value={msg} onChange={(e) => setMsg(e.target.value)} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none h-32 resize-none" /></div>
+        <div><label className="block text-xs text-gray-500 mb-1.5">Mensaje</label><Textarea value={msg} onChange={(e) => setMsg(e.target.value)} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none h-32 min-h-0 resize-none" /></div>
         <button onClick={send} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Send size={14} /> Enviar a todos</button>
       </div>
     </div>
@@ -2229,7 +2258,7 @@ function JarvisSection({ api, stats }: { api: any; stats: any }) {
           {loading && <div className="flex justify-start"><div className="bg-white/5 px-4 py-2.5 rounded-2xl text-sm text-gray-500">Pensando...</div></div>}
         </div>
         <div className="flex gap-2">
-          <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Escribe un mensaje..." className="flex-1 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none" disabled={loading} />
+          <Input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Escribe un mensaje..." aria-label="Mensaje" className="flex-1 rounded-xl border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus-visible:border-[#00FF88]/50 focus-visible:ring-[#00FF88]/20" disabled={loading} />
           <button onClick={send} disabled={loading} className="px-4 py-2.5 rounded-xl bg-[#00FF88] text-white hover:bg-[#00CC6A] disabled:opacity-50"><Send size={16} /></button>
         </div>
       </div>

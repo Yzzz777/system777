@@ -1,18 +1,37 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Search,
   Clock,
   ArrowRight,
   Plus,
-  X,
   Trash2,
   Loader2,
   PenLine,
 } from "lucide-react";
 import { OWNER_DISCORD_ID } from "@/lib/owner";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface BlogPost {
   id: string;
@@ -38,7 +57,6 @@ export default function BlogPage() {
   const [sending, setSending] = useState(false);
   const [formError, setFormError] = useState("");
   const [form, setForm] = useState({ title: "", slug: "", excerpt: "", content: "", category: "General" });
-  const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     let alive = true;
@@ -68,18 +86,6 @@ export default function BlogPage() {
   }, []);
 
   const closeDialog = useCallback(() => setSelected(null), []);
-
-  useEffect(() => {
-    if (!selected) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && closeDialog();
-    document.addEventListener("keydown", onKey);
-    closeRef.current?.focus();
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [selected, closeDialog]);
 
   const categories = ["Todos", ...Array.from(new Set((posts ?? []).map((p) => p.category || "General")))];
   const filtered = (posts ?? []).filter((p) => {
@@ -115,6 +121,7 @@ export default function BlogPage() {
         setPosts((prev) => [data.post, ...(prev ?? [])]);
         setForm({ title: "", slug: "", excerpt: "", content: "", category: "General" });
         setShowCreate(false);
+        toast.success("Artículo publicado", { description: data.post.title });
       } else {
         setFormError(data.error || "No se pudo crear el post.");
       }
@@ -131,6 +138,7 @@ export default function BlogPage() {
       if (res.ok) {
         setPosts((prev) => (prev ?? []).filter((p) => p.id !== id));
         setSelected(null);
+        toast.success("Artículo eliminado");
       }
     } catch {
       /* noop */
@@ -162,24 +170,20 @@ export default function BlogPage() {
             <label htmlFor="blog-search" className="sr-only">
               Buscar artículos
             </label>
-            <input
+            <Input
               id="blog-search"
               type="search"
               placeholder="Buscar artículos…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-[12px] border border-[var(--line)] bg-white/[0.03] py-2.5 pl-10 pr-4 text-sm text-[var(--text)] placeholder:text-[var(--text-3)] outline-none transition-colors focus:border-[rgba(0,255,136,0.5)]"
+              className="pl-10"
             />
           </div>
           {isOwner && (
-            <button
-              type="button"
-              onClick={() => setShowCreate((v) => !v)}
-              className="btn btn-primary !py-2.5"
-            >
-              <Plus aria-hidden className="h-4 w-4" />
+            <Button onClick={() => setShowCreate((v) => !v)}>
+              <Plus aria-hidden />
               Nuevo post
-            </button>
+            </Button>
           )}
         </div>
 
@@ -208,73 +212,81 @@ export default function BlogPage() {
             <h2 className="text-lg font-bold">Crear artículo</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="post-title" className="stat-label mb-1.5 block">
+                <Label htmlFor="post-title" className="stat-label mb-1.5">
                   Título
-                </label>
-                <input
+                </Label>
+                <Input
                   id="post-title"
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                   placeholder="Mi artículo"
-                  className="input"
                 />
               </div>
               <div>
-                <label htmlFor="post-slug" className="stat-label mb-1.5 block">
+                <Label htmlFor="post-slug" className="stat-label mb-1.5">
                   Slug (opcional)
-                </label>
-                <input
+                </Label>
+                <Input
                   id="post-slug"
                   value={form.slug}
                   onChange={(e) => setForm({ ...form, slug: e.target.value })}
                   placeholder="mi-articulo"
-                  className="input"
                 />
               </div>
             </div>
             <div>
-              <label htmlFor="post-excerpt" className="stat-label mb-1.5 block">
+              <Label htmlFor="post-excerpt" className="stat-label mb-1.5">
                 Extracto
-              </label>
-              <input
+              </Label>
+              <Input
                 id="post-excerpt"
                 value={form.excerpt}
                 onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
                 placeholder="Descripción corta…"
-                className="input"
               />
             </div>
             <div>
-              <label htmlFor="post-content" className="stat-label mb-1.5 block">
+              <Label htmlFor="post-content" className="stat-label mb-1.5">
                 Contenido
-              </label>
-              <textarea
+              </Label>
+              <Textarea
                 id="post-content"
                 rows={5}
                 value={form.content}
                 onChange={(e) => setForm({ ...form, content: e.target.value })}
                 placeholder="Escribe tu artículo…"
-                className="input resize-y"
+                className="resize-y"
               />
             </div>
             <div>
-              <label htmlFor="post-category" className="stat-label mb-1.5 block">
+              <Label htmlFor="post-category" className="stat-label mb-1.5">
                 Categoría
-              </label>
-              <select
-                id="post-category"
+              </Label>
+              <Select
                 value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                className="input"
+                onValueChange={(v) => setForm({ ...form, category: v ?? "General" })}
               >
-                {["General", "Discord", "Ciberseguridad", "Programación", "Linux", "Proyectos"].map(
-                  (c) => (
-                    <option key={c} value={c}>
+                <SelectTrigger
+                  id="post-category"
+                  className="h-10 w-full bg-[rgba(255,255,255,0.03)]"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[
+                    "General",
+                    "Discord",
+                    "Ciberseguridad",
+                    "Programación",
+                    "Linux",
+                    "Proyectos",
+                  ].map((c) => (
+                    <SelectItem key={c} value={c}>
                       {c}
-                    </option>
-                  )
-                )}
-              </select>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {formError && (
@@ -284,29 +296,23 @@ export default function BlogPage() {
             )}
 
             <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleCreate}
-                disabled={sending}
-                className="btn btn-primary"
-              >
+              <Button onClick={handleCreate} disabled={sending}>
                 {sending ? (
                   <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
                 ) : (
-                  <PenLine aria-hidden className="h-4 w-4" />
+                  <PenLine aria-hidden />
                 )}
                 Publicar
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="outline"
                 onClick={() => {
                   setShowCreate(false);
                   setFormError("");
                 }}
-                className="btn btn-ghost"
               >
                 Cancelar
-              </button>
+              </Button>
             </div>
             <p className="text-[11px] text-[var(--text-3)]">
               El endpoint exige sesión de owner verificada contra Discord: sin ella devuelve 401.
@@ -316,9 +322,22 @@ export default function BlogPage() {
 
         {/* Estado */}
         {posts === null && !error && (
-          <div className="panel mt-8 p-10 text-center text-sm text-[var(--text-3)]">
-            Cargando artículos…
-          </div>
+          <ul className="mt-8 grid gap-4 sm:grid-cols-2" aria-busy="true" aria-label="Cargando artículos">
+            {[0, 1].map((i) => (
+              <li key={i} className="panel p-6">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-24" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+                <Skeleton className="mt-4 h-5 w-2/3" />
+                <Skeleton className="mt-3 h-4 w-full" />
+                <Skeleton className="mt-2 h-4 w-4/5" />
+                <div className="mt-5 border-t border-[var(--line)] pt-4">
+                  <Skeleton className="h-4 w-20" />
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
 
         {error && posts !== null && (
@@ -347,7 +366,9 @@ export default function BlogPage() {
               <li key={post.id} className="flex">
                 <article className="panel panel-hover flex h-full w-full flex-col p-6">
                   <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <span className="chip">{post.category || "General"}</span>
+                    <Badge variant="outline" className="font-mono">
+                      {post.category || "General"}
+                    </Badge>
                     <time
                       dateTime={post.created_at}
                       className="flex items-center gap-1 font-[family-name:var(--font-mono)] text-[11px] text-[var(--text-3)]"
@@ -355,7 +376,11 @@ export default function BlogPage() {
                       <Clock aria-hidden className="h-3 w-3" />
                       {new Date(post.created_at).toLocaleDateString("es-ES")}
                     </time>
-                    {!post.published && <span className="chip !text-[var(--warn)]">Borrador</span>}
+                    {!post.published && (
+                      <Badge variant="outline" className="font-mono text-[var(--warn)]">
+                        Borrador
+                      </Badge>
+                    )}
                   </div>
                   <h2 className="mt-3 text-lg font-bold leading-snug">{post.title}</h2>
                   {post.excerpt && (
@@ -364,23 +389,24 @@ export default function BlogPage() {
                     </p>
                   )}
                   <div className="mt-4 flex items-center justify-between border-t border-[var(--line)] pt-4">
-                    <button
-                      type="button"
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="px-0"
                       onClick={() => setSelected(post)}
-                      className="inline-flex items-center gap-1.5 text-sm text-[var(--brand)] hover:underline"
                     >
                       Leer
-                      <ArrowRight aria-hidden className="h-4 w-4" />
-                    </button>
+                      <ArrowRight aria-hidden />
+                    </Button>
                     {isOwner && (
-                      <button
-                        type="button"
+                      <Button
+                        variant="destructive"
+                        size="xs"
                         onClick={() => handleDelete(post.id)}
-                        className="inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300"
                       >
-                        <Trash2 aria-hidden className="h-3.5 w-3.5" />
+                        <Trash2 aria-hidden />
                         Eliminar
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </article>
@@ -390,60 +416,80 @@ export default function BlogPage() {
         )}
       </div>
 
-      {/* Modal */}
-      {selected && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"
-          onClick={closeDialog}
-          role="presentation"
+      {/* Modal de lectura */}
+      <Dialog
+        open={!!selected}
+        onOpenChange={(open) => {
+          if (!open) closeDialog();
+        }}
+      >
+        <DialogContent
+          showCloseButton={false}
+          aria-labelledby="post-dialog-title"
+          className="max-h-[85vh] overflow-y-auto p-6 sm:max-w-2xl sm:p-8"
         >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="post-dialog-title"
-            onClick={(e) => e.stopPropagation()}
-            className="panel max-h-[85vh] w-full max-w-2xl overflow-y-auto p-6 sm:p-8"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <span className="chip">{selected.category || "General"}</span>
-                <h2 id="post-dialog-title" className="mt-2 text-xl font-bold">
-                  {selected.title}
-                </h2>
-                <time
-                  dateTime={selected.created_at}
-                  className="mt-1 block font-[family-name:var(--font-mono)] text-[11px] text-[var(--text-3)]"
+          {selected && (
+            <>
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <Badge variant="outline" className="font-mono">
+                    {selected.category || "General"}
+                  </Badge>
+                  <DialogTitle
+                    id="post-dialog-title"
+                    className="mt-2 font-[family-name:var(--font-display)] text-xl font-bold"
+                  >
+                    {selected.title}
+                  </DialogTitle>
+                  <time
+                    dateTime={selected.created_at}
+                    className="mt-1 block font-[family-name:var(--font-mono)] text-[11px] text-[var(--text-3)]"
+                  >
+                    {new Date(selected.created_at).toLocaleDateString("es-ES")} ·{" "}
+                    {selected.author || "Ángel"}
+                  </time>
+                </div>
+                <DialogClose
+                  aria-label="Cerrar"
+                  render={
+                    <Button
+                      variant="outline"
+                      size="icon-sm"
+                      className="shrink-0 text-[var(--text-3)] hover:text-[var(--text)]"
+                    />
+                  }
                 >
-                  {new Date(selected.created_at).toLocaleDateString("es-ES")} ·{" "}
-                  {selected.author || "Ángel"}
-                </time>
+                  <svg
+                    aria-hidden
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  >
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </DialogClose>
               </div>
-              <button
-                ref={closeRef}
-                type="button"
-                onClick={closeDialog}
-                aria-label="Cerrar"
-                className="shrink-0 rounded-[8px] border border-[var(--line)] p-2 text-[var(--text-3)] transition-colors hover:text-[var(--text)]"
-              >
-                <X aria-hidden className="h-4 w-4" />
-              </button>
-            </div>
 
-            <div className="mt-5 whitespace-pre-wrap text-sm leading-relaxed text-[var(--text-2)]">
-              {selected.content || selected.excerpt || "Sin contenido todavía."}
-            </div>
+              <div className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--text-2)]">
+                {selected.content || selected.excerpt || "Sin contenido todavía."}
+              </div>
 
-            {selected.cover_url && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={selected.cover_url}
-                alt=""
-                className="mt-5 max-h-72 w-full rounded-[10px] object-cover"
-              />
-            )}
-          </div>
-        </div>
-      )}
+              {selected.cover_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={selected.cover_url}
+                  alt=""
+                  className="max-h-72 w-full rounded-[10px] object-cover"
+                />
+              )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <p className="relative mt-10 text-center text-xs text-[var(--text-3)]">
         ¿Buscas documentación técnica?{" "}

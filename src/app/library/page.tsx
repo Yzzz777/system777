@@ -12,6 +12,9 @@ import {
   Mail,
 } from "lucide-react";
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 type Resource = {
   title: string;
@@ -111,13 +114,13 @@ export default function LibraryPage() {
             <label htmlFor="lib-search" className="sr-only">
               Buscar recursos
             </label>
-            <input
+            <Input
               id="lib-search"
               type="search"
               placeholder="Buscar recurso…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="input !pl-10"
+              className="pl-10"
             />
           </div>
         </div>
@@ -145,7 +148,9 @@ export default function LibraryPage() {
                     {r.desc}
                   </span>
                 </span>
-                <span className="chip shrink-0 self-start">{r.tag}</span>
+                <Badge variant="outline" className="shrink-0 self-start font-mono">
+                  {r.tag}
+                </Badge>
               </>
             );
             return (
@@ -182,10 +187,10 @@ export default function LibraryPage() {
               Si falta documentación de algo que uso, pídela y la publico aquí.
             </p>
           </div>
-          <Link href="/contact" className="btn btn-ghost shrink-0">
-            <Mail aria-hidden className="h-4 w-4" />
+          <Button variant="outline" className="shrink-0" render={<Link href="/contact" />}>
+            <Mail aria-hidden />
             Pedir recurso
-          </Link>
+          </Button>
         </div>
 
         <p className="mt-6 text-center text-xs text-[var(--text-3)]">

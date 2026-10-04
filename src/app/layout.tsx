@@ -6,6 +6,8 @@ import ScrollProgress from "@/components/ScrollProgress";
 import Providers from "@/components/Providers";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import ThemePicker from "@/components/ThemePicker";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import { siteConfig } from "@/lib/config";
 import "./globals.css";
 
@@ -81,13 +83,16 @@ export default function RootLayout({
         </a>
         <Providers>
           <ThemeProvider>
-            <ScrollProgress />
-            <Navbar />
-            <main id="contenido" className="pt-16">
-              {children}
-            </main>
-            <Footer />
+            <TooltipProvider delay={300}>
+              <ScrollProgress />
+              <Navbar />
+              <main id="contenido" className="pt-16">
+                {children}
+              </main>
+              <Footer />
+            </TooltipProvider>
             <ThemePicker />
+            <Toaster theme="dark" position="bottom-right" offset={16} />
           </ThemeProvider>
         </Providers>
       </body>

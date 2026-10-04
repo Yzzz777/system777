@@ -42,6 +42,9 @@ import TiltBanner from "@/components/TiltBanner";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { siteConfig } from "@/lib/config";
 import { useBotStats, formatUptime, NA } from "@/lib/useBotStats";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const studyStartDate = new Date("2023-01-01");
 
@@ -455,18 +458,18 @@ export default function HomePage() {
 
               <Reveal delay={300}>
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <Link href="/projects" className="btn btn-primary">
+                  <Button render={<Link href="/projects" />}>
                     Ver proyectos
                     <ArrowRight aria-hidden className="h-4 w-4" />
-                  </Link>
-                  <Link href="/contact" className="btn btn-ghost">
+                  </Button>
+                  <Button variant="outline" render={<Link href="/contact" />}>
                     <Mail aria-hidden className="h-4 w-4" />
                     Contactar
-                  </Link>
-                  <a href="#system777" className="btn btn-ghost">
+                  </Button>
+                  <Button variant="outline" render={<a href="#system777" />}>
                     <BotIcon aria-hidden className="h-4 w-4" />
                     System 777
-                  </a>
+                  </Button>
                 </div>
               </Reveal>
 
@@ -697,15 +700,16 @@ export default function HomePage() {
                         </span>
                         <h3 className="mt-2 text-xl font-bold">{p.name}</h3>
                       </div>
-                      <span
-                        className="chip shrink-0"
+                      <Badge
+                        variant="outline"
+                        className="shrink-0 font-mono"
                         style={{
                           color: p.color,
                           borderColor: `color-mix(in srgb, ${p.color} 35%, transparent)`,
                         }}
                       >
                         {p.status}
-                      </span>
+                      </Badge>
                     </div>
 
                     <p className="mt-3 flex-1 text-sm leading-relaxed text-[var(--text-2)]">
@@ -714,29 +718,32 @@ export default function HomePage() {
 
                     <ul className="mt-4 flex flex-wrap gap-1.5">
                       {p.tech.map((t) => (
-                        <li key={t} className="chip">
-                          {t}
+                        <li key={t}>
+                          <Badge variant="outline" className="font-mono">
+                            {t}
+                          </Badge>
                         </li>
                       ))}
                     </ul>
 
                     <div className="mt-5 flex flex-wrap gap-2 border-t border-[var(--line)] pt-4">
                       {p.github && (
-                        <a
-                          href={p.github}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn btn-ghost !px-3.5 !py-2 !text-[13px]"
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          render={
+                            <a href={p.github} target="_blank" rel="noopener noreferrer" />
+                          }
                         >
                           <Github aria-hidden className="h-3.5 w-3.5" />
                           GitHub
-                        </a>
+                        </Button>
                       )}
                       {p.live && (
-                        <Link href={p.live} className="btn btn-ghost !px-3.5 !py-2 !text-[13px]">
+                        <Button variant="outline" size="sm" render={<Link href={p.live} />}>
                           <Globe aria-hidden className="h-3.5 w-3.5" />
                           {p.liveLabel}
-                        </Link>
+                        </Button>
                       )}
                       {!p.live && !p.github && (
                         <span className="chip !text-[var(--text-3)]">Información próximamente</span>
@@ -791,18 +798,22 @@ export default function HomePage() {
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-wrap gap-2">
-                  <a
-                    href="https://discord.com/oauth2/authorize?client_id=1502804306125132057&permissions=8&integration_type=0&scope=applications.commands+bot"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-system"
+                  <Button
+                    variant="system"
+                    render={
+                      <a
+                        href="https://discord.com/oauth2/authorize?client_id=1502804306125132057&permissions=8&integration_type=0&scope=applications.commands+bot"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      />
+                    }
                   >
                     Invitar bot
                     <ArrowUpRight aria-hidden className="h-4 w-4" />
-                  </a>
-                  <Link href="/bot" className="btn btn-ghost">
+                  </Button>
+                  <Button variant="outline" render={<Link href="/bot" />}>
                     Ver más
-                  </Link>
+                  </Button>
                 </div>
               </div>
             </Reveal>
@@ -858,9 +869,9 @@ export default function HomePage() {
                   <h3 className="stat-label mb-3">Premium (planes del bot)</h3>
                   <div className="flex flex-wrap gap-2">
                     {premiumPlans.map((p) => (
-                      <span key={p.name} className="chip !text-[13px]">
+                      <Badge key={p.name} variant="outline" className="font-mono text-[13px]">
                         {p.name} · <span className="text-[var(--brand)]">{p.price}</span>
-                      </span>
+                      </Badge>
                     ))}
                   </div>
                 </div>
@@ -881,18 +892,32 @@ export default function HomePage() {
                   <span className="eyebrow">06 — Blog</span>
                   <h2>Notas y publicaciones</h2>
                 </div>
-                <Link href="/blog" className="btn btn-ghost !px-4 !py-2 !text-[13px]">
+                <Button variant="outline" size="sm" render={<Link href="/blog" />}>
                   Ir al blog
                   <ArrowUpRight aria-hidden className="h-4 w-4" />
-                </Link>
+                </Button>
               </div>
             </Reveal>
 
             <div className="mt-8">
               {posts === null ? (
-                <div className="panel p-8 text-center text-sm text-[var(--text-3)]">
-                  Cargando publicaciones…
-                </div>
+                <ul
+                  className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                  aria-busy="true"
+                  aria-label="Cargando publicaciones"
+                >
+                  {[0, 1, 2].map((i) => (
+                    <li key={i} className="panel p-5">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-5 w-20" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                      <Skeleton className="mt-4 h-5 w-3/4" />
+                      <Skeleton className="mt-3 h-4 w-full" />
+                      <Skeleton className="mt-2 h-4 w-2/3" />
+                    </li>
+                  ))}
+                </ul>
               ) : posts.length === 0 ? (
                 <div className="panel p-8 text-center">
                   <p className="text-sm text-[var(--text-2)]">
@@ -908,7 +933,9 @@ export default function HomePage() {
                     <Reveal as="li" key={p.id} delay={i * 60}>
                       <Link href="/blog" className="panel panel-hover block h-full p-5">
                         <div className="flex items-center gap-2">
-                          <span className="chip">{p.category || "General"}</span>
+                          <Badge variant="outline" className="font-mono">
+                            {p.category || "General"}
+                          </Badge>
                           <time
                             dateTime={p.created_at}
                             className="font-[family-name:var(--font-mono)] text-[11px] text-[var(--text-3)]"
@@ -944,10 +971,10 @@ export default function HomePage() {
                     descargas falsos.
                   </p>
                 </div>
-                <Link href="/library" className="btn btn-ghost !px-4 !py-2 !text-[13px]">
+                <Button variant="outline" size="sm" render={<Link href="/library" />}>
                   Ver biblioteca
                   <ArrowUpRight aria-hidden className="h-4 w-4" />
-                </Link>
+                </Button>
               </div>
             </Reveal>
 
@@ -1024,28 +1051,35 @@ export default function HomePage() {
                 </p>
 
                 <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                  <a
-                    href={siteConfig.social.discord}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-primary"
+                  <Button
+                    render={
+                      <a
+                        href={siteConfig.social.discord}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      />
+                    }
                   >
                     <MessageSquare aria-hidden className="h-4 w-4" />
                     Discord
-                  </a>
-                  <Link href="/contact" className="btn btn-ghost">
+                  </Button>
+                  <Button variant="outline" render={<Link href="/contact" />}>
                     <Mail aria-hidden className="h-4 w-4" />
                     Enviar mensaje
-                  </Link>
-                  <a
-                    href={siteConfig.social.github}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-ghost"
+                  </Button>
+                  <Button
+                    variant="outline"
+                    render={
+                      <a
+                        href={siteConfig.social.github}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      />
+                    }
                   >
                     <Github aria-hidden className="h-4 w-4" />
                     GitHub
-                  </a>
+                  </Button>
                 </div>
 
                 <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-[var(--text-3)]">
@@ -1098,12 +1132,20 @@ function System777StatusPanel() {
         <span className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--text)]">
           {stats?.tag ? stats.tag : "System 777"}
         </span>
-        <span
-          className="chip ml-auto"
-          style={{ color: ready && online ? "var(--brand)" : "var(--text-3)" }}
-        >
-          {!ready ? "consultando…" : online ? "online" : "offline"}
-        </span>
+        {!ready ? (
+          <Skeleton className="ml-auto h-5 w-24" aria-label="Consultando estado" />
+        ) : (
+          <Badge
+            variant="outline"
+            className="ml-auto font-mono"
+            style={{
+              color: online ? "var(--brand)" : "var(--text-3)",
+              borderColor: online ? "rgba(0,255,136,0.4)" : undefined,
+            }}
+          >
+            {online ? "online" : "offline"}
+          </Badge>
+        )}
       </div>
       <dl className="grid grid-cols-2 sm:grid-cols-3">
         {rows.map(([label, value], idx) => (
