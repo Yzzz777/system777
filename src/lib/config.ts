@@ -17,7 +17,7 @@ export const siteConfig = {
     discord: "https://discord.gg/system777",
   },
   colors: {
-    primary: "#00FF88",
+    primary: "#00E5FF",
     secondary: "#45C8FF",
     accent: "#5865F2",
     background: "#05050A",

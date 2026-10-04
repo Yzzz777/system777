@@ -49,7 +49,7 @@ export default function BotStatusPage() {
           <span
             className={`inline-flex items-center gap-3 rounded-full border px-5 py-2.5 ${
               online
-                ? "border-[rgba(0,255,136,0.35)] bg-[rgba(0,255,136,0.08)] text-[var(--brand)]"
+                ? "border-[rgba(0,229,255,0.35)] bg-[rgba(0,229,255,0.08)] text-[var(--brand)]"
                 : "border-[var(--line-strong)] bg-white/[0.03] text-[var(--text-3)]"
             }`}
           >
@@ -75,8 +75,8 @@ export default function BotStatusPage() {
             <li key={item.label}>
               <Card className="h-full p-5">
                 <div className="flex items-center gap-2">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-[rgba(88,101,242,0.16)]">
-                    <item.icon aria-hidden className="h-4 w-4 text-[#8f97ff]" />
+                  <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-[rgba(0,229,255,0.14)]">
+                    <item.icon aria-hidden className="h-4 w-4 text-[#59f1ff]" />
                   </span>
                   <span className="stat-label">{item.label}</span>
                 </div>

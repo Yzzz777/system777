@@ -10,24 +10,25 @@
    ========================================================= */
 
 :root {
-  /* --- superficies --- */
-  --bg: #05050a;
-  --bg-raised: #0a0a11;
-  --surface: #0e0e16;
-  --surface-2: #14141f;
-  --line: rgba(255, 255, 255, 0.07);
-  --line-strong: rgba(255, 255, 255, 0.14);
+  /* --- superficies (Cian Ártico: negro azulado) --- */
+  --bg: #04070e;
+  --bg-raised: #081019;
+  --surface: #0b1420;
+  --surface-2: #111c2b;
+  --line: rgba(150, 200, 255, 0.08);
+  --line-strong: rgba(150, 200, 255, 0.16);
 
   /* --- texto (contraste AA sobre --bg) --- */
-  --text: #f2f4f8;
-  --text-2: #a7adbd;
-  --text-3: #8b93a5;
+  --text: #eef6fb;
+  --text-2: #9fb3c8;
+  --text-3: #7e93aa;
 
   /* --- acentos --- */
-  --brand: #00ff88;
-  --brand-strong: #00e077;
-  --brand-dim: rgba(0, 255, 136, 0.14);
-  --data: #45c8ff;
+  --brand: #00e5ff;
+  --brand-strong: #00c4de;
+  --brand-bright: #59f1ff;
+  --brand-dim: rgba(0, 229, 255, 0.14);
+  --data: #60a5fa;
   --system: #5865f2;
   --system-2: #7c3aed;
   --warn: #ffc53d;
@@ -36,7 +37,7 @@
   /* --- compat con clases existentes --- */
   --color-primary: var(--brand);
   --color-secondary: var(--data);
-  --color-accent: var(--system-2);
+  --color-accent: var(--accent);
   --color-background: var(--bg);
   --color-surface: var(--surface);
   --color-surface-hover: var(--surface-2);
@@ -46,7 +47,7 @@
   --color-success: var(--brand);
   --color-warning: var(--warn);
   --color-error: var(--err);
-  --color-glow: rgba(0, 255, 136, 0.15);
+  --color-glow: rgba(0, 229, 255, 0.15);
 
   /* --- espaciado (8px) --- */
   --s1: 0.25rem;
@@ -68,7 +69,7 @@
   /* --- sombras --- */
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
   --shadow-2: 0 2px 4px rgba(0, 0, 0, 0.45), 0 18px 46px rgba(0, 0, 0, 0.5);
-  --glow-brand: 0 0 0 1px rgba(0, 255, 136, 0.25), 0 8px 32px rgba(0, 255, 136, 0.12);
+  --glow-brand: 0 0 0 1px rgba(0, 229, 255, 0.25), 0 8px 32px rgba(0, 229, 255, 0.12);
 
   /* --- motion --- */
   --dur-fast: 140ms;
@@ -77,9 +78,9 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* --- tipografía --- */
-  --font-display: var(--font-space-grotesk), "Space Grotesk", system-ui, sans-serif;
-  --font-body: var(--font-inter), "Inter", system-ui, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --font-display: var(--font-syne), "Syne", system-ui, sans-serif;
+  --font-body: var(--font-manrope), "Manrope", system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   /* --- shadcn/ui → mapeados a los tokens de identidad YZZZ 777 ---
      El sitio es oscuro por defecto (sin clase .dark): los componentes
      shadcn heredan exactamente los mismos colores que .panel/.btn/.chip */
@@ -90,12 +91,12 @@
   --popover: var(--surface-2);
   --popover-foreground: var(--text);
   --primary: var(--brand);
-  --primary-foreground: #04120b;
+  --primary-foreground: #02141a;
   --secondary: var(--surface-2);
   --secondary-foreground: var(--text-2);
   --muted: var(--surface-2);
   --muted-foreground: var(--text-3);
-  --accent: rgba(0, 255, 136, 0.1);
+  --accent: rgba(0, 229, 255, 0.1);
   --accent-foreground: var(--text);
   --destructive: var(--err);
   --border: var(--line);
@@ -110,7 +111,7 @@
   --sidebar: var(--bg-raised);
   --sidebar-foreground: var(--text);
   --sidebar-primary: var(--brand);
-  --sidebar-primary-foreground: #04120b;
+  --sidebar-primary-foreground: #02141a;
   --sidebar-accent: var(--surface-2);
   --sidebar-accent-foreground: var(--text);
   --sidebar-border: var(--line);
@@ -120,11 +121,11 @@
 @theme {
   --color-primary: var(--brand);
   --color-secondary: var(--data);
-  --color-accent: var(--system-2);
+  --color-accent: var(--accent);
   --color-bg: var(--bg);
   --color-surface: var(--surface);
-  --font-sans: var(--font-inter), system-ui, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: var(--font-manrope), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 * {
@@ -153,13 +154,13 @@ h1, h2, h3, h4 {
 
 ::selection {
   background: var(--brand);
-  color: #04120b;
+  color: #02141a;
 }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: #1c1c2a; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #2b2b3f; }
+::-webkit-scrollbar-thumb { background: #164a5c; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #1e6a85; }
 
 /* =========================================================
    FOCO VISIBLE (a11y)
@@ -176,7 +177,7 @@ h1, h2, h3, h4 {
   left: var(--s4);
   z-index: 200;
   background: var(--brand);
-  color: #04120b;
+  color: #02141a;
   font-weight: 600;
   font-size: 0.875rem;
   padding: 0.6rem 1rem;
@@ -189,7 +190,7 @@ h1, h2, h3, h4 {
    PRIMITIVAS DE COMPONENTE
    ========================================================= */
 .panel {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.008)), var(--surface);
+  background: linear-gradient(180deg, rgba(120, 200, 255, 0.035), rgba(120, 200, 255, 0.008)), var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-1);
@@ -199,20 +200,20 @@ h1, h2, h3, h4 {
   transition: border-color var(--dur) var(--ease-out), transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
 }
 .panel-hover:hover {
-  border-color: var(--line-strong);
+  border-color: rgba(0, 229, 255, 0.38);
   transform: translateY(-3px);
-  box-shadow: var(--shadow-2);
+  box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.12), var(--shadow-2), 0 14px 44px rgba(0, 229, 255, 0.09);
 }
 
 .glass {
-  background: rgba(14, 14, 22, 0.78);
+  background: rgba(8, 16, 25, 0.78);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--line);
 }
 .glass-hover:hover {
-  border-color: rgba(0, 255, 136, 0.18);
-  box-shadow: 0 0 30px rgba(0, 255, 136, 0.05);
+  border-color: rgba(0, 229, 255, 0.18);
+  box-shadow: 0 0 30px rgba(0, 229, 255, 0.05);
 }
 
 .eyebrow {
@@ -224,6 +225,15 @@ h1, h2, h3, h4 {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--brand);
+}
+.eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  background: var(--brand);
+  transform: rotate(45deg);
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.8);
 }
 
 .section-head {
@@ -259,10 +269,14 @@ h1, h2, h3, h4 {
 .btn:active { transform: translateY(1px); }
 
 .btn-primary {
-  background: var(--brand);
-  color: #04120b;
+  background: linear-gradient(135deg, var(--brand), var(--brand-strong));
+  color: #02141a;
+  box-shadow: 0 6px 24px rgba(0, 229, 255, 0.22);
 }
-.btn-primary:hover { background: var(--brand-strong); box-shadow: var(--glow-brand); }
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--brand-bright), var(--brand));
+  box-shadow: var(--glow-brand), 0 10px 34px rgba(0, 229, 255, 0.3);
+}
 
 .btn-ghost {
   background: rgba(255, 255, 255, 0.04);
@@ -291,8 +305,8 @@ h1, h2, h3, h4 {
 .input::placeholder { color: var(--text-3); }
 .input:focus-visible {
   outline: none;
-  border-color: rgba(0, 255, 136, 0.55);
-  box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.12);
+  border-color: rgba(0, 229, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.12);
 }
 select.input option { background: var(--surface, #0b0f14); color: var(--text); }
 
@@ -326,8 +340,8 @@ select.input option { background: var(--surface, #0b0f14); color: var(--text); }
   -webkit-text-fill-color: transparent;
 }
 
-.neon-glow { box-shadow: 0 0 20px var(--color-glow), 0 0 60px rgba(0, 255, 136, 0.05); }
-.neon-text { text-shadow: 0 0 20px rgba(0, 255, 136, 0.45); }
+.neon-glow { box-shadow: 0 0 20px var(--color-glow), 0 0 60px rgba(0, 229, 255, 0.05); }
+.neon-text { text-shadow: 0 0 20px rgba(0, 229, 255, 0.45); }
 
 .gradient-border { position: relative; }
 .gradient-border::before {
@@ -336,7 +350,7 @@ select.input option { background: var(--surface, #0b0f14); color: var(--text); }
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, var(--brand), var(--data), var(--system-2));
+  background: linear-gradient(135deg, var(--brand), var(--data), var(--brand-bright));
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;
   pointer-events: none;
@@ -350,8 +364,8 @@ select.input option { background: var(--surface, #0b0f14); color: var(--text); }
   inset: 0;
   z-index: 0;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
+    linear-gradient(rgba(0, 229, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 229, 255, 0.05) 1px, transparent 1px);
   background-size: 64px 64px;
   mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, black 15%, transparent 75%);
   -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, black 15%, transparent 75%);
@@ -362,9 +376,44 @@ select.input option { background: var(--surface, #0b0f14); color: var(--text); }
   position: fixed;
   inset: 0;
   z-index: 0;
-  background: radial-gradient(120% 80% at 50% -10%, rgba(0, 255, 136, 0.05), transparent 55%),
-    radial-gradient(90% 60% at 100% 100%, rgba(69, 200, 255, 0.045), transparent 60%);
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(0, 229, 255, 0.09), transparent 55%),
+    radial-gradient(90% 60% at 100% 100%, rgba(69, 165, 250, 0.07), transparent 60%),
+    radial-gradient(70% 55% at 0% 85%, rgba(0, 150, 255, 0.06), transparent 55%);
   pointer-events: none;
+  overflow: hidden;
+}
+/* auroras árticas — deriva lenta, apagadas con reduced-motion */
+.bg-vignette::before,
+.bg-vignette::after {
+  content: "";
+  position: absolute;
+  width: 55vmax;
+  height: 55vmax;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.5;
+  will-change: transform;
+}
+.bg-vignette::before {
+  top: -22vmax;
+  left: -12vmax;
+  background: radial-gradient(closest-side, rgba(0, 229, 255, 0.16), transparent 70%);
+  animation: aurora-a 26s ease-in-out infinite alternate;
+}
+.bg-vignette::after {
+  bottom: -24vmax;
+  right: -14vmax;
+  background: radial-gradient(closest-side, rgba(69, 165, 250, 0.14), transparent 70%);
+  animation: aurora-b 32s ease-in-out infinite alternate;
+}
+@keyframes aurora-a {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(14vmax, 8vmax, 0) scale(1.18); }
+}
+@keyframes aurora-b {
+  from { transform: translate3d(0, 0, 0) scale(1.1); }
+  to { transform: translate3d(-12vmax, -7vmax, 0) scale(0.92); }
 }
 
 /* =========================================================
@@ -389,7 +438,7 @@ select.input option { background: var(--surface, #0b0f14); color: var(--text); }
   position: absolute;
   inset: -18%;
   z-index: -1;
-  background: radial-gradient(closest-side, rgba(0, 255, 136, 0.22), transparent 70%);
+  background: radial-gradient(closest-side, rgba(0, 229, 255, 0.22), transparent 70%);
   filter: blur(18px);
 }
 
@@ -397,7 +446,7 @@ select.input option { background: var(--surface, #0b0f14); color: var(--text); }
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--text-2);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(0, 229, 255, 0.035);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
 }
@@ -413,7 +462,7 @@ select.input option { background: var(--surface, #0b0f14); color: var(--text); }
    EFOTOS HEREDADOS (usados por las páginas del bot)
    ========================================================= */
 .holographic {
-  background: linear-gradient(135deg, var(--brand), var(--data), var(--system-2), var(--brand));
+  background: linear-gradient(135deg, var(--brand), var(--data), var(--brand-bright), var(--brand));
   background-size: 300% 300%;
   animation: holo-shift 7s ease infinite;
 }
@@ -424,14 +473,14 @@ select.input option { background: var(--surface, #0b0f14); color: var(--text); }
 }
 
 @keyframes status-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4); }
-  50% { box-shadow: 0 0 0 7px rgba(0, 255, 136, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.4); }
+  50% { box-shadow: 0 0 0 7px rgba(0, 229, 255, 0); }
 }
 .status-online { animation: status-pulse 2.4s ease-in-out infinite; }
 
 @keyframes avatar-pulse {
-  0%, 100% { box-shadow: 0 0 18px rgba(0, 255, 136, 0.25), 0 0 50px rgba(0, 255, 136, 0.08); }
-  50% { box-shadow: 0 0 28px rgba(0, 255, 136, 0.4), 0 0 70px rgba(0, 255, 136, 0.14); }
+  0%, 100% { box-shadow: 0 0 18px rgba(0, 229, 255, 0.25), 0 0 50px rgba(0, 229, 255, 0.08); }
+  50% { box-shadow: 0 0 28px rgba(0, 229, 255, 0.4), 0 0 70px rgba(0, 229, 255, 0.14); }
 }
 .avatar-glow { animation: avatar-pulse 3.4s ease-in-out infinite; }
 
@@ -448,7 +497,7 @@ select.input option { background: var(--surface, #0b0f14); color: var(--text); }
   position: absolute;
   top: 0; left: 0;
   width: 50%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.12), transparent);
+  background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.12), transparent);
   animation: glow-line 4.5s ease-in-out infinite;
 }
 
@@ -658,12 +707,12 @@ select.input option { background: var(--surface, #0b0f14); color: var(--text); }
   --popover: var(--surface-2);
   --popover-foreground: var(--text);
   --primary: var(--brand);
-  --primary-foreground: #04120b;
+  --primary-foreground: #02141a;
   --secondary: var(--surface-2);
   --secondary-foreground: var(--text-2);
   --muted: var(--surface-2);
   --muted-foreground: var(--text-3);
-  --accent: rgba(0, 255, 136, 0.1);
+  --accent: rgba(0, 229, 255, 0.1);
   --accent-foreground: var(--text);
   --destructive: var(--err);
   --border: var(--line);
@@ -672,7 +721,7 @@ select.input option { background: var(--surface, #0b0f14); color: var(--text); }
   --sidebar: var(--bg-raised);
   --sidebar-foreground: var(--text);
   --sidebar-primary: var(--brand);
-  --sidebar-primary-foreground: #04120b;
+  --sidebar-primary-foreground: #02141a;
   --sidebar-accent: var(--surface-2);
   --sidebar-accent-foreground: var(--text);
   --sidebar-border: var(--line);

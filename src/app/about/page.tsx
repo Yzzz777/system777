@@ -65,6 +65,7 @@ export default function AboutPage() {
   return (
     <div className="relative px-4 pb-[var(--section-y)] pt-10 sm:px-6 sm:pt-14">
       <div className="grid-bg" aria-hidden />
+    <div className="bg-vignette" aria-hidden />
       <div className="relative mx-auto max-w-6xl">
         {/* Cabecera */}
         <div className="grid items-center gap-8 sm:grid-cols-[minmax(0,240px)_minmax(0,1fr)]">

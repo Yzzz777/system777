@@ -58,6 +58,7 @@ export default function TechnologiesPage() {
   return (
     <div className="relative px-4 pb-[var(--section-y)] pt-10 sm:px-6 sm:pt-14">
       <div className="grid-bg" aria-hidden />
+    <div className="bg-vignette" aria-hidden />
       <div className="relative mx-auto max-w-6xl">
         <div className="text-center">
           <span className="eyebrow justify-center">

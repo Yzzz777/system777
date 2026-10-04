@@ -18,7 +18,7 @@ export default function PrivacyPage() {
             <section><h2 className="text-xl font-semibold text-white mb-3">6. Tus Derechos</h2><p>Tienes derecho a: acceder a tus datos, corregir datos inexactos, eliminar tu cuenta y datos, exportar tus datos y optar por no recibir comunicaciones no esenciales. Contáctanos para ejercer estos derechos.</p></section>
             <section><h2 className="text-xl font-semibold text-white mb-3">7. Retención de Datos</h2><p>Retenemos tus datos mientras tu cuenta esté activa. Al eliminar tu cuenta, eliminamos los datos personales dentro de los 30 días, excepto donde la ley lo requiera.</p></section>
             <section><h2 className="text-xl font-semibold text-white mb-3">8. Privacidad de Menores</h2><p>Nuestro servicio no está destinado a menores de 13 años. No recopilamos conscientemente datos de menores de 13 años.</p></section>
-            <section><h2 className="text-xl font-semibold text-white mb-3">9. Contacto</h2><p>Para preguntas sobre privacidad, contáctanos en <a href="mailto:rksagmita@jrsystem7777.com" className="text-[#00FF88] hover:underline">rksagmita@jrsystem7777.com</a>.</p></section>
+            <section><h2 className="text-xl font-semibold text-white mb-3">9. Contacto</h2><p>Para preguntas sobre privacidad, contáctanos en <a href="mailto:rksagmita@jrsystem7777.com" className="text-[#00E5FF] hover:underline">rksagmita@jrsystem7777.com</a>.</p></section>
           </div>
         </FadeIn>
       </div>

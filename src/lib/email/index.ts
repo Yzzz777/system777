@@ -38,12 +38,12 @@ export async function sendPaymentConfirmation({ to, name, type, planOrCourse, am
       <h2 style="color: #ffffff; font-size: 24px;">Compra Confirmada!</h2>
       <p style="color: #9ca3af; font-size: 16px;">Hola ${name},</p>
       <p style="color: #9ca3af; font-size: 16px;">Tu compra ha sido procesada exitosamente. Ya tienes acceso al curso.</p>
-      <div style="background-color: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.2); border-radius: 12px; padding: 20px; margin: 20px 0;">
-        <p style="color: #00FF88; font-size: 14px; margin: 0;">Curso</p>
+      <div style="background-color: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.2); border-radius: 12px; padding: 20px; margin: 20px 0;">
+        <p style="color: #00E5FF; font-size: 14px; margin: 0;">Curso</p>
         <p style="color: #ffffff; font-size: 18px; font-weight: bold; margin: 5px 0;">${planOrCourse?.replace(/-/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())}</p>
         <p style="color: #9ca3af; font-size: 14px; margin: 5px 0 0 0;">Monto: $${amount.toFixed(2)} USD</p>
       </div>
-      <p style="color: #9ca3af; font-size: 16px;">Accede a tu curso desde tu <a href="https://jrsystem7777.com/dashboard" style="color: #00FF88;">Dashboard</a>.</p>
+      <p style="color: #9ca3af; font-size: 16px;">Accede a tu curso desde tu <a href="https://jrsystem7777.com/dashboard" style="color: #00E5FF;">Dashboard</a>.</p>
     `
     : `
       <h2 style="color: #ffffff; font-size: 24px;">Suscripción Activada!</h2>
@@ -65,7 +65,7 @@ export async function sendPaymentConfirmation({ to, name, type, planOrCourse, am
       <div style="background-color: #0A0A0A; padding: 40px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
         <div style="max-width: 500px; margin: 0 auto;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #00FF88; font-size: 28px; margin: 0;">SYSTEM 777</h1>
+            <h1 style="color: #00E5FF; font-size: 28px; margin: 0;">SYSTEM 777</h1>
           </div>
           <div style="background-color: #121212; border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 30px;">
             ${content}
@@ -73,7 +73,7 @@ export async function sendPaymentConfirmation({ to, name, type, planOrCourse, am
           <div style="text-align: center; margin-top: 20px;">
             <p style="color: #4b5563; font-size: 12px;">
               Este es un correo automático. Si tienes dudas, contáctanos en
-              <a href="mailto:rksagmita@jrsystem7777.com" style="color: #00FF88;">rksagmita@jrsystem7777.com</a>
+              <a href="mailto:rksagmita@jrsystem7777.com" style="color: #00E5FF;">rksagmita@jrsystem7777.com</a>
             </p>
           </div>
         </div>
@@ -106,13 +106,13 @@ export async function sendZoomConfirmation({ to, name, date, time, topic, zoomLi
       <div style="background-color: #0A0A0A; padding: 40px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
         <div style="max-width: 500px; margin: 0 auto;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #00FF88; font-size: 28px; margin: 0;">SYSTEM 777</h1>
+            <h1 style="color: #00E5FF; font-size: 28px; margin: 0;">SYSTEM 777</h1>
           </div>
           <div style="background-color: #121212; border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 30px;">
             <h2 style="color: #ffffff; font-size: 24px;">Clase Zoom Agendada!</h2>
             <p style="color: #9ca3af; font-size: 16px;">Hola ${name},</p>
             <p style="color: #9ca3af; font-size: 16px;">Tu sesión de Zoom ha sido confirmada.</p>
-            <div style="background-color: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.2); border-radius: 12px; padding: 20px; margin: 20px 0;">
+            <div style="background-color: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.2); border-radius: 12px; padding: 20px; margin: 20px 0;">
               <table style="width: 100%; color: #9ca3af; font-size: 14px;">
                 <tr><td style="padding: 4px 0;">Fecha:</td><td style="color: #ffffff; font-weight: bold;">${date}</td></tr>
                 <tr><td style="padding: 4px 0;">Hora:</td><td style="color: #ffffff; font-weight: bold;">${time}</td></tr>
@@ -121,7 +121,7 @@ export async function sendZoomConfirmation({ to, name, date, time, topic, zoomLi
               </table>
             </div>
             <div style="text-align: center; margin: 20px 0;">
-              <a href="${zoomLink}" style="display: inline-block; background-color: #00FF88; color: #000000; padding: 12px 30px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 14px;">
+              <a href="${zoomLink}" style="display: inline-block; background-color: #00E5FF; color: #000000; padding: 12px 30px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 14px;">
                 Unirse a Zoom
               </a>
             </div>
@@ -163,13 +163,13 @@ export async function sendMeetingInvite({ to, hostName, title, date, time, durat
       <div style="background-color: #0A0A0A; padding: 40px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
         <div style="max-width: 500px; margin: 0 auto;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #00FF88; font-size: 28px; margin: 0;">SYSTEM 777</h1>
+            <h1 style="color: #00E5FF; font-size: 28px; margin: 0;">SYSTEM 777</h1>
           </div>
           <div style="background-color: #121212; border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 30px;">
             <h2 style="color: #ffffff; font-size: 22px;">Reunión Agendada!</h2>
             <p style="color: #9ca3af; font-size: 16px;">Hola,</p>
             <p style="color: #9ca3af; font-size: 16px;">Se ha creado una nueva reunión:</p>
-            <div style="background-color: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.2); border-radius: 12px; padding: 20px; margin: 20px 0;">
+            <div style="background-color: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.2); border-radius: 12px; padding: 20px; margin: 20px 0;">
               <table style="width: 100%; color: #9ca3af; font-size: 14px;">
                 <tr><td style="padding: 4px 0;">Título:</td><td style="color: #ffffff; font-weight: bold;">${title}</td></tr>
                 <tr><td style="padding: 4px 0;">Fecha:</td><td style="color: #ffffff; font-weight: bold;">${date}</td></tr>
@@ -179,7 +179,7 @@ export async function sendMeetingInvite({ to, hostName, title, date, time, durat
               </table>
             </div>
             <div style="text-align: center; margin: 20px 0;">
-              <a href="${meetingLink}" style="display: inline-block; background-color: #00FF88; color: #000000; padding: 12px 30px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 14px;">
+              <a href="${meetingLink}" style="display: inline-block; background-color: #00E5FF; color: #000000; padding: 12px 30px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 14px;">
                 Unirse a la Reunión
               </a>
             </div>
@@ -215,7 +215,7 @@ export async function sendWhatsAppNotification({ to, name, subject, message }: A
       <div style="background-color: #0A0A0A; padding: 40px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
         <div style="max-width: 500px; margin: 0 auto;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #00FF88; font-size: 28px; margin: 0;">SYSTEM 777</h1>
+            <h1 style="color: #00E5FF; font-size: 28px; margin: 0;">SYSTEM 777</h1>
           </div>
           <div style="background-color: #121212; border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 30px;">
             <h2 style="color: #ffffff; font-size: 20px;">${subject}</h2>

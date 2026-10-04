@@ -27,7 +27,7 @@ const footerLinks = {
 
 export function Footer() {
   return (
-    <footer className="border-t border-[var(--line)] bg-[var(--bg-raised)]">
+    <footer className="border-t border-[rgba(0,229,255,0.18)] bg-[var(--bg-raised)] shadow-[0_-14px_44px_rgba(0,229,255,0.05)]">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
@@ -58,7 +58,7 @@ export function Footer() {
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={label}
-                        className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-[var(--line)] text-[var(--text-3)] transition-colors hover:border-[rgba(0,255,136,0.35)] hover:text-[var(--brand)]"
+                        className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-[var(--line)] text-[var(--text-3)] transition-colors hover:border-[rgba(0,229,255,0.35)] hover:text-[var(--brand)]"
                       />
                     }
                   >

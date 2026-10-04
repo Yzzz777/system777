@@ -33,7 +33,6 @@ import {
   Download,
   Mail,
   CheckCircle2,
-  CircleDot,
 } from "lucide-react";
 import StudyTimeCounter from "@/components/StudyTimeCounter";
 import HeroCanvas from "@/components/three/HeroCanvas";
@@ -409,7 +408,7 @@ export default function HomePage() {
                       <span className="chip !border-[var(--line-strong)] !bg-black/55 backdrop-blur">
                         ÁNGEL · YZZZ 777
                       </span>
-                      <span className="chip !border-[rgba(0,255,136,0.4)] !bg-black/55 text-[var(--brand)] backdrop-blur">
+                      <span className="chip !border-[rgba(0,229,255,0.4)] !bg-black/55 text-[var(--brand)] backdrop-blur">
                         <span className="h-1.5 w-1.5 rounded-full bg-[var(--brand)] status-online" />
                         ONLINE
                       </span>
@@ -426,14 +425,13 @@ export default function HomePage() {
             >
               <Reveal delay={60} blur>
                 <span className="eyebrow">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--brand)]" />
                   {siteConfig.tagline}
                 </span>
               </Reveal>
 
               <Reveal delay={120} blur>
                 <h1 className="mt-5 font-[family-name:var(--font-display)] text-[clamp(2.75rem,9vw,5rem)] font-bold leading-[0.95] tracking-tight">
-                  Ángel
+                  <span className="gradient-text drop-shadow-[0_0_28px_rgba(0,229,255,0.35)]">Ángel</span>
                 </h1>
               </Reveal>
 
@@ -481,10 +479,9 @@ export default function HomePage() {
 
           {/* Contador */}
           <Reveal delay={120} className="relative z-10 mx-auto mt-12 max-w-7xl">
-            <div className="panel p-4 sm:p-6">
+            <div className="panel gradient-border p-4 sm:p-6">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                 <span className="eyebrow">
-                  <CircleDot aria-hidden className="h-3 w-3" />
                   Tiempo aprendiendo
                 </span>
                 <span className="font-[family-name:var(--font-mono)] text-[11px] text-[var(--text-3)]">
@@ -497,7 +494,7 @@ export default function HomePage() {
         </section>
 
         {/* ============================ ABOUT ============================ */}
-        <section id="about" className="border-t border-[var(--line)] px-4 py-[var(--section-y)] sm:px-6">
+        <section id="about" className="border-t border-[rgba(0,229,255,0.14)] px-4 py-[var(--section-y)] sm:px-6">
           <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
             <Reveal blur>
               <div className="section-head !mb-0">
@@ -533,7 +530,7 @@ export default function HomePage() {
                     <span className="text-[var(--text)]">C#</span>, sobre una base de Linux,
                     PostgreSQL y Cloudflare.
                   </p>
-                  <p className="border-l-2 border-[rgba(0,255,136,0.35)] pl-4 text-sm italic text-[var(--text-3)]">
+                  <p className="border-l-2 border-[rgba(0,229,255,0.35)] pl-4 text-sm italic text-[var(--text-3)]">
                     No invento empleos, certificaciones ni métricas. Si está aquí, es porque lo
                     hice, lo uso o lo estoy estudiando de verdad.
                   </p>
@@ -565,7 +562,7 @@ export default function HomePage() {
         {/* ============================ TECNOLOGÍAS ============================ */}
         <section
           id="tecnologias"
-          className="border-t border-[var(--line)] bg-[var(--bg-raised)] px-4 py-[var(--section-y)] sm:px-6"
+          className="border-t border-[rgba(0,229,255,0.14)] bg-[var(--bg-raised)] px-4 py-[var(--section-y)] sm:px-6"
         >
           <div className="mx-auto max-w-7xl">
             <Reveal blur>
@@ -620,7 +617,7 @@ export default function HomePage() {
         {/* ============================ CYBERSECURITY ============================ */}
         <section
           id="cybersecurity"
-          className="border-t border-[var(--line)] px-4 py-[var(--section-y)] sm:px-6"
+          className="border-t border-[rgba(0,229,255,0.14)] px-4 py-[var(--section-y)] sm:px-6"
         >
           <div className="mx-auto max-w-7xl">
             <Reveal blur>
@@ -675,7 +672,7 @@ export default function HomePage() {
         {/* ============================ PROJECTS ============================ */}
         <section
           id="proyectos"
-          className="border-t border-[var(--line)] bg-[var(--bg-raised)] px-4 py-[var(--section-y)] sm:px-6"
+          className="border-t border-[rgba(0,229,255,0.14)] bg-[var(--bg-raised)] px-4 py-[var(--section-y)] sm:px-6"
         >
           <div className="mx-auto max-w-7xl">
             <Reveal blur>
@@ -726,7 +723,7 @@ export default function HomePage() {
                       ))}
                     </ul>
 
-                    <div className="mt-5 flex flex-wrap gap-2 border-t border-[var(--line)] pt-4">
+                    <div className="mt-5 flex flex-wrap gap-2 border-t border-[rgba(0,229,255,0.14)] pt-4">
                       {p.github && (
                         <Button
                           variant="outline"
@@ -774,19 +771,19 @@ export default function HomePage() {
         <section id="system777" className="relative overflow-hidden px-4 py-[var(--section-y)] sm:px-6">
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_50%_at_50%_0%,rgba(88,101,242,0.14),transparent_70%)]"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_50%_at_50%_0%,rgba(0,229,255,0.12),transparent_70%)]"
           />
           <div className="relative mx-auto max-w-7xl">
             <Reveal blur>
               <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div className="section-head !mb-0">
-                  <span className="eyebrow" style={{ color: "#8f97ff" }}>
+                  <span className="eyebrow">
                     <BotIcon aria-hidden className="h-3 w-3" />
                     05 — Proyecto insignia
                   </span>
                   <h2>
                     <span
-                      className="bg-gradient-to-r from-[#7f8cff] via-[#5865F2] to-[#9b6bff] bg-clip-text text-transparent"
+                      className="bg-gradient-to-r from-[#59f1ff] via-[#00e5ff] to-[#60a5fa] bg-clip-text text-transparent"
                       style={{ fontFamily: "var(--font-display)" }}
                     >
                       System 777
@@ -829,8 +826,8 @@ export default function HomePage() {
                   <Reveal as="li" key={f.title} delay={(i % 2) * 60}>
                     <div className="panel h-full p-5">
                       <div className="flex items-center gap-3">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[rgba(88,101,242,0.16)]">
-                          <f.icon aria-hidden className="h-4 w-4 text-[#8f97ff]" />
+                        <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[rgba(0,229,255,0.14)]">
+                          <f.icon aria-hidden className="h-4 w-4 text-[#59f1ff]" />
                         </span>
                         <h3 className="text-[15px] font-semibold">{f.title}</h3>
                       </div>
@@ -883,7 +880,7 @@ export default function HomePage() {
         {/* ============================ BLOG ============================ */}
         <section
           id="blog"
-          className="border-t border-[var(--line)] bg-[var(--bg-raised)] px-4 py-[var(--section-y)] sm:px-6"
+          className="border-t border-[rgba(0,229,255,0.14)] bg-[var(--bg-raised)] px-4 py-[var(--section-y)] sm:px-6"
         >
           <div className="mx-auto max-w-7xl">
             <Reveal blur>
@@ -959,7 +956,7 @@ export default function HomePage() {
         </section>
 
         {/* ============================ BIBLIOTECA ============================ */}
-        <section id="biblioteca" className="border-t border-[var(--line)] px-4 py-[var(--section-y)] sm:px-6">
+        <section id="biblioteca" className="border-t border-[rgba(0,229,255,0.14)] px-4 py-[var(--section-y)] sm:px-6">
           <div className="mx-auto max-w-7xl">
             <Reveal blur>
               <div className="flex flex-wrap items-end justify-between gap-4">
@@ -1036,7 +1033,7 @@ export default function HomePage() {
         {/* ============================ CONTACTO ============================ */}
         <section
           id="contacto"
-          className="border-t border-[var(--line)] bg-[var(--bg-raised)] px-4 py-[var(--section-y)] sm:px-6"
+          className="border-t border-[rgba(0,229,255,0.14)] bg-[var(--bg-raised)] px-4 py-[var(--section-y)] sm:px-6"
         >
           <div className="mx-auto max-w-4xl">
             <Reveal>
@@ -1140,7 +1137,7 @@ function System777StatusPanel() {
             className="ml-auto font-mono"
             style={{
               color: online ? "var(--brand)" : "var(--text-3)",
-              borderColor: online ? "rgba(0,255,136,0.4)" : undefined,
+              borderColor: online ? "rgba(0,229,255,0.4)" : undefined,
             }}
           >
             {online ? "online" : "offline"}
@@ -1160,7 +1157,7 @@ function System777StatusPanel() {
           </div>
         ))}
       </dl>
-      <div className="border-t border-[var(--line)] px-5 py-3">
+      <div className="border-t border-[rgba(0,229,255,0.14)] px-5 py-3">
         <p className="text-[11px] text-[var(--text-3)]">
           Datos en vivo desde la API del bot. Si el servicio cae, se muestra “No disponible” en
           lugar de números inventados.

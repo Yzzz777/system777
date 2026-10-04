@@ -25,7 +25,7 @@ export const themes: Theme[] = [
     name: "System 777",
     icon: "🟢",
     colors: {
-      primary: "#00FF88",
+      primary: "#00E5FF",
       secondary: "#00C8FF",
       accent: "#7C3AED",
       background: "#0A0A0A",
@@ -34,10 +34,10 @@ export const themes: Theme[] = [
       text: "#ffffff",
       textSecondary: "#9ca3af",
       border: "rgba(255,255,255,0.05)",
-      success: "#00FF88",
+      success: "#00E5FF",
       warning: "#FFD93D",
       error: "#EF4444",
-      glow: "rgba(0,255,136,0.15)",
+      glow: "rgba(0,229,255,0.15)",
     },
   },
   {

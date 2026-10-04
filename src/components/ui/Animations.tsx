@@ -145,7 +145,7 @@ export function Typewriter({ text, className = "" }: { text: string; className?:
 export function GlowPulse({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <motion.div
-      animate={{ boxShadow: ["0 0 20px rgba(0,255,136,0.1)", "0 0 40px rgba(0,255,136,0.2)", "0 0 20px rgba(0,255,136,0.1)"] }}
+      animate={{ boxShadow: ["0 0 20px rgba(0,229,255,0.1)", "0 0 40px rgba(0,229,255,0.2)", "0 0 20px rgba(0,229,255,0.1)"] }}
       transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
       className={className}
     >

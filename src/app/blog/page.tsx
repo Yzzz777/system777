@@ -148,6 +148,7 @@ export default function BlogPage() {
   return (
     <div className="relative px-4 pb-[var(--section-y)] pt-10 sm:px-6 sm:pt-14">
       <div className="grid-bg" aria-hidden />
+    <div className="bg-vignette" aria-hidden />
       <div className="relative mx-auto max-w-6xl">
         <div className="text-center">
           <span className="eyebrow justify-center">Notas</span>
@@ -197,7 +198,7 @@ export default function BlogPage() {
               aria-pressed={category === c}
               className={`rounded-[10px] border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
                 category === c
-                  ? "border-[rgba(0,255,136,0.45)] bg-[var(--brand-dim)] text-[var(--brand)]"
+                  ? "border-[rgba(0,229,255,0.45)] bg-[var(--brand-dim)] text-[var(--brand)]"
                   : "border-[var(--line)] bg-white/[0.03] text-[var(--text-3)] hover:text-[var(--text)]"
               }`}
             >
@@ -332,7 +333,7 @@ export default function BlogPage() {
                 <Skeleton className="mt-4 h-5 w-2/3" />
                 <Skeleton className="mt-3 h-4 w-full" />
                 <Skeleton className="mt-2 h-4 w-4/5" />
-                <div className="mt-5 border-t border-[var(--line)] pt-4">
+                <div className="mt-5 border-t border-[rgba(0,229,255,0.14)] pt-4">
                   <Skeleton className="h-4 w-20" />
                 </div>
               </li>
@@ -388,7 +389,7 @@ export default function BlogPage() {
                       {post.excerpt}
                     </p>
                   )}
-                  <div className="mt-4 flex items-center justify-between border-t border-[var(--line)] pt-4">
+                  <div className="mt-4 flex items-center justify-between border-t border-[rgba(0,229,255,0.14)] pt-4">
                     <Button
                       variant="link"
                       size="sm"

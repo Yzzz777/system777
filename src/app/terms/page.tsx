@@ -18,7 +18,7 @@ export default function TermsPage() {
             <section><h2 className="text-xl font-semibold text-white mb-3">6. Pagos y Suscripciones</h2><p>Los cursos premium y suscripciones se procesan a través de transferencia bancaria (Banreservas) o PayPal. Los precios están en USD. Puedes cancelar tu suscripción en cualquier momento. Las solicitudes de reembolso se manejan caso por caso dentro de los 30 días.</p></section>
             <section><h2 className="text-xl font-semibold text-white mb-3">7. Limitación de Responsabilidad</h2><p>SYSTEM 777 no será responsable por daños indirectos, incidentales, especiales, consecuentes o punitivos resultantes de tu uso del servicio.</p></section>
             <section><h2 className="text-xl font-semibold text-white mb-3">8. Cambios en los Términos</h2><p>Nos reservamos el derecho de modificar estos Términos en cualquier momento. El uso continuado del servicio después de los cambios constituye aceptación de los Términos modificados.</p></section>
-            <section><h2 className="text-xl font-semibold text-white mb-3">9. Contacto</h2><p>Para preguntas sobre estos Términos, contáctanos en <a href="mailto:rksagmita@jrsystem7777.com" className="text-[#00FF88] hover:underline">rksagmita@jrsystem7777.com</a>.</p></section>
+            <section><h2 className="text-xl font-semibold text-white mb-3">9. Contacto</h2><p>Para preguntas sobre estos Términos, contáctanos en <a href="mailto:rksagmita@jrsystem7777.com" className="text-[#00E5FF] hover:underline">rksagmita@jrsystem7777.com</a>.</p></section>
           </div>
         </FadeIn>
       </div>

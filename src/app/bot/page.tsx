@@ -124,7 +124,7 @@ function LiveStats() {
         {items.map((it) => (
           <div key={it.label} className="px-4 py-3.5">
             <dt className="flex items-center gap-1.5">
-              <it.icon aria-hidden className="h-3.5 w-3.5 text-[#8f97ff]" />
+              <it.icon aria-hidden className="h-3.5 w-3.5 text-[#59f1ff]" />
               <span className="stat-label">{it.label}</span>
             </dt>
             <dd className="mt-1.5 font-[family-name:var(--font-mono)] text-[15px] text-[var(--text)]">
@@ -137,7 +137,7 @@ function LiveStats() {
           </div>
         ))}
       </dl>
-      <p className="border-t border-[var(--line)] px-5 py-3 text-[11px] text-[var(--text-3)]">
+      <p className="border-t border-[rgba(0,229,255,0.14)] px-5 py-3 text-[11px] text-[var(--text-3)]">
         Datos en vivo de la API pública del bot. Si el servicio no responde se muestra “No
         disponible”, nunca cifras inventadas.
       </p>
@@ -150,17 +150,17 @@ export default function BotHomePage() {
     <div className="relative px-4 pb-[var(--section-y)] pt-10 sm:px-6 sm:pt-14">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(65%_45%_at_50%_0%,rgba(88,101,242,0.16),transparent_70%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(65%_45%_at_50%_0%,rgba(0,229,255,0.13),transparent_70%)]"
       />
       <div className="relative mx-auto max-w-7xl">
         {/* Hero */}
         <div className="text-center">
-          <span className="eyebrow justify-center" style={{ color: "#8f97ff" }}>
+          <span className="eyebrow justify-center">
             <BotIcon aria-hidden className="h-3 w-3" />
             Discord Bot · infraestructura propia
           </span>
           <h1 className="mt-5 font-[family-name:var(--font-display)] text-[clamp(2.4rem,7vw,4.25rem)] font-bold leading-[1.02] tracking-tight">
-            <span className="bg-gradient-to-r from-[#7f8cff] via-[#5865F2] to-[#9b6bff] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#59f1ff] via-[#00e5ff] to-[#60a5fa] bg-clip-text text-transparent">
               System 777
             </span>
             <span className="mt-2 block text-[clamp(1.15rem,3vw,1.75rem)] font-semibold text-[var(--text-2)]">
@@ -196,7 +196,7 @@ export default function BotHomePage() {
         {/* Features */}
         <section className="mt-16">
           <div className="section-head">
-            <span className="eyebrow" style={{ color: "#8f97ff" }}>
+            <span className="eyebrow">
               Qué incluye
             </span>
             <h2>Sistemas reales, no promesas</h2>
@@ -210,8 +210,8 @@ export default function BotHomePage() {
             {features.map((f) => (
               <li key={f.title} className="panel panel-hover h-full p-5">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[rgba(88,101,242,0.16)]">
-                    <f.icon aria-hidden className="h-4.5 w-4.5 text-[#8f97ff]" />
+                  <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[rgba(0,229,255,0.14)]">
+                    <f.icon aria-hidden className="h-4.5 w-4.5 text-[#59f1ff]" />
                   </span>
                   <h3 className="text-[15px] font-semibold">{f.title}</h3>
                 </div>
@@ -224,7 +224,7 @@ export default function BotHomePage() {
         {/* Premium */}
         <section id="premium" className="mt-16 scroll-mt-24">
           <div className="section-head">
-            <span className="eyebrow" style={{ color: "#8f97ff" }}>
+            <span className="eyebrow">
               Premium
             </span>
             <h2>Planes del bot</h2>
@@ -235,7 +235,7 @@ export default function BotHomePage() {
             {premiumPlans.map((plan) => (
               <Card
                 key={plan.name}
-                className={`h-full flex-col p-6 ${plan.featured ? "border-[rgba(88,101,242,0.45)] ring-1 ring-[rgba(88,101,242,0.45)]" : ""}`}
+                className={`h-full flex-col p-6 ${plan.featured ? "border-[rgba(0,229,255,0.45)] ring-1 ring-[rgba(0,229,255,0.45)]" : ""}`}
               >
                 <div className="flex items-center gap-2">
                   <plan.icon aria-hidden className="h-5 w-5" style={{ color: plan.color }} />

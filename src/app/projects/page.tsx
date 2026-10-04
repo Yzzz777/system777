@@ -115,7 +115,7 @@ const projects: Project[] = [
     kind: "Web · Portafolio",
     desc: "Este sitio: Next.js 15 con App Router, Tailwind v4, blog con base de datos, autenticación con Discord y despliegue en Cloudflare Pages.",
     tags: ["Next.js", "TypeScript", "Tailwind", "Cloudflare"],
-    color: "#00FF88",
+    color: "#00E5FF",
     status: "Activo",
     github: "https://github.com/Yzzz777/system777",
     live: "/",
@@ -314,7 +314,7 @@ function ProjectDialog({ project, onClose }: { project: Project; onClose: () => 
           </div>
         )}
 
-        <div className="flex flex-wrap gap-2 border-t border-[var(--line)] pt-4">
+        <div className="flex flex-wrap gap-2 border-t border-[rgba(0,229,255,0.14)] pt-4">
           {project.github && (
             <Button
               variant="outline"
@@ -350,6 +350,7 @@ export default function ProjectsPage() {
   return (
     <div className="relative px-4 pb-[var(--section-y)] pt-10 sm:px-6 sm:pt-14">
       <div className="grid-bg" aria-hidden />
+    <div className="bg-vignette" aria-hidden />
       <div className="relative mx-auto max-w-6xl">
         <div className="text-center">
           <span className="eyebrow justify-center">Portfolio</span>
@@ -409,7 +410,7 @@ export default function ProjectsPage() {
                   ))}
                 </ul>
 
-                <div className="mt-5 flex flex-wrap gap-2 border-t border-[var(--line)] pt-4">
+                <div className="mt-5 flex flex-wrap gap-2 border-t border-[rgba(0,229,255,0.14)] pt-4">
                   <Button variant="outline" size="sm" onClick={() => setSelected(p)}>
                     Detalles
                     <ArrowUpRight aria-hidden />

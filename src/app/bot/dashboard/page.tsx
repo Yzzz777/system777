@@ -33,6 +33,37 @@ const BOT_INVITE = "https://discord.com/oauth2/authorize?client_id=1502804306125
 const SUPPORT_SERVER = "https://discord.gg/system777";
 const OWNER_IDS = ["1376047332709240884", "1376047332709240884"];
 
+// ── Render seguro de campos de logs (la API devuelve a veces objetos) ──
+function fmtLogActor(v: any): string {
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  if (typeof v === "number") return String(v);
+  if (typeof v === "object") {
+    return v.tag || v.name || v.username || v.label || v.global_name || (v.id ? `ID…${String(v.id).slice(-4)}` : "");
+  }
+  return String(v);
+}
+function fmtLogDetail(d: any): string {
+  if (d == null) return "";
+  if (typeof d === "string" || typeof d === "number") return String(d);
+  if (typeof d === "object") {
+    if (Array.isArray(d)) return d.map(fmtLogDetail).filter(Boolean).join(", ");
+    return d.name || d.tag || d.label || d.key || d.value || d.id || "";
+  }
+  return String(d);
+}
+function logTitle(log: any): string {
+  if (typeof log?.action === "string" && log.action) return log.action;
+  if (typeof log?.message === "string" && log.message) return log.message;
+  const det = Array.isArray(log?.details) ? log.details.map(fmtLogDetail).filter(Boolean).join(" · ") : "";
+  return det || (typeof log?.type === "string" ? log.type.replace(/_/g, " ") : "") || "Acción desconocida";
+}
+function fmtEmoji(v: any, fallback = ""): string {
+  if (typeof v === "string" && v) return v;
+  if (v && typeof v === "object") return v.name || (v.id ? "⭐" : "");
+  return fallback;
+}
+
 const OWNER_NAV = [
   { category: "General", items: [
     { id: "inicio", label: "Inicio", icon: Home },
@@ -113,7 +144,7 @@ function Toggle({ checked, onChange, label, onSave }: { checked: boolean; onChan
     if (onSave) setTimeout(onSave, 200);
   };
   return (
-    <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white/[0.06] hover:bg-[#00FF88]/10 transition-all cursor-pointer group" onClick={() => apply(!checked)}>
+    <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white/[0.06] hover:bg-[#00E5FF]/10 transition-all cursor-pointer group" onClick={() => apply(!checked)}>
       <span className="text-sm text-gray-200 group-hover:text-white transition-colors">{label}</span>
       <Switch
         checked={checked}
@@ -137,7 +168,7 @@ function SelectInput({ value, onChange, options, label }: { value: string; onCha
       >
         <SelectTrigger
           aria-label={label}
-          className="w-full rounded-xl border-white/10 bg-white/[0.08] px-4 text-sm text-white hover:border-[#00FF88]/30 data-[size=default]:h-11 focus-visible:border-[#00FF88]/50 focus-visible:ring-[#00FF88]/20"
+          className="w-full rounded-xl border-white/10 bg-white/[0.08] px-4 text-sm text-white hover:border-[#00E5FF]/30 data-[size=default]:h-11 focus-visible:border-[#00E5FF]/50 focus-visible:ring-[#00E5FF]/20"
         >
           <SelectValue placeholder="Seleccionar..." />
         </SelectTrigger>
@@ -146,7 +177,7 @@ function SelectInput({ value, onChange, options, label }: { value: string; onCha
             <SelectItem
               key={o.value}
               value={o.value}
-              className="cursor-pointer py-2.5 pl-4 pr-8 text-gray-300 hover:bg-[#00FF88]/15 focus:bg-[#00FF88]/15 data-highlighted:bg-[#00FF88]/15 data-selected:bg-[#00FF88]/10 data-selected:text-[#00FF88]"
+              className="cursor-pointer py-2.5 pl-4 pr-8 text-gray-300 hover:bg-[#00E5FF]/15 focus:bg-[#00E5FF]/15 data-highlighted:bg-[#00E5FF]/15 data-selected:bg-[#00E5FF]/10 data-selected:text-[#00E5FF]"
             >
               {o.label}
             </SelectItem>
@@ -167,7 +198,7 @@ function TextInput({ value, onChange, label, placeholder, type = "text" }: { val
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label={label}
-        className="rounded-xl border-white/10 bg-white/[0.08] text-white placeholder:text-gray-500 focus-visible:border-[#00FF88]/50 focus-visible:ring-[#00FF88]/20"
+        className="rounded-xl border-white/10 bg-white/[0.08] text-white placeholder:text-gray-500 focus-visible:border-[#00E5FF]/50 focus-visible:ring-[#00E5FF]/20"
       />
     </div>
   );
@@ -183,7 +214,7 @@ function NumberInput({ value, onChange, label, min = 0 }: { value: number; onCha
         min={min}
         onChange={(e) => onChange(Number(e.target.value))}
         aria-label={label}
-        className="rounded-xl border-white/10 bg-white/[0.08] text-white focus-visible:border-[#00FF88]/50 focus-visible:ring-[#00FF88]/20"
+        className="rounded-xl border-white/10 bg-white/[0.08] text-white focus-visible:border-[#00E5FF]/50 focus-visible:ring-[#00E5FF]/20"
       />
     </div>
   );
@@ -200,7 +231,7 @@ function MultiChannelSelect({ selected, onChange, options, label }: { selected: 
       <div className="max-h-40 overflow-y-auto rounded-xl bg-white/[0.05] border border-white/10 p-2 space-y-1">
         {options.map(o => (
           <label key={o.value} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/[0.05] cursor-pointer transition-colors">
-            <input type="checkbox" checked={selected.includes(o.value)} onChange={() => toggle(o.value)} className="accent-[#00FF88]" />
+            <input type="checkbox" checked={selected.includes(o.value)} onChange={() => toggle(o.value)} className="accent-[#00E5FF]" />
             <span className="text-sm text-gray-300">{o.label}</span>
           </label>
         ))}
@@ -232,7 +263,7 @@ export default function BotDashboardPage() {
   const [botMsgChannel, setBotMsgChannel] = useState("");
   const [botMsgEmbed, setBotMsgEmbed] = useState(false);
   const [botMsgEmbedTitle, setBotMsgEmbedTitle] = useState("");
-  const [botMsgEmbedColor, setBotMsgEmbedColor] = useState("#00FF88");
+  const [botMsgEmbedColor, setBotMsgEmbedColor] = useState("#00E5FF");
   const [botMsgEmbedAuthor, setBotMsgEmbedAuthor] = useState("");
   const [botMsgEmbedFooter, setBotMsgEmbedFooter] = useState("");
   const [botMsgEmbedImage, setBotMsgEmbedImage] = useState("");
@@ -329,9 +360,9 @@ export default function BotDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0a0a12" }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#04070e" }}>
         <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-2 border-[#00FF88] border-t-transparent rounded-full animate-spin" />
+          <div className="w-10 h-10 border-2 border-[#00E5FF] border-t-transparent rounded-full animate-spin" />
           <p className="text-gray-500 text-sm">Cargando servidores...</p>
         </div>
       </div>
@@ -340,12 +371,12 @@ export default function BotDashboardPage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "#0a0a12" }}>
+      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "#04070e" }}>
         <div className="glass rounded-2xl p-10 max-w-md w-full text-center">
-          <div className="w-16 h-16 rounded-2xl bg-[#00FF88]/20 flex items-center justify-center mx-auto mb-6"><Shield size={32} className="text-[#00FF88]" /></div>
-          <h2 className="text-2xl font-black mb-3"><span className="bg-gradient-to-r from-[#00FF88] to-[#00C8FF] bg-clip-text text-transparent">Panel de Control</span></h2>
+          <div className="w-16 h-16 rounded-2xl bg-[#00E5FF]/20 flex items-center justify-center mx-auto mb-6"><Shield size={32} className="text-[#00E5FF]" /></div>
+          <h2 className="text-2xl font-black mb-3"><span className="bg-gradient-to-r from-[#00E5FF] to-[#00C8FF] bg-clip-text text-transparent">Panel de Control</span></h2>
           <p className="text-gray-500 mb-8">Inicia sesion con tu cuenta de Discord para gestionar tus servidores.</p>
-          <button onClick={() => window.location.href = "/api/auth/discord"} className="w-full flex items-center justify-center gap-3 py-3.5 rounded-xl bg-[#00FF88] hover:bg-[#00CC6A] transition-colors font-bold text-black">
+          <button onClick={() => window.location.href = "/api/auth/discord"} className="w-full flex items-center justify-center gap-3 py-3.5 rounded-xl bg-[#00E5FF] hover:bg-[#00B8DB] transition-colors font-bold text-black">
             <Bot size={18} /> Iniciar sesion con Discord
           </button>
         </div>
@@ -355,15 +386,15 @@ export default function BotDashboardPage() {
 
   if (!selectedServer) {
     return (
-      <div className="min-h-screen" style={{ background: "#0a0a12" }}>
-        <header className="border-b border-white/5" style={{ background: "#0f0f1e" }}>
+      <div className="min-h-screen" style={{ background: "#04070e" }}>
+        <header className="border-b border-[rgba(150,200,255,0.08)]" style={{ background: "#081019" }}>
           <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#00FF88]/20 flex items-center justify-center"><Bot size={18} className="text-[#00FF88]" /></div>
+              <div className="w-8 h-8 rounded-lg bg-[#00E5FF]/20 flex items-center justify-center"><Bot size={18} className="text-[#00E5FF]" /></div>
               <span className="font-bold text-white">System 777</span>
             </div>
             <div className="flex items-center gap-3">
-              <a href={BOT_INVITE} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-[#00FF88]/10 text-[#00FF88] text-xs font-semibold hover:bg-[#00FF88]/20">Invitame</a>
+              <a href={BOT_INVITE} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-[#00E5FF]/10 text-[#00E5FF] text-xs font-semibold hover:bg-[#00E5FF]/20">Invitame</a>
               <a href={SUPPORT_SERVER} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-white/5 text-gray-400 text-xs hover:bg-white/10">Soporte</a>
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5">
                 {session.user?.image && <Image src={session.user.image} alt="" width={24} height={24} className="rounded-full" />}
@@ -380,30 +411,30 @@ export default function BotDashboardPage() {
           <div className="flex gap-3 mb-8">
             <div className="relative flex-1 max-w-md">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-              <Input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar servidor..." aria-label="Buscar servidor" className="rounded-xl border-white/10 bg-white/5 pl-10 pr-4 py-2.5 text-white focus-visible:border-[#00FF88]/50 focus-visible:ring-[#00FF88]/20" />
+              <Input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar servidor..." aria-label="Buscar servidor" className="rounded-xl border-white/10 bg-white/5 pl-10 pr-4 py-2.5 text-white focus-visible:border-[#00E5FF]/50 focus-visible:ring-[#00E5FF]/20" />
             </div>
             <button onClick={() => window.location.reload()} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-400 text-sm hover:bg-white/10"><RefreshCw size={14} /> Actualizar</button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredGuilds.map((guild: any) => (
-              <motion.div key={guild.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl p-5 hover:-translate-y-0.5 transition-all cursor-pointer group" style={{ background: "#12122a", border: "1px solid rgba(255,255,255,0.05)" }} onClick={() => loadGuild(guild.id)}>
+              <motion.div key={guild.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl p-5 border border-[rgba(150,200,255,0.08)] bg-[#0b1420] hover:-translate-y-0.5 hover:border-[rgba(0,229,255,0.35)] hover:shadow-[0_0_28px_rgba(0,229,255,0.1)] transition-all cursor-pointer group" onClick={() => loadGuild(guild.id)}>
                 <div className="flex items-center gap-4 mb-4">
                   {guild.icon ? (
                     <Image src={guild.icon} alt={guild.name} width={56} height={56} className="rounded-2xl" unoptimized />
                   ) : (
-                    <div className="w-14 h-14 rounded-2xl bg-[#00FF88]/20 flex items-center justify-center"><span className="text-[#00FF88] font-black text-xl">{guild.name?.[0]}</span></div>
+                    <div className="w-14 h-14 rounded-2xl bg-[#00E5FF]/20 flex items-center justify-center"><span className="text-[#00E5FF] font-black text-xl">{guild.name?.[0]}</span></div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <div className="font-bold text-white truncate group-hover:text-[#00FF88] transition-colors">{guild.name}</div>
+                    <div className="font-bold text-white truncate group-hover:text-[#00E5FF] transition-colors">{guild.name}</div>
                     <div className="text-xs text-gray-500 flex items-center gap-1 mt-1"><Users size={10} /> {guild.members?.toLocaleString()} Miembros</div>
                     {guild.isAdmin ? (
-                      <div className="text-xs text-[#57F287] mt-1">✓ Configurar</div>
+                      <div className="text-xs text-[#00E5FF] mt-1">✓ Configurar</div>
                     ) : (
                       <div className="text-xs text-gray-600 mt-1">Sin permisos de admin</div>
                     )}
                   </div>
                 </div>
-                <button onClick={() => loadGuild(guild.id)} className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all ${guild.isAdmin ? "bg-[#00FF88]/10 text-[#00FF88] hover:bg-[#00FF88]/20 hover:shadow-[0_0_20px_rgba(0,255,136,0.1)]" : "bg-white/5 text-gray-600 cursor-not-allowed"}`}>
+                <button onClick={() => loadGuild(guild.id)} className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all ${guild.isAdmin ? "bg-[#00E5FF]/10 text-[#00E5FF] hover:bg-[#00E5FF]/20 hover:shadow-[0_0_20px_rgba(0,229,255,0.1)]" : "bg-white/5 text-gray-600 cursor-not-allowed"}`}>
                   {guild.isAdmin ? "Configurar" : "Sin permisos"}
                 </button>
               </motion.div>
@@ -426,19 +457,19 @@ export default function BotDashboardPage() {
   const catOptions = [{ value: "", label: "Seleccionar categoría..." }, ...channels.filter((c: any) => c.type === 4).map((c: any) => ({ value: c.id, label: c.name }))];
 
   return (
-    <div className="flex min-h-screen" style={{ background: "#0a0a12" }}>
+    <div className="flex min-h-screen" style={{ background: "#04070e" }}>
 
       {/* Mobile overlay */}
       {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 fixed lg:sticky top-0 left-0 z-50 w-64 flex-shrink-0 transition-transform duration-300 flex flex-col border-r border-white/5 overflow-hidden`} style={{ background: "#0f0f1e", height: "100vh" }}>
-        <div className="p-4 border-b border-white/5">
+      <aside className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 fixed lg:sticky top-0 left-0 z-50 w-64 flex-shrink-0 transition-transform duration-300 flex flex-col border-r border-[rgba(150,200,255,0.08)] overflow-hidden`} style={{ background: "linear-gradient(180deg, #0a1220 0%, #060b14 100%)", height: "100vh" }}>
+        <div className="p-4 border-b border-[rgba(150,200,255,0.08)]">
           <div className="flex items-center gap-3">
             {selectedGuild?.icon ? (
               <Image src={selectedGuild.icon} alt="" width={36} height={36} className="rounded-xl flex-shrink-0" unoptimized />
             ) : (
-              <div className="w-9 h-9 rounded-xl bg-[#00FF88]/20 flex items-center justify-center flex-shrink-0"><span className="text-[#00FF88] font-bold text-sm">{selectedGuild?.name?.[0]}</span></div>
+              <div className="w-9 h-9 rounded-xl bg-[#00E5FF]/20 flex items-center justify-center flex-shrink-0"><span className="text-[#00E5FF] font-bold text-sm">{selectedGuild?.name?.[0]}</span></div>
             )}
             <div className="min-w-0 flex-1"><div className="text-sm font-bold text-white truncate">{selectedGuild?.name}</div><div className="text-xs text-gray-500">{selectedGuild?.members?.toLocaleString()} miembros</div></div>
           </div>
@@ -447,9 +478,9 @@ export default function BotDashboardPage() {
         <nav className="flex-1 overflow-y-auto py-2 px-2">
           {(isOwner ? OWNER_NAV : MEMBER_NAV).map((section) => (
             <div key={section.category} className="mb-3">
-              <div className="px-3 py-1.5 text-xs font-semibold text-gray-600 uppercase">{section.category}</div>
+              <div className="px-3 py-1.5 text-xs font-semibold text-[#7e93aa] uppercase">{section.category}</div>
               {section.items.map((item) => (
-                <button key={item.id} onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors ${activeTab === item.id ? "bg-[#00FF88]/15 text-[#00FF88]" : "text-gray-400 hover:text-white hover:bg-white/5"}`}>
+                <button key={item.id} onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${activeTab === item.id ? "bg-[#00E5FF]/15 text-[#00E5FF] shadow-[inset_3px_0_0_#00E5FF,0_0_18px_rgba(0,229,255,0.12)]" : "text-gray-400 hover:text-white hover:bg-white/5"}`}>
                   <item.icon size={16} className="flex-shrink-0" />
                   <span>{item.label}</span>
                 </button>
@@ -458,7 +489,7 @@ export default function BotDashboardPage() {
           ))}
         </nav>
 
-        <div className="p-3 border-t border-white/5 space-y-1">
+        <div className="p-3 border-t border-[rgba(150,200,255,0.08)] space-y-1">
           <button onClick={() => setSelectedServer(null)} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-white/5">
             <ChevronLeft size={16} /> Mis Servidores
           </button>
@@ -472,7 +503,7 @@ export default function BotDashboardPage() {
       <main className="flex-1 overflow-y-auto relative" id="dashboard-main" style={{ height: "100vh" }}>
 
         {/* Mobile hamburger */}
-        <button onClick={() => setSidebarOpen(true)} className="lg:hidden fixed top-20 right-4 z-[70] p-3 rounded-full bg-[#00FF88] text-black shadow-lg shadow-[#00FF88]/30 hover:bg-[#00CC6A] transition-colors active:scale-95">
+        <button onClick={() => setSidebarOpen(true)} className="lg:hidden fixed top-20 right-4 z-[70] p-3 rounded-full bg-[#00E5FF] text-black shadow-lg shadow-[#00E5FF]/30 hover:bg-[#00B8DB] transition-colors active:scale-95">
           <Menu size={22} />
         </button>
 
@@ -481,7 +512,7 @@ export default function BotDashboardPage() {
           <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
           {activeTab === "inicio" && (
             <div className="space-y-6">
-              <div className="rounded-2xl p-6" style={{ background: "linear-gradient(135deg, #00FF8820, #00C8FF20)", border: "1px solid rgba(0,255,136,0.2)" }}>
+              <div className="rounded-2xl p-6" style={{ background: "linear-gradient(135deg, #00E5FF20, #00C8FF20)", border: "1px solid rgba(0,229,255,0.2)" }}>
                 <h2 className="text-xl font-black text-white mb-2">Bienvenido al Panel</h2>
                 <p className="text-gray-400 text-sm mb-4">Configura tu servidor con System 777.</p>
                 <div className="flex flex-wrap gap-2">
@@ -493,7 +524,7 @@ export default function BotDashboardPage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
-                  { icon: <Settings size={24} />, title: "Modulos", desc: "Activa o desactiva funciones", tab: "modules", color: "#00FF88" },
+                  { icon: <Settings size={24} />, title: "Modulos", desc: "Activa o desactiva funciones", tab: "modules", color: "#00E5FF" },
                   { icon: <Crown size={24} />, title: "Premium", desc: "Funciones exclusivas", tab: "premiumadmin", color: "#FEE75C" },
                   { icon: <Shield size={24} />, title: "Proteccion", desc: "Anti-raid, anti-spam", tab: "protection", color: "#57F287" },
                   { icon: <MessageSquare size={24} />, title: "Bienvenida", desc: "Mensajes automaticos", tab: "welcome", color: "#00C8FF" },
@@ -584,7 +615,7 @@ export default function BotDashboardPage() {
                   if (!webhookChannel) return showToast("Selecciona un canal", "error");
                   const r = await api(`public/guild/${selectedServer}/webhooks`, { method: "POST", body: JSON.stringify({ channelId: webhookChannel, name: webhookName || "System 777", avatar: webhookAvatar }) });
                   if (r?.ok) { showToast("Webhook creado", "success"); setWebhookName(""); setWebhookAvatar(""); } else showToast(r?.msg || "Error", "error");
-                }} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Save size={14} /> Crear Webhook</button>
+                }} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Save size={14} /> Crear Webhook</button>
               </div>
             </div>
           )}
@@ -599,7 +630,7 @@ export default function BotDashboardPage() {
                   if (!slowmodeChannel) return showToast("Selecciona un canal", "error");
                   const r = await api(`public/guild/${selectedServer}/slowmode`, { method: "POST", body: JSON.stringify({ channelId: slowmodeChannel, duration: slowmodeDuration }) });
                   if (r?.ok) showToast(`Slowmode ${slowmodeDuration > 0 ? `configurado a ${slowmodeDuration}s` : "desactivado"}`, "success"); else showToast(r?.msg || "Error", "error");
-                }} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Save size={14} /> Aplicar</button>
+                }} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Save size={14} /> Aplicar</button>
               </div>
             </div>
           )}
@@ -644,7 +675,7 @@ export default function BotDashboardPage() {
                 <div className="glass rounded-2xl p-6 space-y-4">
                   <h3 className="font-bold text-white">Agregar Staff</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <Input value={hierarchyForm.userId} onChange={(e) => setHierarchyForm({ ...hierarchyForm, userId: e.target.value })} placeholder="User ID" aria-label="User ID" className="rounded-xl border-white/10 bg-white/5 text-white focus-visible:border-[#00FF88]/50 focus-visible:ring-[#00FF88]/20" />
+                    <Input value={hierarchyForm.userId} onChange={(e) => setHierarchyForm({ ...hierarchyForm, userId: e.target.value })} placeholder="User ID" aria-label="User ID" className="rounded-xl border-white/10 bg-white/5 text-white focus-visible:border-[#00E5FF]/50 focus-visible:ring-[#00E5FF]/20" />
                     <SelectInput value={hierarchyForm.rank} onChange={(v) => setHierarchyForm({ ...hierarchyForm, rank: v })} label="Rango" options={[
                       { value: "trial_staff", label: "🔰 Trial Staff" },
                       { value: "ticket_staff", label: "🎫 Ticket Staff" },
@@ -654,15 +685,15 @@ export default function BotDashboardPage() {
                       { value: "developer", label: "⚙️ Developer" },
                       { value: "co_owner", label: "💠 Co-Owner" },
                     ]} />
-                    <Input value={hierarchyForm.note} onChange={(e) => setHierarchyForm({ ...hierarchyForm, note: e.target.value })} placeholder="Nota (opcional)" aria-label="Nota (opcional)" className="rounded-xl border-white/10 bg-white/5 text-white focus-visible:border-[#00FF88]/50 focus-visible:ring-[#00FF88]/20" />
+                    <Input value={hierarchyForm.note} onChange={(e) => setHierarchyForm({ ...hierarchyForm, note: e.target.value })} placeholder="Nota (opcional)" aria-label="Nota (opcional)" className="rounded-xl border-white/10 bg-white/5 text-white focus-visible:border-[#00E5FF]/50 focus-visible:ring-[#00E5FF]/20" />
                   </div>
-                  <button onClick={async () => { const r = await api("staff/add", { method: "POST", body: JSON.stringify(hierarchyForm) }); if (r?.ok !== false) { showToast("Staff agregado", "success"); const s = await api("staff"); if (s?.members) setHierarchy(Object.values(s.members)); } else showToast(r?.msg || "Error", "error"); }} className="px-4 py-2 rounded-xl bg-[#00FF88] text-white text-sm font-bold hover:bg-[#00CC6A]">Agregar</button>
+                  <button onClick={async () => { const r = await api("staff/add", { method: "POST", body: JSON.stringify(hierarchyForm) }); if (r?.ok !== false) { showToast("Staff agregado", "success"); const s = await api("staff"); if (s?.members) setHierarchy(Object.values(s.members)); } else showToast(r?.msg || "Error", "error"); }} className="px-4 py-2 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-bold hover:bg-[#00B8DB]">Agregar</button>
                 </div>
               )}
               <div className="glass rounded-2xl overflow-hidden">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-white/5 hover:bg-transparent">
+                    <TableRow className="border-[rgba(150,200,255,0.08)] hover:bg-transparent">
                       <TableHead className="h-auto px-4 py-3 text-gray-500">Miembro</TableHead>
                       <TableHead className="h-auto px-4 py-3 text-gray-500">Rango</TableHead>
                       <TableHead className="h-auto px-4 py-3 text-gray-500">Desde</TableHead>
@@ -674,7 +705,7 @@ export default function BotDashboardPage() {
                       const ranks: Record<string, { icon: string; label: string; color: string }> = { owner: { icon: "👑", label: "Owner", color: "#FFD700" }, co_owner: { icon: "💠", label: "Co-Owner", color: "#FF8C00" }, developer: { icon: "⚙️", label: "Developer", color: "#9B59B6" }, admin: { icon: "🛡️", label: "Admin", color: "#E74C3C" }, moderator: { icon: "🔨", label: "Moderator", color: "#3498DB" }, support: { icon: "💬", label: "Support", color: "#2ECC71" }, premium_manager: { icon: "💎", label: "Premium Manager", color: "#F1C40F" }, ticket_staff: { icon: "🎫", label: "Ticket Staff", color: "#1ABC9C" }, trial_staff: { icon: "🔰", label: "Trial Staff", color: "#95A5A6" } };
                       const r = ranks[m.rank] || { icon: "?", label: m.rank, color: "#666" };
                       return (
-                        <TableRow key={m.userId} className="border-white/5 hover:bg-white/[0.02]">
+                        <TableRow key={m.userId} className="border-[rgba(150,200,255,0.08)] hover:bg-white/[0.02]">
                           <TableCell className="px-4 py-3 text-white">{m.userId}</TableCell>
                           <TableCell className="px-4 py-3"><span style={{ color: r.color }}>{r.icon} {r.label}</span></TableCell>
                           <TableCell className="px-4 py-3 text-gray-500">{m.addedAt ? new Date(m.addedAt).toLocaleDateString() : "-"}</TableCell>
@@ -704,7 +735,7 @@ export default function BotDashboardPage() {
                 <div className="glass rounded-2xl p-4">
                   <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">👁️ Vista Previa</h4>
                   <div className="rounded-xl overflow-hidden" style={{ background: "#2b2d31" }}>
-                    <div className="p-1" style={{ background: botMsgEmbedColor || "#00FF88" }} />
+                    <div className="p-1" style={{ background: botMsgEmbedColor || "#00E5FF" }} />
                     <div className="p-4">
                       {botMsgEmbedTitle && <div className="font-bold text-white mb-1">{botMsgEmbedTitle}</div>}
                       <div className="text-sm text-gray-300 whitespace-pre-wrap">{botMsgInput}</div>
@@ -723,7 +754,7 @@ export default function BotDashboardPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <TextInput value={botMsgEmbedTitle} onChange={(v) => setBotMsgEmbedTitle(v)} label="Título del Embed" placeholder="📢 Anuncio Importante" />
-                  <TextInput value={botMsgEmbedColor} onChange={(v) => setBotMsgEmbedColor(v)} label="Color del Embed" placeholder="#00FF88" />
+                  <TextInput value={botMsgEmbedColor} onChange={(v) => setBotMsgEmbedColor(v)} label="Color del Embed" placeholder="#00E5FF" />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -735,7 +766,7 @@ export default function BotDashboardPage() {
 
                 <div>
                   <label className="block text-xs text-gray-500 mb-1.5">Mensaje</label>
-                  <Textarea value={botMsgInput} onChange={(e) => setBotMsgInput(e.target.value)} placeholder="Escribe tu mensaje aquí...&#10;&#10;Variables: {user}, {server}, {membercount}&#10;Menciones: @rol, @everyone, @here&#10;Emojis: <:nombre:id> o <a:nombre:id>" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#00FF88]/50 h-32 min-h-0 resize-none font-mono text-xs leading-relaxed" />
+                  <Textarea value={botMsgInput} onChange={(e) => setBotMsgInput(e.target.value)} placeholder="Escribe tu mensaje aquí...&#10;&#10;Variables: {user}, {server}, {membercount}&#10;Menciones: @rol, @everyone, @here&#10;Emojis: <:nombre:id> o <a:nombre:id>" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#00E5FF]/50 h-32 min-h-0 resize-none font-mono text-xs leading-relaxed" />
                 </div>
 
                 {/* ── Menciones de roles ── */}
@@ -751,7 +782,7 @@ export default function BotDashboardPage() {
                         } else {
                           setBotMsgInput(botMsgInput + ' ' + mention);
                         }
-                      }} className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${botMsgInput.includes(`<@&${r.id}>`) ? "bg-[#00FF88] text-white shadow-lg shadow-[#00FF88]/30" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}>
+                      }} className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${botMsgInput.includes(`<@&${r.id}>`) ? "bg-[#00E5FF] text-[#02141a] shadow-lg shadow-[#00E5FF]/30" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}>
                         @ {r.name}
                       </button>
                     ))}
@@ -776,7 +807,7 @@ export default function BotDashboardPage() {
                     if (botMsgMentionHere) body.mention = "@here";
                     const r = await api(`public/guild/${selectedServer}/broadcast`, { method: "POST", body: JSON.stringify(body) });
                     if (r?.ok) { showToast(r.msg || "✅ Mensaje enviado", "success"); setBotMsgInput(""); setBotMsgEmbedTitle(""); setBotMsgEmbedAuthor(""); setBotMsgEmbedFooter(""); setBotMsgEmbedImage(""); setBotMessages([{ text: botMsgInput, target: botMsgChannel, ts: Date.now() }, ...botMessages]); } else showToast(r?.msg || "Error", "error");
-                  }} className="px-6 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-bold hover:bg-[#00CC6A]"><Send size={14} className="inline mr-1" /> Enviar Mensaje</button>
+                  }} className="px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-bold hover:bg-[#00B8DB]"><Send size={14} className="inline mr-1" /> Enviar Mensaje</button>
                 </div>
               </div>
 
@@ -785,9 +816,9 @@ export default function BotDashboardPage() {
                 <h3 className="font-bold text-white mb-4">📋 Historial de Envíos</h3>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {botMessages.map((m: any, i: number) => (
-                    <div key={i} className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                    <div key={i} className="p-3 rounded-xl bg-white/[0.02] border border-[rgba(150,200,255,0.08)]">
                       <div className="flex items-center gap-2 mb-1">
-                        <Send size={12} className="text-[#00FF88]" />
+                        <Send size={12} className="text-[#00E5FF]" />
                         <span className="text-xs text-gray-500">Canal: {channels.find((c: any) => c.id === m.target)?.name || m.target}</span>
                         <span className="text-xs text-gray-600">{new Date(m.ts).toLocaleTimeString()}</span>
                       </div>
@@ -849,7 +880,7 @@ function WelcomeSection({ config, channels, roles, saveConfig, guildId }: { conf
   const [welcome, setWelcome] = useState({
     enabled: w.enabled || false, channel: w.channel || "", title: w.title || "Introducción",
     message: w.message || "¡Hey! {user} Bienvenido/a a la comunidad oficial de **{server}**. 👋\n\n👉 Te recomendamos visitar los canales indicados a continuación para conocer las normas y mantenerte al tanto de toda la información del servidor.\n\n¡Esperamos que disfrutes tu estancia y formes parte de esta gran comunidad! 🥳🎉",
-    color: w.color || "#00FF88", image: w.image || "", thumbnail: w.thumbnail || "",
+    color: w.color || "#00E5FF", image: w.image || "", thumbnail: w.thumbnail || "",
     footer: w.footer || "", mentionRole: w.mentionRole || "", channelLinks: w.channelLinks || [],
     dmMessage: w.dmMessage || "", dmEnabled: w.dmEnabled !== false,
     autoRole: Array.isArray(w.autoRole) ? w.autoRole : (w.autoRole ? [w.autoRole] : []),
@@ -870,7 +901,7 @@ function WelcomeSection({ config, channels, roles, saveConfig, guildId }: { conf
       setWelcome({
         enabled: w.enabled || false, channel: w.channel || "", title: w.title || "Introducción",
         message: w.message || "¡Hey! {user} Bienvenido/a a la comunidad oficial de **{server}**. 👋\n\n👉 Te recomendamos visitar los canales indicados a continuación para conocer las normas y mantenerte al tanto de toda la información del servidor.\n\n¡Esperamos que disfrutes tu estancia y formes parte de esta gran comunidad! 🥳🎉",
-        color: w.color || "#00FF88", image: w.image || "", thumbnail: w.thumbnail || "",
+        color: w.color || "#00E5FF", image: w.image || "", thumbnail: w.thumbnail || "",
         footer: w.footer || "", mentionRole: w.mentionRole || "", channelLinks: w.channelLinks || [],
         dmMessage: w.dmMessage || "", dmEnabled: w.dmEnabled !== false,
         autoRole: Array.isArray(w.autoRole) ? w.autoRole : (w.autoRole ? [w.autoRole] : []),
@@ -914,11 +945,11 @@ function WelcomeSection({ config, channels, roles, saveConfig, guildId }: { conf
             <SelectInput value={welcome.channel || ""} onChange={(v) => setWelcome({ ...welcome, channel: v })} options={channels} label="Canal de bienvenida" />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <TextInput value={welcome.title || ""} onChange={(v) => setWelcome({ ...welcome, title: v })} label="Título del Embed" placeholder="Introducción" />
-              <TextInput value={welcome.color || ""} onChange={(v) => setWelcome({ ...welcome, color: v })} label="Color del Embed" placeholder="#00FF88" />
+              <TextInput value={welcome.color || ""} onChange={(v) => setWelcome({ ...welcome, color: v })} label="Color del Embed" placeholder="#00E5FF" />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1.5">Mensaje de bienvenida</label>
-              <Textarea value={welcome.message || ""} onChange={(e) => setWelcome({ ...welcome, message: e.target.value })} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#00FF88]/50 h-32 min-h-0 resize-none font-mono text-xs leading-relaxed" />
+              <Textarea value={welcome.message || ""} onChange={(e) => setWelcome({ ...welcome, message: e.target.value })} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#00E5FF]/50 h-32 min-h-0 resize-none font-mono text-xs leading-relaxed" />
               <p className="text-xs text-gray-600 mt-1">Variables: {'{user}'} {'{server}'} {'{membercount}'} {'{servericon}'} | Markdown: **negrita** *cursiva*</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -940,14 +971,14 @@ function WelcomeSection({ config, channels, roles, saveConfig, guildId }: { conf
                         const current = welcome.autoRole || [];
                         const updated = isSelected ? current.filter((id: string) => id !== r.value) : [...current, r.value];
                         setWelcome({ ...welcome, autoRole: updated });
-                      }} className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${isSelected ? "bg-[#57F287] text-white shadow-lg shadow-[#57F287]/30" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}>
+                      }} className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${isSelected ? "bg-[#00E5FF] text-[#02141a] shadow-lg shadow-[#00E5FF]/30" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}>
                         {isSelected ? "✓ " : ""}@{displayName}
                       </button>
                     );
                   })}
                 </div>
                 {(welcome.autoRole || []).length > 0 && (
-                  <div className="text-xs text-[#57F287]">
+                  <div className="text-xs text-[#00E5FF]">
                     {(welcome.autoRole || []).length} rol(es) seleccionado(s)
                   </div>
                 )}
@@ -962,7 +993,7 @@ function WelcomeSection({ config, channels, roles, saveConfig, guildId }: { conf
                 <div className="space-y-2">
                   {welcome.channelLinks.map((link: any, idx: number) => (
                     <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-white/[0.02]">
-                      <span>{link.emoji || "📢"}</span>
+                      <span>{fmtEmoji(link.emoji, "📢")}</span>
                       <span className="text-white text-sm flex-1">#{channels.find((c: any) => c.id === link.channelId)?.name || link.channelId} · {link.label}</span>
                       <button onClick={() => removeChannelLink(idx)} className="text-red-400 hover:text-red-300 text-xs">✕</button>
                     </div>
@@ -973,7 +1004,7 @@ function WelcomeSection({ config, channels, roles, saveConfig, guildId }: { conf
                 <TextInput value={newChannelLink.emoji} onChange={(v) => setNewChannelLink({ ...newChannelLink, emoji: v })} label="Emoji" placeholder="📢" />
                 <SelectInput value={newChannelLink.channelId} onChange={(v) => setNewChannelLink({ ...newChannelLink, channelId: v })} options={channels} label="Canal" />
                 <TextInput value={newChannelLink.label} onChange={(v) => setNewChannelLink({ ...newChannelLink, label: v })} label="Etiqueta" placeholder="Reglas" />
-                <div className="flex items-end"><button onClick={addChannelLink} className="w-full px-4 py-2.5 rounded-xl bg-[#57F287]/10 text-[#57F287] text-sm font-semibold hover:bg-[#57F287]/20"><Plus size={14} className="inline" /> Agregar</button></div>
+                <div className="flex items-end"><button onClick={addChannelLink} className="w-full px-4 py-2.5 rounded-xl bg-[#00E5FF]/10 text-[#00E5FF] text-sm font-semibold hover:bg-[#00E5FF]/20"><Plus size={14} className="inline" /> Agregar</button></div>
               </div>
             </div>
 
@@ -992,7 +1023,7 @@ function WelcomeSection({ config, channels, roles, saveConfig, guildId }: { conf
             <div className="border border-white/10 rounded-xl p-4 space-y-2">
               <h4 className="text-sm font-bold text-white">👁️ Vista Previa</h4>
               <div className="rounded-xl overflow-hidden" style={{ background: "#2b2d31" }}>
-                <div className="p-1 rounded-t-xl" style={{ background: welcome.color || "#00FF88" }} />
+                <div className="p-1 rounded-t-xl" style={{ background: welcome.color || "#00E5FF" }} />
                 <div className="p-4">
                   {welcome.title && <div className="font-bold text-white mb-2">{welcome.title}</div>}
                   <div className="text-sm text-gray-300 whitespace-pre-wrap">{previewMessage(welcome.message || "")}</div>
@@ -1000,7 +1031,7 @@ function WelcomeSection({ config, channels, roles, saveConfig, guildId }: { conf
                     <div className="mt-3 space-y-1">
                       {welcome.channelLinks.map((link: any, idx: number) => (
                         <div key={idx} className="flex items-center gap-2 text-sm">
-                          <span>{link.emoji}</span>
+                          <span>{fmtEmoji(link.emoji, "🔗")}</span>
                           <span className="text-[#00aff4]">#canal</span>
                           <span className="text-gray-400">·</span>
                           <span className="text-white">{link.label}</span>
@@ -1008,12 +1039,12 @@ function WelcomeSection({ config, channels, roles, saveConfig, guildId }: { conf
                       ))}
                     </div>
                   )}
-                  {welcome.footer && <div className="text-xs text-gray-500 mt-3 pt-2 border-t border-white/5">{welcome.footer}</div>}
+                  {welcome.footer && <div className="text-xs text-gray-500 mt-3 pt-2 border-t border-[rgba(150,200,255,0.08)]">{welcome.footer}</div>}
                 </div>
               </div>
             </div>
 
-            <button onClick={() => saveConfig(`guild/${guildId}/welcome`, welcome)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Save size={14} /> Guardar Bienvenida</button>
+            <button onClick={() => saveConfig(`guild/${guildId}/welcome`, welcome)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Save size={14} /> Guardar Bienvenida</button>
           </>
         )}
       </div>
@@ -1036,7 +1067,7 @@ function WelcomeSection({ config, channels, roles, saveConfig, guildId }: { conf
               <Textarea value={goodbye.message || ""} onChange={(e) => setGoodbye({ ...goodbye, message: e.target.value })} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none h-20 min-h-0 resize-none" />
             </div>
             <TextInput value={goodbye.image || ""} onChange={(v) => setGoodbye({ ...goodbye, image: v })} label="Imagen (opcional)" placeholder="https://..." />
-            <button onClick={() => saveConfig(`guild/${guildId}/goodbye`, goodbye)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Save size={14} /> Guardar Despedida</button>
+            <button onClick={() => saveConfig(`guild/${guildId}/goodbye`, goodbye)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Save size={14} /> Guardar Despedida</button>
           </>
         )}
       </div>
@@ -1052,7 +1083,7 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
   const [editingCat, setEditingCat] = useState<any>(null);
   const [showCatForm, setShowCatForm] = useState(false);
   const [catForm, setCatForm] = useState({
-    id: "", label: "", emoji: "🎫", description: "", color: "#00FF88", priority: "low", status: "active",
+    id: "", label: "", emoji: "🎫", description: "", color: "#00E5FF", priority: "low", status: "active",
     staffRole: "", allowedRoles: [] as string[], blockedRoles: [] as string[],
     channelCategoryId: "", logChannel: "", transcriptChannel: "", notificationChannel: "",
     autoMessage: "", businessHours: "", estimatedResponseTime: "", welcomeMsg: "", style: undefined as number | undefined,
@@ -1061,7 +1092,7 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
   const [ticketCfg, setTicketCfg] = useState({
     panelChannel: tc.panelChannel || "", supportRole: tc.supportRole || "", logChannel: tc.logChannel || "",
     ticketCategory: tc.ticketCategory || "", panelTitle: tc.panelTitle || "Soporte",
-    panelDesc: tc.panelDesc || tc.panelDescription || "Selecciona el tipo de ticket.", panelColor: tc.panelColor || "#00FF88",
+    panelDesc: tc.panelDesc || tc.panelDescription || "Selecciona el tipo de ticket.", panelColor: tc.panelColor || "#00E5FF",
     panelImage: tc.panelImage || "",
     channelPrefix: tc.channelPrefix || "ticket", maxPerUser: tc.maxPerUser || 3, ping: tc.ping !== false,
     dmTranscript: tc.dmTranscript !== false, welcomeMessage: tc.welcomeMessage || "",
@@ -1084,7 +1115,7 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
       setTicketCfg({
         panelChannel: tc.panelChannel || "", supportRole: tc.supportRole || "", logChannel: tc.logChannel || "",
         ticketCategory: tc.ticketCategory || "", panelTitle: tc.panelTitle || "Soporte",
-        panelDesc: tc.panelDesc || tc.panelDescription || "Selecciona el tipo de ticket.", panelColor: tc.panelColor || "#00FF88",
+        panelDesc: tc.panelDesc || tc.panelDescription || "Selecciona el tipo de ticket.", panelColor: tc.panelColor || "#00E5FF",
         panelImage: tc.panelImage || "",
         channelPrefix: tc.channelPrefix || "ticket", maxPerUser: tc.maxPerUser || 3, ping: tc.pingOnOpen !== false,
         dmTranscript: tc.dmTranscript !== false, welcomeMessage: tc.welcomeMessage || "",
@@ -1179,7 +1210,7 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
     const newCat = { ...catForm, id, order: ticketCategories.length };
     const updated = [...ticketCategories, newCat];
     setTicketCategories(updated);
-    setCatForm({ id: "", label: "", emoji: "🎫", description: "", color: "#00FF88", priority: "low", status: "active", staffRole: "", allowedRoles: [], blockedRoles: [], channelCategoryId: "", logChannel: "", transcriptChannel: "", notificationChannel: "", autoMessage: "", businessHours: "", estimatedResponseTime: "", welcomeMsg: "", style: undefined, sortOrder: 0 });
+    setCatForm({ id: "", label: "", emoji: "🎫", description: "", color: "#00E5FF", priority: "low", status: "active", staffRole: "", allowedRoles: [], blockedRoles: [], channelCategoryId: "", logChannel: "", transcriptChannel: "", notificationChannel: "", autoMessage: "", businessHours: "", estimatedResponseTime: "", welcomeMsg: "", style: undefined, sortOrder: 0 });
     setShowCatForm(false);
     showToast("Categoría agregada", "success");
   };
@@ -1221,21 +1252,21 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
     { id: "stats", label: "Estadísticas", icon: BarChart3 },
   ];
 
-  const colorSwatches = ["#00FF88", "#7C3AED", "#EB459E", "#57F287", "#FEE75C", "#ED4245", "#FF6B35", "#00B4D8"];
-  const priorityColors: Record<string, string> = { low: "bg-green-500/20 text-green-400", medium: "bg-yellow-500/20 text-yellow-400", high: "bg-red-500/20 text-red-400", urgent: "bg-red-600/20 text-red-300" };
+  const colorSwatches = ["#00E5FF", "#7C3AED", "#EB459E", "#57F287", "#FEE75C", "#ED4245", "#FF6B35", "#00B4D8"];
+  const priorityColors: Record<string, string> = { low: "bg-cyan-400/20 text-cyan-300", medium: "bg-yellow-500/20 text-yellow-400", high: "bg-red-500/20 text-red-400", urgent: "bg-red-600/20 text-red-300" };
   const filteredLogs = logsFilter === "all" ? ticketLogs : ticketLogs.filter((l: any) => (l.action || l.type || "").toLowerCase().includes(logsFilter.toLowerCase()));
   const paginatedLogs = filteredLogs.slice((logsPage - 1) * LOGS_PER_PAGE, logsPage * LOGS_PER_PAGE);
   const totalPages = Math.ceil(filteredLogs.length / LOGS_PER_PAGE);
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl p-6" style={{ background: "linear-gradient(135deg, #00FF8820, #7C3AED20)", border: "1px solid rgba(88,101,242,0.2)" }}>
+      <div className="rounded-2xl p-6" style={{ background: "linear-gradient(135deg, #00E5FF20, #60A5FA20)", border: "1px solid rgba(0,229,255,0.2)" }}>
         <h2 className="text-xl font-black text-white mb-1">🎫 Sistema de Tickets</h2>
         <p className="text-sm text-gray-400">Configura el panel, categorías, formularios y comportamiento de tickets.</p>
       </div>
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
         {tabs.map((t) => (
-          <button key={t.id} onClick={() => setActiveTicketTab(t.id)} className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${activeTicketTab === t.id ? "bg-[#00FF88] text-white shadow-lg shadow-[#00FF88]/20" : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"}`}>
+          <button key={t.id} onClick={() => setActiveTicketTab(t.id)} className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${activeTicketTab === t.id ? "bg-[#00E5FF] text-[#02141a] shadow-lg shadow-[#00E5FF]/20" : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"}`}>
             <t.icon size={14} />
             {t.label}
           </button>
@@ -1251,7 +1282,7 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
               <button onClick={loadOpenTickets} className="text-gray-400 hover:text-white"><RefreshCw size={16} /></button>
             </div>
             {ticketsLoading ? (
-              <div className="text-center py-8"><div className="w-8 h-8 border-2 border-[#00FF88] border-t-transparent rounded-full animate-spin mx-auto" /></div>
+              <div className="text-center py-8"><div className="w-8 h-8 border-2 border-[#00E5FF] border-t-transparent rounded-full animate-spin mx-auto" /></div>
             ) : openTickets.length === 0 ? (
               <div className="text-center py-12">
                 <Ticket size={48} className="mx-auto text-gray-600 mb-3" />
@@ -1261,15 +1292,15 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
             ) : (
               <div className="space-y-3">
                 {openTickets.map((t: any) => (
-                  <div key={t.channelId || t.id} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-white/[0.03] hover:bg-white/[0.05] transition-colors border border-white/5">
+                  <div key={t.channelId || t.id} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-white/[0.03] hover:bg-white/[0.05] transition-colors border border-[rgba(150,200,255,0.08)]">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0" style={{ background: (t.color || "#00FF88") + "20" }}>
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0" style={{ background: (t.color || "#00E5FF") + "20" }}>
                         {t.emoji || "🎫"}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-white font-semibold text-sm truncate">{t.channelName || `ticket-${t.number}`}</span>
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${t.status === "open" ? "bg-green-500/20 text-green-400" : t.status === "claimed" ? "bg-blue-500/20 text-blue-400" : "bg-gray-500/20 text-gray-400"}`}>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${t.status === "open" ? "bg-cyan-400/20 text-cyan-300" : t.status === "claimed" ? "bg-blue-500/20 text-blue-400" : "bg-gray-500/20 text-gray-400"}`}>
                             {t.status || "open"}
                           </span>
                           {t.priority && (
@@ -1313,7 +1344,7 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 overflow-hidden">
           <div className="space-y-4">
             <div className="glass rounded-2xl p-6 space-y-4">
-              <h3 className="font-bold text-white flex items-center gap-2"><Hash size={16} className="text-[#00FF88]" /> Canales y Roles</h3>
+              <h3 className="font-bold text-white flex items-center gap-2"><Hash size={16} className="text-[#00E5FF]" /> Canales y Roles</h3>
               <SelectInput value={ticketCfg.panelChannel} onChange={(v: string) => setTicketCfg({ ...ticketCfg, panelChannel: v })} options={channels} label="Canal del panel" />
               <SelectInput value={ticketCfg.supportRole} onChange={(v: string) => setTicketCfg({ ...ticketCfg, supportRole: v })} options={roles} label="Rol de Soporte" />
               <SelectInput value={ticketCfg.logChannel} onChange={(v: string) => setTicketCfg({ ...ticketCfg, logChannel: v })} options={channels} label="Canal de Logs" />
@@ -1327,14 +1358,14 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
                   <label className="text-xs text-gray-500">Descripción</label>
                   <span className="text-xs text-gray-600">{ticketCfg.panelDesc.length}/2000</span>
                 </div>
-                <Textarea value={ticketCfg.panelDesc} onChange={(e) => setTicketCfg({ ...ticketCfg, panelDesc: e.target.value })} maxLength={2000} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#00FF88]/50 h-24 min-h-0 resize-none" />
+                <Textarea value={ticketCfg.panelDesc} onChange={(e) => setTicketCfg({ ...ticketCfg, panelDesc: e.target.value })} maxLength={2000} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-[#00E5FF]/50 h-24 min-h-0 resize-none" />
               </div>
               <TextInput value={ticketCfg.panelImage} onChange={(v: string) => setTicketCfg({ ...ticketCfg, panelImage: v })} label="URL de imagen (opcional)" placeholder="https://..." />
               <div>
                 <label className="block text-xs text-gray-500 mb-2">Color del embed</label>
                 <div className="flex items-center gap-3">
                   <input type="color" value={ticketCfg.panelColor} onChange={(e) => setTicketCfg({ ...ticketCfg, panelColor: e.target.value })} className="w-10 h-10 rounded-lg border border-white/10 cursor-pointer" />
-                  <Input type="text" value={ticketCfg.panelColor} onChange={(e) => setTicketCfg({ ...ticketCfg, panelColor: e.target.value })} aria-label="Color hex del panel" className="flex-1 rounded-xl border-white/10 bg-white/5 px-3 py-2 font-mono text-sm text-white focus-visible:border-[#00FF88]/50 focus-visible:ring-[#00FF88]/20" />
+                  <Input type="text" value={ticketCfg.panelColor} onChange={(e) => setTicketCfg({ ...ticketCfg, panelColor: e.target.value })} aria-label="Color hex del panel" className="flex-1 rounded-xl border-white/10 bg-white/5 px-3 py-2 font-mono text-sm text-white focus-visible:border-[#00E5FF]/50 focus-visible:ring-[#00E5FF]/20" />
                 </div>
                 <div className="flex gap-2 mt-2">
                   {colorSwatches.map((c) => (
@@ -1354,20 +1385,20 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
                 </div>
                 <div className="p-4">
                   <div className="flex items-start gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: "#00FF88" }}>
+                    <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: "#00E5FF" }}>
                       <span className="text-white text-sm font-bold">S7</span>
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="text-white text-sm font-semibold">System 777</span>
-                        <span className="bg-[#00FF88] text-white text-[9px] px-1.5 py-0.5 rounded font-semibold">APP</span>
+                        <span className="bg-[#00E5FF] text-[#02141a] text-[9px] px-1.5 py-0.5 rounded font-semibold">APP</span>
                       </div>
-                      <div className="rounded-xl overflow-hidden" style={{ background: "#2b2d31", border: `2px solid ${ticketCfg.panelColor || "#00FF88"}` }}>
-                        <div className="h-1.5" style={{ background: ticketCfg.panelColor || "#00FF88" }} />
+                      <div className="rounded-xl overflow-hidden" style={{ background: "#2b2d31", border: `2px solid ${ticketCfg.panelColor || "#00E5FF"}` }}>
+                        <div className="h-1.5" style={{ background: ticketCfg.panelColor || "#00E5FF" }} />
                         <div className="p-3">
                           <div className="flex items-center gap-2 mb-2">
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: (ticketCfg.panelColor || "#00FF88") + "25" }}>
-                              <Ticket size={14} style={{ color: ticketCfg.panelColor || "#00FF88" }} />
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: (ticketCfg.panelColor || "#00E5FF") + "25" }}>
+                              <Ticket size={14} style={{ color: ticketCfg.panelColor || "#00E5FF" }} />
                             </div>
                             <span className="text-white font-bold text-sm">{ticketCfg.panelTitle || "Soporte"}</span>
                           </div>
@@ -1380,7 +1411,7 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
                             <div className="space-y-1.5">
                               {ticketCategories.filter((c: any) => c.status !== "inactive").slice(0, 5).map((cat: any) => (
                                 <div key={cat.id} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-white/5 cursor-pointer transition-colors" style={{ background: "rgba(255,255,255,0.03)" }}>
-                                  <span className="text-sm">{cat.emoji || "🎫"}</span>
+                                  <span className="text-sm">{fmtEmoji(cat.emoji, "🎫")}</span>
                                   <span className="text-white text-xs font-medium">{cat.label}</span>
                                   {cat.description && <span className="text-[#80848e] text-[10px] ml-auto truncate max-w-[120px]">{cat.description}</span>}
                                 </div>
@@ -1395,13 +1426,13 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
               </div>
             </div>
             <div className="glass rounded-2xl p-6 space-y-4">
-              <h3 className="font-bold text-white flex items-center gap-2"><Terminal size={16} className="text-[#57F287]" /> Configuración Rápida</h3>
+              <h3 className="font-bold text-white flex items-center gap-2"><Terminal size={16} className="text-[#00E5FF]" /> Configuración Rápida</h3>
               <TextInput value={ticketCfg.channelPrefix} onChange={(v: string) => setTicketCfg({ ...ticketCfg, channelPrefix: v })} label="Prefijo del canal" placeholder="ticket" />
               <NumberInput value={ticketCfg.maxPerUser} onChange={(v: number) => setTicketCfg({ ...ticketCfg, maxPerUser: v })} label="Máximo tickets por usuario" min={1} />
             </div>
             <div className="flex gap-3">
-              <button onClick={saveTicketConfig} className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A] transition-colors"><Save size={14} /> Guardar</button>
-              <button onClick={async () => { await saveTicketConfig(); const res = await api(`public/guild/${guildId}/tickets/panel`, { method: "POST" }); if (res?.ok) showToast(res.msg || "Panel publicado", "success"); else showToast(res?.msg || "Error", "error"); }} className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#57F287]/10 text-[#57F287] text-sm font-semibold hover:bg-[#57F287]/20 transition-colors"><Send size={14} /> Publicar en Discord</button>
+              <button onClick={saveTicketConfig} className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB] transition-colors"><Save size={14} /> Guardar</button>
+              <button onClick={async () => { await saveTicketConfig(); const res = await api(`public/guild/${guildId}/tickets/panel`, { method: "POST" }); if (res?.ok) showToast(res.msg || "Panel publicado", "success"); else showToast(res?.msg || "Error", "error"); }} className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#00E5FF]/10 text-[#00E5FF] text-sm font-semibold hover:bg-[#00E5FF]/20 transition-colors"><Send size={14} /> Publicar en Discord</button>
             </div>
           </div>
         </div>
@@ -1412,17 +1443,17 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="font-bold text-white">📂 Categorías ({ticketCategories.length})</h3>
-            <button onClick={() => { setEditingCat(null); setCatForm({ id: "", label: "", emoji: "🎫", description: "", color: "#00FF88", priority: "low", status: "active", staffRole: "", allowedRoles: [], blockedRoles: [], channelCategoryId: "", logChannel: "", transcriptChannel: "", notificationChannel: "", autoMessage: "", businessHours: "", estimatedResponseTime: "", welcomeMsg: "", style: undefined, sortOrder: ticketCategories.length }); setShowCatForm(true); }} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Plus size={14} /> Nueva Categoría</button>
+            <button onClick={() => { setEditingCat(null); setCatForm({ id: "", label: "", emoji: "🎫", description: "", color: "#00E5FF", priority: "low", status: "active", staffRole: "", allowedRoles: [], blockedRoles: [], channelCategoryId: "", logChannel: "", transcriptChannel: "", notificationChannel: "", autoMessage: "", businessHours: "", estimatedResponseTime: "", welcomeMsg: "", style: undefined, sortOrder: ticketCategories.length }); setShowCatForm(true); }} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Plus size={14} /> Nueva Categoría</button>
           </div>
           {ticketCategories.length === 0 && <div className="glass rounded-2xl p-8 text-center text-gray-500">No hay categorías. Crea una para empezar.</div>}
           {ticketCategories.map((cat: any, i: number) => (
             <div key={cat.id} className="glass rounded-2xl p-4 flex items-center gap-4">
-              <span className="text-2xl">{cat.emoji || "🎫"}</span>
+              <span className="text-2xl">{fmtEmoji(cat.emoji, "🎫")}</span>
               <div className="flex-1 min-w-0">
                 <div className="font-bold text-white truncate">{cat.label}</div>
                 <div className="text-xs text-gray-500 truncate">{cat.description || "Sin descripción"}</div>
                 <div className="flex gap-2 mt-1">
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${cat.status === "inactive" ? "bg-red-500/20 text-red-400" : "bg-green-500/20 text-green-400"}`}>{cat.status === "inactive" ? "Inactivo" : "Activo"}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${cat.status === "inactive" ? "bg-red-500/20 text-red-400" : "bg-cyan-400/20 text-cyan-300"}`}>{cat.status === "inactive" ? "Inactivo" : "Activo"}</span>
                   <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-400">{cat.priority || "low"}</span>
                 </div>
               </div>
@@ -1434,7 +1465,7 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
             </div>
           ))}
           {showCatForm && (
-            <div className="glass rounded-2xl p-6 space-y-4 border border-[#00FF88]/30">
+            <div className="glass rounded-2xl p-6 space-y-4 border border-[#00E5FF]/30">
               <h3 className="font-bold text-white">{editingCat ? "✏️ Editar Categoría" : "➕ Nueva Categoría"}</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <TextInput value={catForm.label} onChange={(v: string) => setCatForm({ ...catForm, label: v })} label="Nombre" placeholder="Soporte Técnico" />
@@ -1463,12 +1494,12 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
                 <NumberInput value={catForm.sortOrder || 0} onChange={(v: number) => setCatForm({ ...catForm, sortOrder: v })} label="Orden" min={0} />
               </div>
               <div className="flex gap-2">
-                <button onClick={editingCat ? updateCategory : addCategory} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Save size={14} /> {editingCat ? "Actualizar" : "Crear"}</button>
+                <button onClick={editingCat ? updateCategory : addCategory} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Save size={14} /> {editingCat ? "Actualizar" : "Crear"}</button>
                 <button onClick={() => { setShowCatForm(false); setEditingCat(null); }} className="px-4 py-2.5 rounded-xl bg-white/5 text-gray-400 text-sm hover:bg-white/10">Cancelar</button>
               </div>
             </div>
           )}
-          <button onClick={saveTicketConfig} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Save size={14} /> Guardar Categorías</button>
+          <button onClick={saveTicketConfig} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Save size={14} /> Guardar Categorías</button>
         </div>
       )}
 
@@ -1476,23 +1507,23 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
       {activeTicketTab === "forms" && (
         <div className="space-y-4">
           <div className="glass rounded-2xl p-6 space-y-4">
-            <h3 className="font-bold text-white flex items-center gap-2"><FileText size={16} className="text-[#00FF88]" /> Formularios Personalizados</h3>
+            <h3 className="font-bold text-white flex items-center gap-2"><FileText size={16} className="text-[#00E5FF]" /> Formularios Personalizados</h3>
             <p className="text-xs text-gray-500">Define campos personalizados que se mostrarán al abrir un ticket en cada categoría.</p>
             {ticketCategories.length === 0 ? (
               <div className="text-center py-8 space-y-4">
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-[#00FF88]/10 flex items-center justify-center"><FileText size={32} className="text-[#00FF88]" /></div>
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-[#00E5FF]/10 flex items-center justify-center"><FileText size={32} className="text-[#00E5FF]" /></div>
                 <p className="text-gray-300 text-sm font-medium">No hay categorías creadas</p>
                 <p className="text-gray-500 text-xs max-w-md mx-auto">Para configurar formularios, primero necesitas crear categorías de ticket. Cada categoría puede tener sus propios campos personalizados.</p>
-                <button onClick={() => { setActiveTicketTab("categories"); setShowCatForm(true); }} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A] transition-colors"><Plus size={14} /> Crear primera categoría</button>
+                <button onClick={() => { setActiveTicketTab("categories"); setShowCatForm(true); }} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB] transition-colors"><Plus size={14} /> Crear primera categoría</button>
               </div>
             ) : (
               <>
-                <SelectInput value={selectedFormCat} onChange={setSelectedFormCat} options={[{ value: "", label: "Seleccionar categoría..." }, ...ticketCategories.map((c: any) => ({ value: c.id, label: `${c.emoji || "🎫"} ${c.label}` }))]} label="Categoría" />
+                <SelectInput value={selectedFormCat} onChange={setSelectedFormCat} options={[{ value: "", label: "Seleccionar categoría..." }, ...ticketCategories.map((c: any) => ({ value: c.id, label: `${fmtEmoji(c.emoji, "🎫")} ${c.label}` }))]} label="Categoría" />
                 {selectedFormCat && (
                   <div className="space-y-3">
                     <div className="space-y-2">
                       {(formFields[selectedFormCat] || []).map((f: any, i: number) => (
-                        <div key={i} className="flex items-center gap-3 p-2 rounded-xl bg-white/[0.02] border border-white/5">
+                        <div key={i} className="flex items-center gap-3 p-2 rounded-xl bg-white/[0.02] border border-[rgba(150,200,255,0.08)]">
                           <span className="text-xs text-gray-400 w-4">{i + 1}</span>
                           <span className="text-sm text-white flex-1">{f.label}</span>
                           <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-400">{f.type}</span>
@@ -1502,12 +1533,12 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
                       ))}
                       {(formFields[selectedFormCat] || []).length === 0 && <p className="text-xs text-gray-600 text-center py-2">Sin campos definidos para esta categoría</p>}
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 rounded-xl bg-white/[0.02] border border-[rgba(150,200,255,0.08)]">
                       <TextInput value={newField.label} onChange={(v: string) => setNewField({ ...newField, label: v })} label="Nombre del campo" placeholder="Tu problema" />
                       <SelectInput value={newField.type} onChange={(v: string) => setNewField({ ...newField, type: v })} options={[{ value: "short_text", label: "Texto corto" }, { value: "long_text", label: "Texto largo" }, { value: "number", label: "Número" }, { value: "email", label: "Email" }, { value: "select", label: "Selección" }]} label="Tipo" />
                       <div className="flex items-end gap-2">
                         <Toggle checked={newField.required} onChange={(v: boolean) => setNewField({ ...newField, required: v })} label="Requerido" />
-                        <button onClick={() => { if (!newField.label) { showToast("Escribe un nombre para el campo", "error"); return; } const updated = { ...formFields }; if (!updated[selectedFormCat]) updated[selectedFormCat] = []; updated[selectedFormCat].push({ ...newField }); setFormFields(updated); setNewField({ label: "", type: "short_text", required: false }); showToast("Campo agregado", "success"); }} className="px-4 py-2.5 rounded-xl bg-[#57F287]/10 text-[#57F287] text-sm font-semibold hover:bg-[#57F287]/20"><Plus size={14} /></button>
+                        <button onClick={() => { if (!newField.label) { showToast("Escribe un nombre para el campo", "error"); return; } const updated = { ...formFields }; if (!updated[selectedFormCat]) updated[selectedFormCat] = []; updated[selectedFormCat].push({ ...newField }); setFormFields(updated); setNewField({ label: "", type: "short_text", required: false }); showToast("Campo agregado", "success"); }} className="px-4 py-2.5 rounded-xl bg-[#00E5FF]/10 text-[#00E5FF] text-sm font-semibold hover:bg-[#00E5FF]/20"><Plus size={14} /></button>
                       </div>
                     </div>
                   </div>
@@ -1515,7 +1546,7 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
                 {!selectedFormCat && <p className="text-xs text-gray-600 text-center py-4">Selecciona una categoría arriba para configurar sus campos de formulario</p>}
               </>
             )}
-            <button onClick={saveTicketConfig} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Save size={14} /> Guardar Formularios</button>
+            <button onClick={saveTicketConfig} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Save size={14} /> Guardar Formularios</button>
           </div>
         </div>
       )}
@@ -1524,10 +1555,10 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
       {activeTicketTab === "behavior" && (
         <div className="space-y-4">
           <div className="glass rounded-2xl p-6 space-y-4">
-            <h3 className="font-bold text-white flex items-center gap-2"><Settings size={16} className="text-[#00FF88]" /> Comportamiento del Ticket</h3>
+            <h3 className="font-bold text-white flex items-center gap-2"><Settings size={16} className="text-[#00E5FF]" /> Comportamiento del Ticket</h3>
             <Toggle checked={!!ticketCfg.autoCloseEnabled} onChange={(v: boolean) => setTicketCfg({ ...ticketCfg, autoCloseEnabled: v })} label="Auto-cierre por inactividad" />
             {ticketCfg.autoCloseEnabled && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-4 border-l-2 border-white/5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-4 border-l-2 border-[rgba(150,200,255,0.08)]">
                 <NumberInput value={ticketCfg.autoCloseMinutes} onChange={(v: number) => setTicketCfg({ ...ticketCfg, autoCloseMinutes: v })} label="Minutos de inactividad" min={5} />
                 <TextInput value={ticketCfg.autoCloseMessage} onChange={(v: string) => setTicketCfg({ ...ticketCfg, autoCloseMessage: v })} label="Mensaje de cierre" placeholder="Este ticket se cerrará por inactividad." />
               </div>
@@ -1541,7 +1572,7 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
             <TextInput value={ticketCfg.welcomeMessage} onChange={(v: string) => setTicketCfg({ ...ticketCfg, welcomeMessage: v })} label="Mensaje de bienvenida del ticket" placeholder="Describe tu problema con detalle..." />
             <TextInput value={ticketCfg.channelPrefix} onChange={(v: string) => setTicketCfg({ ...ticketCfg, channelPrefix: v })} label="Prefijo del canal" placeholder="ticket" />
             <NumberInput value={ticketCfg.maxPerUser} onChange={(v: number) => setTicketCfg({ ...ticketCfg, maxPerUser: v })} label="Máximo tickets por usuario" min={1} />
-            <button onClick={saveTicketConfig} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Save size={14} /> Guardar Comportamiento</button>
+            <button onClick={saveTicketConfig} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Save size={14} /> Guardar Comportamiento</button>
           </div>
         </div>
       )}
@@ -1551,7 +1582,7 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
         <div className="space-y-4">
           <div className="glass rounded-2xl p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-white flex items-center gap-2"><ScrollText size={16} className="text-[#00FF88]" /> Logs de Tickets</h3>
+              <h3 className="font-bold text-white flex items-center gap-2"><ScrollText size={16} className="text-[#00E5FF]" /> Logs de Tickets</h3>
               <div className="flex items-center gap-3">
                 <Toggle checked={logsAutoRefresh} onChange={setLogsAutoRefresh} label="Auto-refresh" />
                 <button onClick={loadLogs} className="text-gray-400 hover:text-white"><RefreshCw size={16} /></button>
@@ -1559,13 +1590,13 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
             </div>
             <div className="flex gap-2 flex-wrap">
               {["all", "created", "closed", "claimed", "moved", "renamed", "priority_changed", "rating_received", "transcript_sent"].map((f) => (
-                <button key={f} onClick={() => { setLogsFilter(f); setLogsPage(1); }} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${logsFilter === f ? "bg-[#00FF88] text-white" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}>
+                <button key={f} onClick={() => { setLogsFilter(f); setLogsPage(1); }} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${logsFilter === f ? "bg-[#00E5FF] text-[#02141a]" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}>
                   {f === "all" ? "Todos" : f.replace(/_/g, " ")}
                 </button>
               ))}
             </div>
             {logsLoading ? (
-              <div className="text-center py-8"><div className="w-8 h-8 border-2 border-[#00FF88] border-t-transparent rounded-full animate-spin mx-auto" /></div>
+              <div className="text-center py-8"><div className="w-8 h-8 border-2 border-[#00E5FF] border-t-transparent rounded-full animate-spin mx-auto" /></div>
             ) : paginatedLogs.length === 0 ? (
               <div className="text-center py-8 text-gray-500">Sin registros de actividad</div>
             ) : (
@@ -1573,10 +1604,11 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
                 {paginatedLogs.map((log: any, i: number) => (
                   <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm text-white truncate">{log.action || log.type || "Acción desconocida"}</div>
+                      <div className="text-sm text-white truncate">{logTitle(log)}</div>
                       <div className="text-xs text-gray-500">
-                        {log.user && <span>por {log.user}</span>}
-                        {log.target && <span> → {log.target}</span>}
+                        {log.user && <span>por {fmtLogActor(log.user)}</span>}
+                        {log.executor && <span>por {fmtLogActor(log.executor)}</span>}
+                        {log.target && <span> → {fmtLogActor(log.target)}</span>}
                       </div>
                     </div>
                     <span className="text-xs text-gray-600 whitespace-nowrap">{log.timestamp ? new Date(log.timestamp).toLocaleString() : log.ts ? new Date(log.ts).toLocaleString() : ""}</span>
@@ -1606,7 +1638,7 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
             <Toggle checked={!!ticketCfg.ratingRequired} onChange={(v: boolean) => setTicketCfg({ ...ticketCfg, ratingRequired: v })} label="Valoración obligatoria antes de cerrar" />
             <SelectInput value={ticketCfg.ratingLogChannel} onChange={(v: string) => setTicketCfg({ ...ticketCfg, ratingLogChannel: v })} options={channels} label="Canal de valoraciones" />
             <TextInput value={ticketCfg.ratingMessage} onChange={(v: string) => setTicketCfg({ ...ticketCfg, ratingMessage: v })} label="Mensaje personalizado" placeholder="Antes de cerrar, ¿cómo fue tu experiencia?" />
-            <button onClick={saveTicketConfig} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Save size={14} /> Guardar Configuración</button>
+            <button onClick={saveTicketConfig} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Save size={14} /> Guardar Configuración</button>
           </div>
         </div>
       )}
@@ -1619,7 +1651,7 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
                   { label: "Promedio General", value: `${(ticketStats.avgRating || 0).toFixed(1)} ⭐`, color: "#FEE75C" },
-                  { label: "Total Valoraciones", value: ticketStats.totalRatings || 0, color: "#00FF88" },
+                  { label: "Total Valoraciones", value: ticketStats.totalRatings || 0, color: "#00E5FF" },
                   { label: "CSAT", value: `${ticketStats.csat || 0}%`, color: "#57F287" },
                   { label: "Tiempo Promedio", value: ticketStats.avgDuration ? `${Math.round(ticketStats.avgDuration / 60000)}m` : "N/A", color: "#EB459E" },
                 ].map((s) => (
@@ -1664,7 +1696,7 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
                   <h3 className="font-bold text-white mb-3">📋 Valoraciones Recientes</h3>
                   <div className="space-y-2 max-h-96 overflow-y-auto">
                     {ticketStats.recentRatings.map((r: any, i: number) => (
-                      <div key={i} className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                      <div key={i} className="p-3 rounded-xl bg-white/[0.02] border border-[rgba(150,200,255,0.08)]">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-yellow-400">{"⭐".repeat(r.stars)}</span>
                           <span className="text-xs text-gray-500">#{r.ticketNumber}</span>
@@ -1694,7 +1726,7 @@ function AutoroleSection({ config, roles, saveConfig }: any) {
       <div><h2 className="text-xl font-black text-white mb-1">🎭 AutoRole</h2><p className="text-sm text-gray-500">Rol asignado automáticamente al unirse.</p></div>
       <div className="glass rounded-2xl p-6 space-y-4">
         <SelectInput value={roleId} onChange={setRoleId} options={roles} label="Rol a asignar" />
-        <button onClick={() => saveConfig(`guild/${config?.id || ""}/autorole`, { roleId })} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Save size={14} /> Guardar</button>
+        <button onClick={() => saveConfig(`guild/${config?.id || ""}/autorole`, { roleId })} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Save size={14} /> Guardar</button>
       </div>
     </div>
   );
@@ -1717,7 +1749,7 @@ function LogsSection({ config, channels, saveConfig }: any) {
         {logTypes.map((lt) => (
           <SelectInput key={lt.key} value={logs[lt.key] || ""} onChange={(v) => setLogs({ ...logs, [lt.key]: v })} options={channels} label={lt.label} />
         ))}
-        <button onClick={() => saveConfig(`guild/${config?.id || ""}/logs`, logs)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Save size={14} /> Guardar</button>
+        <button onClick={() => saveConfig(`guild/${config?.id || ""}/logs`, logs)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Save size={14} /> Guardar</button>
       </div>
     </motion.div>
   );
@@ -1755,7 +1787,7 @@ function ProtectionSection({ config, channels, saveConfig }: any) {
       <div className="glass rounded-2xl p-6 space-y-4">
         <Toggle checked={!!prot.antinuke?.enabled} onChange={(v) => u("antinuke.enabled", v)} label="💣 Anti-Nuke" />
         {prot.antinuke?.enabled && ["channels", "roles", "emojis", "bans", "kicks", "webhooks"].map((key) => (
-          <div key={key} className="pl-4 border-l-2 border-white/5 space-y-2">
+          <div key={key} className="pl-4 border-l-2 border-[rgba(150,200,255,0.08)] space-y-2">
             <p className="text-sm text-gray-400 capitalize">{key}</p>
             <div className="flex gap-3">
               <div className="flex-1"><NumberInput value={prot.antinuke?.[key]?.threshold || 3} onChange={(v) => u(`antinuke.${key}.threshold`, v)} label="Umbral" /></div>
@@ -1781,7 +1813,7 @@ function ProtectionSection({ config, channels, saveConfig }: any) {
         <TextInput value={prot.wordFilter?.warningMessage || ""} onChange={(v) => u("wordFilter.warningMessage", v)} label="Mensaje de advertencia" />
         <SelectInput value={prot.wordFilter?.action || "delete"} onChange={(v) => u("wordFilter.action", v)} options={filterActions} label="Acción" />
       </div>
-      <button onClick={() => saveConfig(`guild/${config?.id || ""}/protection`, prot)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Save size={14} /> Guardar Protección</button>
+      <button onClick={() => saveConfig(`guild/${config?.id || ""}/protection`, prot)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Save size={14} /> Guardar Protección</button>
     </div>
   );
 }
@@ -1809,7 +1841,7 @@ function ModerationSection({ guildId, api }: { guildId: string; api: any }) {
         </div>
         <div className="flex gap-2">
           <button onClick={() => doAction("warn")} className="flex-1 py-2.5 rounded-xl bg-[#FEE75C]/10 text-[#FEE75C] text-sm font-semibold hover:bg-[#FEE75C]/20">⚠️ Warn</button>
-          <button onClick={() => doAction("timeout")} className="flex-1 py-2.5 rounded-xl bg-[#00FF88]/10 text-[#00FF88] text-sm font-semibold hover:bg-[#00FF88]/20">⏱️ Timeout</button>
+          <button onClick={() => doAction("timeout")} className="flex-1 py-2.5 rounded-xl bg-[#00E5FF]/10 text-[#00E5FF] text-sm font-semibold hover:bg-[#00E5FF]/20">⏱️ Timeout</button>
           <button onClick={() => doAction("kick")} className="flex-1 py-2.5 rounded-xl bg-[#FEE75C]/10 text-[#FEE75C] text-sm font-semibold hover:bg-[#FEE75C]/20">👢 Kick</button>
           <button onClick={() => doAction("ban")} className="flex-1 py-2.5 rounded-xl bg-[#ED4245]/10 text-[#ED4245] text-sm font-semibold hover:bg-[#ED4245]/20">⛔ Ban</button>
         </div>
@@ -1822,7 +1854,7 @@ function ModerationSection({ guildId, api }: { guildId: string; api: any }) {
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="border-white/5 hover:bg-transparent">
+              <TableRow className="border-[rgba(150,200,255,0.08)] hover:bg-transparent">
                 <TableHead className="h-auto py-2 text-xs text-gray-500">#</TableHead>
                 <TableHead className="h-auto py-2 text-xs text-gray-500">Tipo</TableHead>
                 <TableHead className="h-auto py-2 text-xs text-gray-500">Usuario</TableHead>
@@ -1831,7 +1863,7 @@ function ModerationSection({ guildId, api }: { guildId: string; api: any }) {
               </TableRow>
             </TableHeader>
             <TableBody>{cases.map((c: any, i: number) => (
-              <TableRow key={i} className="border-white/5 hover:bg-white/[0.02]"><TableCell className="py-2 text-gray-400">{c.caseNumber || i + 1}</TableCell><TableCell className="py-2"><span className="px-2 py-0.5 rounded text-xs bg-white/5">{c.type}</span></TableCell><TableCell className="py-2 text-gray-300">{c.targetId}</TableCell><TableCell className="py-2 text-gray-400 truncate max-w-[200px]">{c.reason}</TableCell><TableCell className="py-2 text-gray-500 text-xs">{new Date(c.timestamp).toLocaleDateString()}</TableCell></TableRow>
+              <TableRow key={i} className="border-[rgba(150,200,255,0.08)] hover:bg-white/[0.02]"><TableCell className="py-2 text-gray-400">{c.caseNumber || i + 1}</TableCell><TableCell className="py-2"><span className="px-2 py-0.5 rounded text-xs bg-white/5">{c.type}</span></TableCell><TableCell className="py-2 text-gray-300">{c.targetId}</TableCell><TableCell className="py-2 text-gray-400 truncate max-w-[200px]">{c.reason}</TableCell><TableCell className="py-2 text-gray-500 text-xs">{new Date(c.timestamp).toLocaleDateString()}</TableCell></TableRow>
             ))}</TableBody>
           </Table>
         </div>
@@ -1849,7 +1881,7 @@ function LevelsSection({ config, channels, roles, saveConfig, api, guildId }: an
   const multiplierOpts = [{ value: "1", label: "1× Normal" }, { value: "1.5", label: "1.5× Boost" }, { value: "2", label: "2× Doble XP" }, { value: "3", label: "3× Triple XP" }];
   const colorPresets = [
     { value: "#F5C518", label: "🟡 Dorado" },
-    { value: "#00FF88", label: "🔵 Blurple" },
+    { value: "#00E5FF", label: "🔵 Blurple" },
     { value: "#57F287", label: "🟢 Verde" },
     { value: "#FEE75C", label: "💛 Amarillo" },
     { value: "#EB459E", label: "💗 Rosa" },
@@ -1903,7 +1935,7 @@ function LevelsSection({ config, channels, roles, saveConfig, api, guildId }: an
         <div className="flex gap-3">
           <NumberInput value={newReward.level} onChange={(v) => setNewReward({ ...newReward, level: v })} label="Nivel" />
           <div className="flex-1"><SelectInput value={newReward.roleId} onChange={(v) => setNewReward({ ...newReward, roleId: v })} options={roles} label="Rol" /></div>
-          <button onClick={() => { if (newReward.roleId) setLvl({ ...lvl, rewards: [...(lvl.rewards || []), newReward] }); setNewReward({ level: 0, roleId: "" }); }} className="self-end px-4 py-2.5 rounded-xl bg-[#57F287]/10 text-[#57F287] text-sm font-semibold hover:bg-[#57F287]/20"><Plus size={14} /></button>
+          <button onClick={() => { if (newReward.roleId) setLvl({ ...lvl, rewards: [...(lvl.rewards || []), newReward] }); setNewReward({ level: 0, roleId: "" }); }} className="self-end px-4 py-2.5 rounded-xl bg-[#00E5FF]/10 text-[#00E5FF] text-sm font-semibold hover:bg-[#00E5FF]/20"><Plus size={14} /></button>
         </div>
         <div className="space-y-2">{(lvl.rewards || []).map((r: any, i: number) => (
           <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-white/[0.03]"><span className="text-sm text-gray-300">Nivel {r.level} → {roles.find((o: any) => o.value === r.roleId)?.label || r.roleId}</span><button onClick={() => setLvl({ ...lvl, rewards: lvl.rewards.filter((_: any, j: number) => j !== i) })} className="text-red-400 hover:text-red-300"><Trash2 size={12} /></button></div>
@@ -1912,11 +1944,11 @@ function LevelsSection({ config, channels, roles, saveConfig, api, guildId }: an
       <div className="glass rounded-2xl p-6">
         <h3 className="font-bold text-white mb-3">🏆 Top Niveles</h3>
         <div className="space-y-2">{top.map((t: any, i: number) => (
-          <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-white/[0.03]"><span className="text-xs text-gray-600 w-6">#{i + 1}</span><span className="text-sm text-gray-300">{t.userId}</span><span className="ml-auto text-xs text-[#00FF88]">Lv {t.level} · {t.xp} XP</span></div>
+          <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-white/[0.03]"><span className="text-xs text-gray-600 w-6">#{i + 1}</span><span className="text-sm text-gray-300">{t.userId}</span><span className="ml-auto text-xs text-[#00E5FF]">Lv {t.level} · {t.xp} XP</span></div>
         ))}</div>
         {top.length === 0 && <p className="text-gray-600 text-sm text-center py-4">Sin datos</p>}
       </div>
-      <button onClick={() => saveConfig(`guild/${guildId}/levels`, lvl)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Save size={14} /> Guardar Niveles</button>
+      <button onClick={() => saveConfig(`guild/${guildId}/levels`, lvl)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Save size={14} /> Guardar Niveles</button>
     </div>
   );
 }
@@ -1957,7 +1989,7 @@ function EconomySection({ config, saveConfig, api, guildId }: any) {
         ))}</div>
         {top.length === 0 && <p className="text-gray-600 text-sm text-center py-4">Sin datos</p>}
       </div>
-      <button onClick={() => saveConfig(`guild/${guildId}/economy`, eco)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Save size={14} /> Guardar Economía</button>
+      <button onClick={() => saveConfig(`guild/${guildId}/economy`, eco)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Save size={14} /> Guardar Economía</button>
     </div>
   );
 }
@@ -1976,13 +2008,13 @@ function VerificationSection({ config, channels, roles, saveConfig, api, guildId
     <div className="space-y-6">
       <div><h2 className="text-xl font-black text-white mb-1">🔐 Verificación</h2><p className="text-sm text-gray-500">Canal de verificación con IP tracking.</p></div>
       <div className="glass rounded-2xl p-6 space-y-4">
-        {verifyCfg.active && <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#57F287]/10 text-[#57F287] text-sm"><CheckCircle size={14} /> Verificación Activa</div>}
+        {verifyCfg.active && <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#00E5FF]/10 text-[#00E5FF] text-sm"><CheckCircle size={14} /> Verificación Activa</div>}
         <Toggle checked={!!verifyCfg.active} onChange={(v) => setVerifyCfg({ ...verifyCfg, active: v })} label="Activar verificación" />
         <SelectInput value={verifyCfg.channelId} onChange={(v) => setVerifyCfg({ ...verifyCfg, channelId: v })} options={channels} label="Canal de verificación" />
         <SelectInput value={verifyCfg.roleId} onChange={(v) => setVerifyCfg({ ...verifyCfg, roleId: v })} options={roles} label="Rol de verificación" />
         <TextInput value={verifyCfg.customMsg} onChange={(v) => setVerifyCfg({ ...verifyCfg, customMsg: v })} label="Mensaje personalizado" />
         <div className="flex gap-2">
-          <button onClick={setupVerify} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Send size={14} /> Publicar</button>
+          <button onClick={setupVerify} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Send size={14} /> Publicar</button>
           <button onClick={removeVerify} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#ED4245]/10 text-[#ED4245] text-sm font-semibold hover:bg-[#ED4245]/20"><Trash2 size={14} /> Desactivar</button>
         </div>
       </div>
@@ -1999,11 +2031,11 @@ function BotControlSection({ api, stats }: { api: any; stats: any }) {
       <div><h2 className="text-xl font-black text-white mb-1">⚡ Control del Bot</h2><p className="text-sm text-gray-500">Enciende, apaga o reinicia System 777.</p></div>
       <div className="glass rounded-2xl p-6">
         <div className="flex items-center gap-4 mb-6">
-          <div className={`w-3 h-3 rounded-full ${power.online ? "bg-green-400" : "bg-gray-500"}`} />
+          <div className={`w-3 h-3 rounded-full ${power.online ? "bg-cyan-300" : "bg-gray-500"}`} />
           <span className="text-white font-bold">{power.online ? "Online" : "Offline"}</span>
         </div>
         <div className="flex gap-3">
-          <button onClick={() => doPower("start")} className="flex-1 py-3 rounded-xl bg-[#57F287]/10 text-[#57F287] text-sm font-semibold hover:bg-[#57F287]/20">▶ Encender</button>
+          <button onClick={() => doPower("start")} className="flex-1 py-3 rounded-xl bg-[#00E5FF]/10 text-[#00E5FF] text-sm font-semibold hover:bg-[#00E5FF]/20">▶ Encender</button>
           <button onClick={() => doPower("stop")} className="flex-1 py-3 rounded-xl bg-[#ED4245]/10 text-[#ED4245] text-sm font-semibold hover:bg-[#ED4245]/20">⏹ Apagar</button>
           <button onClick={() => doPower("restart")} className="flex-1 py-3 rounded-xl bg-[#FEE75C]/10 text-[#FEE75C] text-sm font-semibold hover:bg-[#FEE75C]/20">↺ Reiniciar</button>
         </div>
@@ -2055,7 +2087,7 @@ function BroadcastSection({ api, showToast }: { api: any; showToast: any }) {
       <div><h2 className="text-xl font-black text-white mb-1">📢 Broadcast</h2><p className="text-sm text-gray-500">Envía un mensaje a todos los servidores.</p></div>
       <div className="glass rounded-2xl p-6 space-y-4">
         <div><label className="block text-xs text-gray-500 mb-1.5">Mensaje</label><Textarea value={msg} onChange={(e) => setMsg(e.target.value)} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none h-32 min-h-0 resize-none" /></div>
-        <button onClick={send} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Send size={14} /> Enviar a todos</button>
+        <button onClick={send} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Send size={14} /> Enviar a todos</button>
       </div>
     </div>
   );
@@ -2119,18 +2151,18 @@ function StaffSection({ api }: { api: any }) {
         <TextInput value={form.userId} onChange={(v) => setForm({ ...form, userId: v })} label="User ID" />
         <SelectInput value={form.rank} onChange={(v) => setForm({ ...form, rank: v })} options={[{ value: "helper", label: "Helper" }, { value: "mod", label: "Moderador" }, { value: "admin", label: "Admin" }, { value: "co-owner", label: "Co-Owner" }]} label="Rango" />
         <TextInput value={form.note} onChange={(v) => setForm({ ...form, note: v })} label="Nota" />
-        <button onClick={add} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Plus size={14} /> Añadir</button>
+        <button onClick={add} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Plus size={14} /> Añadir</button>
       </div>
       <div className="glass rounded-2xl p-6">
         <h3 className="font-bold text-white mb-3">Staff ({staff.length})</h3>
         <div className="space-y-2">{staff.map((s: any) => (
-          <div key={s.userId} className="flex items-center justify-between p-3 rounded-lg bg-white/[0.03]"><div><span className="text-sm text-white">{s.userId}</span><span className="text-xs text-[#00FF88] ml-2">{s.rank}</span>{s.note && <span className="text-xs text-gray-500 ml-2">{s.note}</span>}</div><button onClick={() => remove(s.userId)} className="text-red-400 hover:text-red-300"><Trash2 size={12} /></button></div>
+          <div key={s.userId} className="flex items-center justify-between p-3 rounded-lg bg-white/[0.03]"><div><span className="text-sm text-white">{s.userId}</span><span className="text-xs text-[#00E5FF] ml-2">{s.rank}</span>{s.note && <span className="text-xs text-gray-500 ml-2">{s.note}</span>}</div><button onClick={() => remove(s.userId)} className="text-red-400 hover:text-red-300"><Trash2 size={12} /></button></div>
         ))}</div>
       </div>
       <div className="glass rounded-2xl p-6">
         <h3 className="font-bold text-white mb-3">📜 Audit Log</h3>
         <div className="space-y-1 max-h-64 overflow-y-auto">{logs.map((l: any, i: number) => (
-          <div key={i} className="text-xs text-gray-400 py-1 border-b border-white/5">{l.action} — {l.userId} — {new Date(l.timestamp).toLocaleString()}</div>
+          <div key={i} className="text-xs text-gray-400 py-1 border-b border-[rgba(150,200,255,0.08)]">{fmtLogDetail(l.action)} — {fmtLogActor(l.userId)} — {l.timestamp ? new Date(l.timestamp).toLocaleString() : ""}</div>
         ))}</div>
         {logs.length === 0 && <p className="text-gray-600 text-sm text-center py-4">Sin logs</p>}
       </div>
@@ -2181,7 +2213,7 @@ function PremiumAdminSection({ api }: { api: any }) {
     <div className="space-y-6">
       <div><h2 className="text-xl font-black text-white mb-1">👑 Premium Admin</h2></div>
       <div className="flex gap-2 overflow-x-auto pb-2">{["users", "codes"].map((t) => (
-        <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap ${tab === t ? "bg-[#00FF88]/20 text-[#00FF88]" : "text-gray-500 hover:text-white"}`}>{t === "users" ? "Usuarios" : "Códigos"}</button>
+        <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap ${tab === t ? "bg-[#00E5FF]/20 text-[#00E5FF]" : "text-gray-500 hover:text-white"}`}>{t === "users" ? "Usuarios" : "Códigos"}</button>
       ))}</div>
       {tab === "users" && (
         <div className="glass rounded-2xl p-6 space-y-4">
@@ -2190,7 +2222,7 @@ function PremiumAdminSection({ api }: { api: any }) {
             <div className="flex-1"><TextInput value={grantForm.userId} onChange={(v) => setGrantForm({ ...grantForm, userId: v })} label="User ID" /></div>
             <div className="flex-1"><SelectInput value={grantForm.plan} onChange={(v) => setGrantForm({ ...grantForm, plan: v })} options={[{ value: "Sharingan", label: "Sharingan" }, { value: "Mangekyo", label: "Mangekyo" }, { value: "Rinnegan", label: "Rinnegan" }]} label="Plan" /></div>
             <div className="w-24"><NumberInput value={grantForm.days} onChange={(v) => setGrantForm({ ...grantForm, days: v })} label="Días" /></div>
-            <button onClick={grant} className="self-end px-4 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Plus size={14} /></button>
+            <button onClick={grant} className="self-end px-4 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Plus size={14} /></button>
           </div>
           <h3 className="font-bold text-white mt-4">Usuarios ({users.length})</h3>
           <div className="space-y-2">{users.map((u: any) => (
@@ -2205,7 +2237,7 @@ function PremiumAdminSection({ api }: { api: any }) {
             <div className="flex-1"><SelectInput value={codeForm.plan} onChange={(v) => setCodeForm({ ...codeForm, plan: v })} options={[{ value: "Sharingan", label: "Sharingan" }, { value: "Mangekyo", label: "Mangekyo" }, { value: "Rinnegan", label: "Rinnegan" }]} label="Plan" /></div>
             <div className="w-24"><NumberInput value={codeForm.days} onChange={(v) => setCodeForm({ ...codeForm, days: v })} label="Días" /></div>
             <div className="w-24"><NumberInput value={codeForm.uses} onChange={(v) => setCodeForm({ ...codeForm, uses: v })} label="Usos" /></div>
-            <button onClick={genCode} className="self-end px-4 py-2.5 rounded-xl bg-[#00FF88] text-white text-sm font-semibold hover:bg-[#00CC6A]"><Plus size={14} /></button>
+            <button onClick={genCode} className="self-end px-4 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Plus size={14} /></button>
           </div>
           <h3 className="font-bold text-white mt-4">Códigos ({codes.length})</h3>
           <div className="space-y-2">{codes.map((c: any) => (
@@ -2252,14 +2284,14 @@ function JarvisSection({ api, stats }: { api: any; stats: any }) {
           {messages.length === 0 && <div className="text-center text-gray-600 py-20">JARVIS online. ¿En qué puedo ayudarte?</div>}
           {messages.map((m, i) => (
             <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[70%] px-4 py-2.5 rounded-2xl text-sm ${m.role === "user" ? "bg-[#00FF88] text-white" : "bg-white/5 text-gray-300"}`}>{m.content}</div>
+              <div className={`max-w-[70%] px-4 py-2.5 rounded-2xl text-sm ${m.role === "user" ? "bg-[#00E5FF] text-[#02141a]" : "bg-white/5 text-gray-300"}`}>{m.content}</div>
             </div>
           ))}
           {loading && <div className="flex justify-start"><div className="bg-white/5 px-4 py-2.5 rounded-2xl text-sm text-gray-500">Pensando...</div></div>}
         </div>
         <div className="flex gap-2">
-          <Input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Escribe un mensaje..." aria-label="Mensaje" className="flex-1 rounded-xl border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus-visible:border-[#00FF88]/50 focus-visible:ring-[#00FF88]/20" disabled={loading} />
-          <button onClick={send} disabled={loading} className="px-4 py-2.5 rounded-xl bg-[#00FF88] text-white hover:bg-[#00CC6A] disabled:opacity-50"><Send size={16} /></button>
+          <Input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Escribe un mensaje..." aria-label="Mensaje" className="flex-1 rounded-xl border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus-visible:border-[#00E5FF]/50 focus-visible:ring-[#00E5FF]/20" disabled={loading} />
+          <button onClick={send} disabled={loading} className="px-4 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] hover:bg-[#00B8DB] disabled:opacity-50"><Send size={16} /></button>
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -2344,7 +2376,7 @@ function NotificationsSection({ api, channels, roles, guildId, showToast }: any)
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div><h2 className="text-xl font-black text-white mb-1">🔔 Notificaciones de Streamers</h2><p className="text-sm text-gray-500">Notifica cuando haya contenido nuevo en YouTube, Kick o TikTok.</p></div>
-        <button onClick={checkNow} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#00FF88]/10 text-[#00FF88] text-sm font-semibold hover:bg-[#00FF88]/20"><RefreshCw size={14} /> Verificar Ahora</button>
+        <button onClick={checkNow} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#00E5FF]/10 text-[#00E5FF] text-sm font-semibold hover:bg-[#00E5FF]/20"><RefreshCw size={14} /> Verificar Ahora</button>
       </div>
 
       <div className="flex gap-2">
@@ -2461,12 +2493,12 @@ function ActivityLogsSection({ api, guildId }: { api: any; guildId: string }) {
   const typeColors: Record<string, string> = {
     moderation: "bg-red-500/20 text-red-400",
     message: "bg-blue-500/20 text-blue-400",
-    member: "bg-green-500/20 text-green-400",
+    member: "bg-cyan-400/20 text-cyan-300",
     channel: "bg-purple-500/20 text-purple-400",
     role: "bg-yellow-500/20 text-yellow-400",
     voice: "bg-cyan-500/20 text-cyan-400",
     ticket: "bg-[#FEE75C]/20 text-[#FEE75C]",
-    bot: "bg-[#00FF88]/20 text-[#00FF88]",
+    bot: "bg-[#00E5FF]/20 text-[#00E5FF]",
     system: "bg-gray-500/20 text-gray-400",
   };
 
@@ -2476,6 +2508,11 @@ function ActivityLogsSection({ api, guildId }: { api: any; guildId: string }) {
   };
 
   const filtered = filter === "all" ? logs : logs.filter((l) => l.type === filter);
+  // tipos reales que llegan de la API (p. ej. channel_update, member_join…)
+  const availableTypes = ["all", ...Array.from(new Set(logs.map((l: any) => l?.type).filter((t: any) => typeof t === "string" && t)))];
+  const iconFor = (t: string) => typeIcons[t] || typeIcons[t.split("_")[0]] || "📋";
+  const colorFor = (t: string) => typeColors[t] || typeColors[t.split("_")[0]] || typeColors.system;
+  const labelFor = (t: string) => t === "all" ? "Todos" : t.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
   return (
     <div className="space-y-6">
@@ -2484,31 +2521,32 @@ function ActivityLogsSection({ api, guildId }: { api: any; guildId: string }) {
         <p className="text-sm text-gray-500">Historial de todas las acciones del bot en el servidor.</p>
       </div>
       <div className="flex gap-2 flex-wrap">
-        {["all", "moderation", "message", "member", "channel", "role", "voice", "ticket", "bot"].map((t) => (
-          <button key={t} onClick={() => setFilter(t)} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${filter === t ? "bg-[#00FF88] text-white" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}>
-            {typeIcons[t] || "📋"} {t === "all" ? "Todos" : t.charAt(0).toUpperCase() + t.slice(1)}
+        {availableTypes.map((t) => (
+          <button key={t} onClick={() => setFilter(t)} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${filter === t ? "bg-[#00E5FF] text-[#02141a]" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}>
+            {iconFor(t)} {labelFor(t)}
           </button>
         ))}
       </div>
       <div className="glass rounded-2xl p-6">
         {loading ? (
-          <div className="text-center py-8"><div className="w-8 h-8 border-2 border-[#00FF88] border-t-transparent rounded-full animate-spin mx-auto" /></div>
+          <div className="text-center py-8"><div className="w-8 h-8 border-2 border-[#00E5FF] border-t-transparent rounded-full animate-spin mx-auto" /></div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-8 text-gray-500">Sin registros de actividad</div>
         ) : (
           <div className="space-y-2 max-h-[600px] overflow-y-auto">
             {filtered.slice(0, 100).map((log: any, i: number) => (
               <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
-                <span className="text-lg">{typeIcons[log.type] || "📋"}</span>
+                <span className="text-lg">{iconFor(String(log?.type || ""))}</span>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm text-white truncate">{log.action || log.message || "Acción desconocida"}</div>
+                  <div className="text-sm text-white truncate">{logTitle(log)}</div>
                   <div className="text-xs text-gray-500">
-                    {log.user && <span>por {log.user}</span>}
-                    {log.target && <span> → {log.target}</span>}
+                    {log?.executor && <span>por {fmtLogActor(log.executor)}</span>}
+                    {!log?.executor && log?.user && <span>por {fmtLogActor(log.user)}</span>}
+                    {log?.target && <span> → {fmtLogActor(log.target)}</span>}
                   </div>
                 </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${typeColors[log.type] || typeColors.system}`}>{log.type}</span>
-                <span className="text-xs text-gray-600 whitespace-nowrap">{log.timestamp ? new Date(log.timestamp).toLocaleString() : log.ts ? new Date(log.ts).toLocaleString() : ""}</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${colorFor(String(log?.type || ""))}`}>{String(log?.type || "").replace(/_/g, " ")}</span>
+                <span className="text-xs text-gray-600 whitespace-nowrap">{log?.timestamp ? new Date(log.timestamp).toLocaleString() : log?.ts ? new Date(log.ts).toLocaleString() : ""}</span>
               </div>
             ))}
           </div>
@@ -2566,7 +2604,7 @@ function RolePermsSection({ api, guildId, roles, showToast }: { api: any; guildI
               <h4 className="text-sm font-bold text-white capitalize">{category}</h4>
               <div className="flex flex-wrap gap-2">
                 {perms.map((perm) => (
-                  <span key={perm} className="flex items-center gap-1 px-3 py-1 rounded-full bg-[#00FF88]/10 text-[#00FF88] text-xs">
+                  <span key={perm} className="flex items-center gap-1 px-3 py-1 rounded-full bg-[#00E5FF]/10 text-[#00E5FF] text-xs">
                     {perm}
                     <button onClick={() => removePerm(category, perm)} className="hover:text-red-400 ml-1">✕</button>
                   </span>
@@ -2578,7 +2616,7 @@ function RolePermsSection({ api, guildId, roles, showToast }: { api: any; guildI
           <div className="flex gap-2">
             <SelectInput value={newPerm.category} onChange={(v) => setNewPerm({ ...newPerm, category: v })} options={[{ value: "moderation", label: "Moderación" }, { value: "tickets", label: "Tickets" }, { value: "welcome", label: "Bienvenida" }, { value: "levels", label: "Niveles" }, { value: "economy", label: "Economía" }, { value: "admin", label: "Admin" }]} label="Categoría" />
             <TextInput value={newPerm.permission} onChange={(v) => setNewPerm({ ...newPerm, permission: v })} label="Permiso" placeholder=" Nombre del permiso" />
-            <div className="flex items-end"><button onClick={addPerm} className="px-4 py-2.5 rounded-xl bg-[#57F287]/10 text-[#57F287] text-sm font-semibold hover:bg-[#57F287]/20"><Plus size={14} className="inline" /> Agregar</button></div>
+            <div className="flex items-end"><button onClick={addPerm} className="px-4 py-2.5 rounded-xl bg-[#00E5FF]/10 text-[#00E5FF] text-sm font-semibold hover:bg-[#00E5FF]/20"><Plus size={14} className="inline" /> Agregar</button></div>
           </div>
         </div>
       )}

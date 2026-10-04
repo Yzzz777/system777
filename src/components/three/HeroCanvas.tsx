@@ -25,14 +25,14 @@ function StaticFallback() {
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(55% 45% at 68% 32%, rgba(0,255,136,0.12), transparent 70%), radial-gradient(45% 40% at 22% 72%, rgba(69,200,255,0.10), transparent 70%), radial-gradient(40% 35% at 80% 78%, rgba(88,101,242,0.10), transparent 70%)",
+            "radial-gradient(55% 45% at 68% 32%, rgba(0,229,255,0.12), transparent 70%), radial-gradient(45% 40% at 22% 72%, rgba(96,165,250,0.10), transparent 70%), radial-gradient(40% 35% at 80% 78%, rgba(89,241,255,0.09), transparent 70%)",
         }}
       />
       <div
         className="absolute inset-0 opacity-40"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(0,255,136,0.055) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,136,0.055) 1px, transparent 1px)",
+            "linear-gradient(rgba(0,229,255,0.055) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.055) 1px, transparent 1px)",
           backgroundSize: "52px 52px",
           maskImage:
             "radial-gradient(75% 65% at 55% 45%, #000 20%, transparent 80%)",
@@ -40,10 +40,10 @@ function StaticFallback() {
             "radial-gradient(75% 65% at 55% 45%, #000 20%, transparent 80%)",
         }}
       />
-      <span className="absolute left-[18%] top-[30%] h-1.5 w-1.5 rounded-full bg-[#00ff88]/70 shadow-[0_0_14px_2px_rgba(0,255,136,0.5)]" />
-      <span className="absolute left-[72%] top-[24%] h-1 w-1 rounded-full bg-[#45c8ff]/70 shadow-[0_0_12px_2px_rgba(69,200,255,0.5)]" />
-      <span className="absolute left-[64%] top-[66%] h-1.5 w-1.5 rounded-full bg-[#5865f2]/70 shadow-[0_0_14px_2px_rgba(88,101,242,0.45)]" />
-      <span className="absolute left-[32%] top-[74%] h-1 w-1 rounded-full bg-[#00ff88]/60" />
+      <span className="absolute left-[18%] top-[30%] h-1.5 w-1.5 rounded-full bg-[#00e5ff]/70 shadow-[0_0_14px_2px_rgba(0,229,255,0.5)]" />
+      <span className="absolute left-[72%] top-[24%] h-1 w-1 rounded-full bg-[#60a5fa]/70 shadow-[0_0_12px_2px_rgba(96,165,250,0.5)]" />
+      <span className="absolute left-[64%] top-[66%] h-1.5 w-1.5 rounded-full bg-[#59f1ff]/70 shadow-[0_0_14px_2px_rgba(89,241,255,0.45)]" />
+      <span className="absolute left-[32%] top-[74%] h-1 w-1 rounded-full bg-[#00e5ff]/60" />
     </div>
   );
 }

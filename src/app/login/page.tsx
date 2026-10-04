@@ -24,10 +24,10 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-8">
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#00FF88]/5 via-transparent to-transparent" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#00E5FF]/5 via-transparent to-transparent" aria-hidden="true" />
       <div className="glass relative z-10 w-full max-w-md rounded-2xl p-8 sm:p-10 text-center">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#5865F2]/15">
-          <Bot className="h-8 w-8 text-[#5865F2]" />
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#00E5FF]/15">
+          <Bot className="h-8 w-8 text-[#00E5FF]" />
         </div>
         <h1 className="text-2xl font-bold text-white">System 777</h1>
         <p className="mt-2 text-sm text-gray-400">Inicia sesion con Discord para gestionar tus servidores</p>

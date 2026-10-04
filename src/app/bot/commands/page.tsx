@@ -115,7 +115,7 @@ export default function BotCommandsPage() {
     <div className="relative px-4 pb-[var(--section-y)] pt-10 sm:px-6 sm:pt-14">
       <div className="relative mx-auto max-w-6xl">
         <div className="text-center">
-          <span className="eyebrow justify-center" style={{ color: "#8f97ff" }}>
+          <span className="eyebrow justify-center">
             <Terminal aria-hidden className="h-3 w-3" />
             Referencia pública
           </span>
@@ -144,7 +144,7 @@ export default function BotCommandsPage() {
               placeholder="Buscar comando o descripción…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 focus-visible:border-[rgba(88,101,242,0.55)] focus-visible:ring-[rgba(88,101,242,0.15)]"
+              className="pl-10 focus-visible:border-[rgba(0,229,255,0.55)] focus-visible:ring-[rgba(0,229,255,0.15)]"
             />
           </div>
           <p className="shrink-0 font-[family-name:var(--font-mono)] text-xs text-[var(--text-3)]">
@@ -162,7 +162,7 @@ export default function BotCommandsPage() {
               <TabsTrigger
                 key={cat}
                 value={cat}
-                className="h-8 flex-none border border-[var(--line)] bg-white/[0.03] px-3.5 text-[13px] text-[var(--text-3)] hover:bg-white/[0.06] hover:text-[var(--text)] data-active:border-[rgba(88,101,242,0.55)] data-active:bg-[rgba(88,101,242,0.16)] data-active:text-[#a9b0ff]"
+                className="h-8 flex-none border border-[var(--line)] bg-white/[0.03] px-3.5 text-[13px] text-[var(--text-3)] hover:bg-white/[0.06] hover:text-[var(--text)] data-active:border-[rgba(0,229,255,0.55)] data-active:bg-[rgba(0,229,255,0.14)] data-active:text-[#59f1ff]"
               >
                 {cat}
               </TabsTrigger>

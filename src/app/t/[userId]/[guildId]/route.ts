@@ -31,10 +31,10 @@ export async function GET(
   <title>System 777 — Verificación</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a0f;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-    .card{background:rgba(20,20,30,.9);border:1px solid rgba(88,101,242,.3);border-radius:16px;padding:40px;max-width:420px;text-align:center;backdrop-filter:blur(20px)}
+    body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#04070e;color:#eef6fb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+    .card{background:rgba(8,16,25,.9);border:1px solid rgba(0,229,255,.3);border-radius:16px;padding:40px;max-width:420px;text-align:center;backdrop-filter:blur(20px)}
     .icon{font-size:48px;margin-bottom:16px}
-    h1{font-size:22px;color:#5865f2;margin-bottom:8px}
+    h1{font-size:22px;color:#00e5ff;margin-bottom:8px}
     p{font-size:14px;color:#949ba4;line-height:1.6;margin-bottom:16px}
     .status{display:inline-block;background:rgba(87,242,135,.15);color:#57f287;padding:6px 16px;border-radius:20px;font-size:13px;font-weight:600}
     .footer{margin-top:20px;font-size:11px;color:#4e5058}

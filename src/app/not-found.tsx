@@ -5,6 +5,7 @@ export default function NotFound() {
   return (
     <div className="relative flex min-h-[70vh] items-center justify-center px-4 py-20">
       <div className="grid-bg" aria-hidden />
+    <div className="bg-vignette" aria-hidden />
       <div className="relative w-full max-w-lg text-center">
         <span className="eyebrow justify-center">
           <SearchX aria-hidden className="h-3 w-3" />

@@ -40,7 +40,7 @@ export default function ThemePicker() {
             >
               <div className="sticky top-0 flex items-center justify-between border-b border-white/5 bg-[#121212] p-4">
                 <div className="flex items-center gap-2">
-                  <Palette className="h-5 w-5 text-[#00FF88]" />
+                  <Palette className="h-5 w-5 text-[#00E5FF]" />
                   <h3 className="font-semibold text-white">Temas</h3>
                 </div>
                 <button onClick={() => setOpen(false)} className="rounded-lg p-1 text-gray-400 hover:bg-white/5 hover:text-white">
@@ -74,7 +74,7 @@ export default function ThemePicker() {
                       </div>
                     </div>
                     {currentTheme.id === theme.id && (
-                      <Check className="h-4 w-4 text-[#00FF88]" />
+                      <Check className="h-4 w-4 text-[#00E5FF]" />
                     )}
                   </button>
                 ))}

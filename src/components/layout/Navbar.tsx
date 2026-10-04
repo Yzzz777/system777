@@ -84,8 +84,8 @@ export function Navbar() {
       className={cn(
         "fixed inset-x-0 top-0 z-50 border-b transition-[background-color,border-color,box-shadow] duration-300",
         scrolled
-          ? "border-[var(--line)] bg-[rgba(5,5,10,0.88)] shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
-          : "border-transparent bg-[rgba(5,5,10,0.35)] backdrop-blur-sm"
+          ? "border-[rgba(0,229,255,0.22)] bg-[rgba(4,7,14,0.88)] shadow-[0_10px_30px_rgba(0,0,0,0.35),0_1px_18px_rgba(0,229,255,0.12)] backdrop-blur-xl"
+          : "border-transparent bg-[rgba(4,7,14,0.35)] backdrop-blur-sm"
       )}
     >
       <nav
@@ -93,7 +93,7 @@ export function Navbar() {
         className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6"
       >
         <Link href="/" onClick={onLogoClick} className="group flex shrink-0 items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-[10px] border border-[var(--line)] bg-[var(--surface-2)] transition-colors group-hover:border-[rgba(0,255,136,0.35)]">
+          <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-[10px] border border-[var(--line)] bg-[var(--surface-2)] transition-colors group-hover:border-[rgba(0,229,255,0.35)]">
             <Image
               src="/logo.webp"
               alt=""
@@ -133,7 +133,7 @@ export function Navbar() {
                     <motion.span
                       layoutId="nav-pill"
                       data-nav-pill
-                      className="absolute inset-0 rounded-lg bg-white/[0.07] ring-1 ring-[var(--line-strong)]"
+                      className="absolute inset-0 rounded-lg bg-[var(--brand-dim)] ring-1 ring-[rgba(0,229,255,0.35)]"
                       transition={{ type: "spring", stiffness: 380, damping: 32 }}
                     />
                   )}
@@ -167,7 +167,7 @@ export function Navbar() {
                     <motion.span
                       layoutId="nav-pill"
                       data-nav-pill
-                      className="absolute inset-0 rounded-lg bg-white/[0.07] ring-1 ring-[var(--line-strong)]"
+                      className="absolute inset-0 rounded-lg bg-[var(--brand-dim)] ring-1 ring-[rgba(0,229,255,0.35)]"
                       transition={{ type: "spring", stiffness: 380, damping: 32 }}
                     />
                   )}
@@ -193,7 +193,7 @@ export function Navbar() {
                           className={cn(
                             "block rounded-lg px-3 py-2 text-[13.5px] transition-colors hover:bg-white/5 hover:text-[var(--text)]",
                             childActive
-                              ? "bg-white/[0.07] text-[var(--text)]"
+                              ? "bg-[var(--brand-dim)] text-[var(--brand)]"
                               : "text-[var(--text-2)]"
                           )}
                         >
@@ -274,7 +274,7 @@ export function Navbar() {
       {/* Panel móvil */}
       <div
         className={cn(
-          "overflow-hidden border-t border-[var(--line)] bg-[var(--bg)] transition-[max-height,opacity] duration-300 lg:hidden",
+          "overflow-hidden border-t border-[rgba(0,229,255,0.14)] bg-[var(--bg)] transition-[max-height,opacity] duration-300 lg:hidden",
           open ? "max-h-[calc(100dvh-4rem)] opacity-100" : "max-h-0 opacity-0"
         )}
       >
@@ -294,7 +294,7 @@ export function Navbar() {
                     className={cn(
                       "block rounded-xl px-3 py-3 text-[15px] transition-colors hover:bg-white/5 hover:text-[var(--text)]",
                       active
-                        ? "bg-white/[0.06] text-[var(--text)]"
+                        ? "bg-[var(--brand-dim)] text-[var(--brand)]"
                         : "text-[var(--text-2)]"
                     )}
                   >
@@ -324,7 +324,7 @@ export function Navbar() {
               );
             })}
           </ul>
-          <div className="mt-4 border-t border-[var(--line)] pt-4">
+          <div className="mt-4 border-t border-[rgba(0,229,255,0.14)] pt-4">
             {session ? (
               <div className="space-y-2">
                 <Button

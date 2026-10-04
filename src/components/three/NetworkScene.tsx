@@ -32,9 +32,9 @@ function mulberry32(seed: number) {
 }
 
 const COLORS = [
-  new THREE.Color("#00ff88"), // brand
-  new THREE.Color("#45c8ff"), // data
-  new THREE.Color("#5865f2"), // system
+  new THREE.Color("#00e5ff"), // brand
+  new THREE.Color("#60a5fa"), // data
+  new THREE.Color("#59f1ff"), // brand-bright
   new THREE.Color("#9dffe0"), // highlight
 ];
 
@@ -144,9 +144,9 @@ function Graph({
     const t = state.clock.elapsedTime;
     const d = Math.min(1, delta * 2.5);
 
-    if (outer.current) outer.current.rotation.y = t * 0.045;
+    if (outer.current) outer.current.rotation.y = t * 0.058;
     if (particles.current) {
-      particles.current.rotation.y = -t * 0.018;
+      particles.current.rotation.y = -t * 0.026;
       particles.current.rotation.x = Math.sin(t * 0.12) * 0.05;
     }
 
@@ -161,10 +161,10 @@ function Graph({
 
     // pulso sutil de los nodos y "latido" de la red
     if (nodeMat.current) {
-      nodeMat.current.size = (tier === "high" ? 0.46 : 0.6) + Math.sin(t * 1.4) * 0.05;
+      nodeMat.current.size = (tier === "high" ? 0.58 : 0.7) + Math.sin(t * 1.6) * 0.09;
     }
     if (edgeMat.current) {
-      edgeMat.current.opacity = 0.22 + Math.sin(t * 0.8) * 0.05;
+      edgeMat.current.opacity = 0.3 + Math.sin(t * 0.9) * 0.12;
     }
   });
 
@@ -178,12 +178,13 @@ function Graph({
             <bufferAttribute attach="attributes-color" args={[dust.col, 3]} />
           </bufferGeometry>
           <pointsMaterial
-            size={0.16}
+            size={0.2}
             sizeAttenuation
             vertexColors
             transparent
-            opacity={0.85}
+            opacity={0.9}
             depthWrite={false}
+            blending={THREE.AdditiveBlending}
           />
         </points>
       </group>
@@ -198,12 +199,13 @@ function Graph({
             </bufferGeometry>
             <pointsMaterial
               ref={nodeMat}
-              size={0.46}
+              size={0.58}
               sizeAttenuation
               vertexColors
               transparent
-              opacity={0.95}
+              opacity={1}
               depthWrite={false}
+              blending={THREE.AdditiveBlending}
             />
           </points>
 
@@ -213,10 +215,11 @@ function Graph({
             </bufferGeometry>
             <lineBasicMaterial
               ref={edgeMat}
-              color="#00ff88"
+              color="#00e5ff"
               transparent
-              opacity={0.22}
+              opacity={0.3}
               depthWrite={false}
+              blending={THREE.AdditiveBlending}
             />
           </lineSegments>
 
@@ -225,7 +228,7 @@ function Graph({
             <bufferGeometry>
               <bufferAttribute attach="attributes-position" args={[grid, 3]} />
             </bufferGeometry>
-            <lineBasicMaterial color="#45c8ff" transparent opacity={0.07} depthWrite={false} />
+            <lineBasicMaterial color="#60a5fa" transparent opacity={0.07} depthWrite={false} />
           </lineSegments>
         </group>
       </group>

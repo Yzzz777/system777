@@ -42,6 +42,7 @@ export default function ContactPage() {
   return (
     <div className="relative px-4 pb-[var(--section-y)] pt-10 sm:px-6 sm:pt-14">
       <div className="grid-bg" aria-hidden />
+    <div className="bg-vignette" aria-hidden />
       <div className="relative mx-auto max-w-5xl">
         <div className="text-center">
           <span className="eyebrow justify-center">
@@ -147,8 +148,8 @@ export default function ContactPage() {
               rel="noopener noreferrer"
               className="panel panel-hover flex items-center gap-3.5 p-5"
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[rgba(88,101,242,0.16)]">
-                <MessageSquare aria-hidden className="h-5 w-5 text-[#8f97ff]" />
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[rgba(0,229,255,0.14)]">
+                <MessageSquare aria-hidden className="h-5 w-5 text-[#59f1ff]" />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block font-semibold">Discord</span>
