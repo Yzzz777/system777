@@ -35,7 +35,6 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import StudyTimeCounter from "@/components/StudyTimeCounter";
-import HeroCanvas from "@/components/three/HeroCanvas";
 import RealEye from "@/components/RealEye";
 import TiltBanner from "@/components/TiltBanner";
 import { motion, useScroll, useTransform } from "framer-motion";
@@ -369,7 +368,21 @@ export default function HomePage() {
       <div className="relative z-10">
         {/* ============================ HERO ============================ */}
         <section className="relative overflow-hidden px-4 pb-16 pt-10 sm:px-6 sm:pt-16 lg:pb-24">
-          <HeroCanvas />
+          <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+            <Image
+              src="/hero-sasuke.gif"
+              alt=""
+              fill
+              unoptimized
+              sizes="100vw"
+              className="object-cover opacity-45"
+              style={{
+                maskImage: "radial-gradient(120% 100% at 60% 45%, #000 35%, transparent 92%)",
+                WebkitMaskImage: "radial-gradient(120% 100% at 60% 45%, #000 35%, transparent 92%)",
+              }}
+            />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,7,14,0.78)_0%,rgba(4,7,14,0.55)_45%,rgba(4,7,14,0.88)_100%)]" />
+          </div>
           <motion.div
             aria-hidden
             style={allowMotion ? { y: eyeY } : undefined}

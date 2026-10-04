@@ -1445,6 +1445,11 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
             <h3 className="font-bold text-white">📂 Categorías ({ticketCategories.length})</h3>
             <button onClick={() => { setEditingCat(null); setCatForm({ id: "", label: "", emoji: "🎫", description: "", color: "#00E5FF", priority: "low", status: "active", staffRole: "", allowedRoles: [], blockedRoles: [], channelCategoryId: "", logChannel: "", transcriptChannel: "", notificationChannel: "", autoMessage: "", businessHours: "", estimatedResponseTime: "", welcomeMsg: "", style: undefined, sortOrder: ticketCategories.length }); setShowCatForm(true); }} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Plus size={14} /> Nueva Categoría</button>
           </div>
+          {ticketCategories.length > 25 && (
+            <p className="text-xs text-amber-400/90 bg-amber-400/10 border border-amber-400/20 rounded-xl px-4 py-2.5">
+              Discord admite un máximo de 25 categorías en el panel: el panel mostrará las primeras 25 (las demás siguen guardadas).
+            </p>
+          )}
           {ticketCategories.length === 0 && <div className="glass rounded-2xl p-8 text-center text-gray-500">No hay categorías. Crea una para empezar.</div>}
           {ticketCategories.map((cat: any, i: number) => (
             <div key={cat.id} className="glass rounded-2xl p-4 flex items-center gap-4">
