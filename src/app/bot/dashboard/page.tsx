@@ -285,25 +285,48 @@ export default function BotDashboardPage() {
 
   const authTokenRef = useRef<string | null>(null);
 
-  const api = useCallback(async (path: string, opts?: RequestInit) => {
+  const fetchToken = useCallback(async () => {
     try {
-      let token = authTokenRef.current;
-      if (!token) {
-        try {
-          const tr = await fetch("/api/auth/token");
-          const td = await tr.json();
-          if (td?.token) { token = td.token; authTokenRef.current = td.token; }
-        } catch {}
-      }
+      const tr = await fetch("/api/auth/token");
+      const td = await tr.json();
+      const t = td?.token || null;
+      authTokenRef.current = t;
+      return t as string | null;
+    } catch { return null; }
+  }, []);
+
+  const api = useCallback(async (path: string, opts?: RequestInit) => {
+    const call = async (token: string | null) => {
       const hdrs: Record<string, string> = { "Content-Type": "application/json" };
       if (token) hdrs["Authorization"] = "Bearer " + token;
-      const res = await fetch(`https://bot-api.jrsystem7777.com/api/${path}`, { ...opts, headers: hdrs, credentials: "include" });
+      return fetch(`https://bot-api.jrsystem7777.com/api/${path}`, { ...opts, headers: hdrs, credentials: "include" });
+    };
+
+    try {
+      let token = authTokenRef.current;
+      if (!token) token = await fetchToken();
+
+      let res = await call(token);
+      if (res.status === 401) {
+        // Token caducado → refrescar una vez y reintentar antes de rendirse.
+        token = await fetchToken();
+        res = await call(token);
+      }
+      if (res.status === 401) {
+        showToast("Sesión no autorizada", "error");
+        setTimeout(() => { window.location.href = "/login"; }, 1200);
+        return null;
+      }
+      if (!res.ok && res.status >= 500) {
+        showToast("Error del servidor", "error");
+        return null;
+      }
       return await res.json();
     } catch (e) {
       showToast("Error de conexión", "error");
       return null;
     }
-  }, [showToast]);
+  }, [showToast, fetchToken]);
 
   useEffect(() => {
     (async () => {

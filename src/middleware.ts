@@ -11,8 +11,13 @@ export async function middleware(request: NextRequest) {
 
   if (isProtected) {
     const data = await verifySession(session);
-    const exp = data?.expiresAt as number | undefined;
-    if (!data || (exp && Date.now() > exp)) {
+    const exp = typeof data?.expiresAt === "number" ? data.expiresAt : undefined;
+    // Sesión sin caducidad o ya caducada → login.
+    const valid = !!data && exp !== undefined && Date.now() <= exp;
+    // /bot/dashboard habla con la API del bot: sin accessToken de Discord
+    // todas las pestañas devuelven 401 y la UI se quedaba vacía en silencio.
+    const needsDiscordToken = request.nextUrl.pathname.startsWith("/bot/dashboard") && !data?.accessToken;
+    if (!valid || needsDiscordToken) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }
