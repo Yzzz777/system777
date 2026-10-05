@@ -1,4 +1,4 @@
-import { Page, expect } from "@playwright/test";
+import { Page, Request as PwRequest, expect } from "@playwright/test";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -43,9 +43,11 @@ export function sessionCookieValue(): string {
   return `${base64}.${sig}`;
 }
 
-export type Recorded = { method: string; path: string; body: any };
+export type Recorded = { method: string; path: string; body: unknown };
 
-export type Mocks = { requests: Recorded[]; guilds: any[]; rolePerms: Record<string, string[]> };
+export type GuildRow = { id: string; name: string; members: number; isAdmin: boolean; icon: string | null; inBot: boolean };
+
+export type Mocks = { requests: Recorded[]; guilds: GuildRow[]; rolePerms: Record<string, string[]> };
 
 /**
  * Intercepta bot-api (prod) + /api/bot/guilds y devuelve datos falsos.
@@ -58,11 +60,11 @@ export async function mockApis(page: Page): Promise<Mocks> {
     { id: "444444444444444444", name: "Otro Servidor", members: 10, isAdmin: false, icon: null, inBot: true },
   ];
 
-  const record = (method: string, p: string, body: any) => state.requests.push({ method, path: p, body });
+  const record = (method: string, p: string, body: unknown) => state.requests.push({ method, path: p, body });
 
   // CORS: la app llama con credentials:'include', así que el origen hay que
   // devolverlo ecoado (nunca '*') o el navegador descarta la respuesta.
-  const corsFor = (req: any) => ({
+  const corsFor = (req: PwRequest) => ({
     "Access-Control-Allow-Origin": req.headers()["origin"] || "http://127.0.0.1:3111",
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
@@ -78,13 +80,13 @@ export async function mockApis(page: Page): Promise<Mocks> {
     if (method === "OPTIONS") {
       return route.fulfill({ status: 204, headers: CORS, body: "" });
     }
-    let body: any = null;
+    let body: unknown = null;
     if (method === "POST" || method === "PUT") {
       try { body = req.postDataJSON(); } catch { body = req.postData(); }
     }
     record(method, p, body);
 
-    const json = (data: any) =>
+    const json = (data: unknown) =>
       route.fulfill({ status: 200, contentType: "application/json", headers: CORS, body: JSON.stringify(data) });
 
     if (p === "/api/public/stats") return json({ ok: true, ...STATUSES });
@@ -118,8 +120,9 @@ export async function mockApis(page: Page): Promise<Mocks> {
       return json({ ok: true, rolePerms: state.rolePerms, commands: COMMANDS });
     }
     if (p.endsWith("/roleperms") && method === "POST") {
-      state.rolePerms = body?.roleId && Array.isArray(body?.deny) && body.deny.length
-        ? { ...state.rolePerms, [body.roleId]: body.deny }
+      const payload = (body ?? {}) as { roleId?: string; deny?: string[] };
+      state.rolePerms = payload.roleId && Array.isArray(payload.deny) && payload.deny.length
+        ? { ...state.rolePerms, [payload.roleId]: payload.deny }
         : state.rolePerms;
       return json({ ok: true, rolePerms: state.rolePerms });
     }

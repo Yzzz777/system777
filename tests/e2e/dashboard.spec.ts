@@ -81,4 +81,24 @@ test.describe("Dashboard del bot (QA con mocks — nunca toca bot-api real)", ()
     expect(mocks.requests.length).toBeGreaterThan(0);
     expect(ROLE_ID).toBeTruthy();
   });
+
+  test("SEO del panel: canonical propio, noindex y manifest público", async ({ page }) => {
+    await openGuild(page);
+
+    // En dev Next inyecta la metadata dos veces (en prod es una): todos los
+    // tags deben apuntar al panel, nunca a /bot.
+    const canonicals = page.locator('link[rel="canonical"]');
+    expect(await canonicals.count(), "sin canonical").toBeGreaterThan(0);
+    for (const href of await canonicals.evaluateAll((els) => els.map((e) => e.getAttribute("href")))) {
+      expect(href, `canonical incorrecto: ${href}`).toMatch(/\/bot\/dashboard$/);
+    }
+
+    const robots = await page.locator('meta[name="robots"]').evaluateAll((els) => els.map((e) => e.getAttribute("content")));
+    expect(robots.length, "sin meta robots").toBeGreaterThan(0);
+    for (const c of robots) expect(c, `robots incorrecto: ${c}`).toMatch(/noindex/);
+
+    const manifest = await page.request.get("/manifest.webmanifest");
+    expect(manifest.ok(), "/manifest.webmanifest debe responder 200").toBeTruthy();
+    expect(await manifest.text()).toContain("System 777");
+  });
 });

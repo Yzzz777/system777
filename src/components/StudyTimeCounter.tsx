@@ -59,7 +59,9 @@ export default function StudyTimeCounter({ startDate }: StudyTimeCounterProps) {
 
   return (
     <div className="w-full" role="timer" aria-label="Tiempo aprendiendo">
-      <p className="sr-only">{summary}</p>
+      {/* El resumen cambia entre render de servidor y cliente (new Date()):
+          sin suppress, React aborta la hidratación de la portada. */}
+      <p suppressHydrationWarning className="sr-only">{summary}</p>
       <div aria-hidden className="flex items-stretch gap-2 sm:gap-3">
         {units.map((u) => (
           <div
