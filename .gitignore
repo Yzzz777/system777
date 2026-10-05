@@ -11,3 +11,7 @@ npm-debug.log*
 deploy.log
 tsconfig.tsbuildinfo
 _deploy
+
+# playwright
+test-results/
+playwright-report/

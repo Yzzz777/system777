@@ -565,7 +565,7 @@ export default function BotDashboardPage() {
           )}
 
           {activeTab === "modules" && (
-            <ModulesSection key={`modules-${selectedServer}`} config={guildConfig} saveConfig={saveConfig} />
+            <ModulesSection key={`modules-${selectedServer}`} config={guildConfig} saveConfig={saveConfig} guildId={selectedServer!} />
           )}
 
           {activeTab === "welcome" && (
@@ -577,15 +577,15 @@ export default function BotDashboardPage() {
           )}
 
           {activeTab === "autorole" && (
-            <AutoroleSection key={`autorole-${selectedServer}`} config={guildConfig} roles={roleOptions} saveConfig={saveConfig} />
+            <AutoroleSection key={`autorole-${selectedServer}`} config={guildConfig} roles={roleOptions} saveConfig={saveConfig} guildId={selectedServer!} />
           )}
 
           {activeTab === "logs" && (
-            <LogsSection key={`logs-${selectedServer}`} config={guildConfig} channels={channelOptions} saveConfig={saveConfig} />
+            <LogsSection key={`logs-${selectedServer}`} config={guildConfig} channels={channelOptions} saveConfig={saveConfig} guildId={selectedServer!} />
           )}
 
           {activeTab === "protection" && (
-            <ProtectionSection key={`protection-${selectedServer}`} config={guildConfig} channels={channelOptions} saveConfig={saveConfig} />
+            <ProtectionSection key={`protection-${selectedServer}`} config={guildConfig} channels={channelOptions} saveConfig={saveConfig} guildId={selectedServer!} />
           )}
 
           {activeTab === "moderation" && (
@@ -861,7 +861,7 @@ export default function BotDashboardPage() {
   );
 }
 
-function ModulesSection({ config, saveConfig }: { config: any; saveConfig: any }) {
+function ModulesSection({ config, saveConfig, guildId }: { config: any; saveConfig: any; guildId: string }) {
   const [modules, setModules] = useState(config?.modules || {});
   const moduleList = [
     { id: "welcome", label: "Bienvenida", icon: "👋", cat: "Comunidad" },
@@ -878,7 +878,7 @@ function ModulesSection({ config, saveConfig }: { config: any; saveConfig: any }
   const toggleModule = (id: string, value: boolean) => {
     const updated = { ...modules, [id]: value };
     setModules(updated);
-    saveConfig(`guild/${config?.id || ""}/modules`, { modules: updated });
+    saveConfig(`guild/${config?.id || guildId}/modules`, { modules: updated });
   };
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
@@ -1773,20 +1773,20 @@ function TicketsSection({ config, channels, roles, categories, saveConfig, api, 
   );
 }
 
-function AutoroleSection({ config, roles, saveConfig }: any) {
+function AutoroleSection({ config, roles, saveConfig, guildId }: any) {
   const [roleId, setRoleId] = useState(config?.autorole?.roleId || "");
   return (
     <div className="space-y-6">
       <div><h2 className="text-xl font-black text-white mb-1">🎭 AutoRole</h2><p className="text-sm text-gray-500">Rol asignado automáticamente al unirse.</p></div>
       <div className="glass rounded-2xl p-6 space-y-4">
         <SelectInput value={roleId} onChange={setRoleId} options={roles} label="Rol a asignar" />
-        <button onClick={() => saveConfig(`guild/${config?.id || ""}/autorole`, { roleId })} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Save size={14} /> Guardar</button>
+        <button onClick={() => saveConfig(`guild/${config?.id || guildId}/autorole`, { roleId })} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Save size={14} /> Guardar</button>
       </div>
     </div>
   );
 }
 
-function LogsSection({ config, channels, saveConfig }: any) {
+function LogsSection({ config, channels, saveConfig, guildId }: any) {
   const [logs, setLogs] = useState(config?.logChannels || { moderation: "", messages: "", members: "", channels: "", roles: "", voice: "" });
   const logTypes = [
     { key: "moderation", label: "Moderación" },
@@ -1803,13 +1803,13 @@ function LogsSection({ config, channels, saveConfig }: any) {
         {logTypes.map((lt) => (
           <SelectInput key={lt.key} value={logs[lt.key] || ""} onChange={(v) => setLogs({ ...logs, [lt.key]: v })} options={channels} label={lt.label} />
         ))}
-        <button onClick={() => saveConfig(`guild/${config?.id || ""}/logs`, logs)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Save size={14} /> Guardar</button>
+        <button onClick={() => saveConfig(`guild/${config?.id || guildId}/logs`, logs)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Save size={14} /> Guardar</button>
       </div>
     </motion.div>
   );
 }
 
-function ProtectionSection({ config, channels, saveConfig }: any) {
+function ProtectionSection({ config, channels, saveConfig, guildId }: any) {
   const [prot, setProt] = useState(config?.protection || {
     antiraid: { enabled: false, threshold: 5, action: "timeout" },
     antispam: { enabled: false, maxMessages: 5 },
@@ -1867,7 +1867,7 @@ function ProtectionSection({ config, channels, saveConfig }: any) {
         <TextInput value={prot.wordFilter?.warningMessage || ""} onChange={(v) => u("wordFilter.warningMessage", v)} label="Mensaje de advertencia" />
         <SelectInput value={prot.wordFilter?.action || "delete"} onChange={(v) => u("wordFilter.action", v)} options={filterActions} label="Acción" />
       </div>
-      <button onClick={() => saveConfig(`guild/${config?.id || ""}/protection`, prot)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Save size={14} /> Guardar Protección</button>
+      <button onClick={() => saveConfig(`guild/${config?.id || guildId}/protection`, prot)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Save size={14} /> Guardar Protección</button>
     </div>
   );
 }
@@ -2131,17 +2131,22 @@ function GlobalBansSection({ api }: { api: any }) {
 
 function BroadcastSection({ api, showToast }: { api: any; showToast: any }) {
   const [msg, setMsg] = useState("");
-  const send = async () => { 
-    if (!msg.trim()) return;
-    const res = await api("public/broadcast", { method: "POST", body: JSON.stringify({ message: msg }) }); 
-    if (res?.ok) { setMsg(""); } 
+  const [sending, setSending] = useState(false);
+  const send = async () => {
+    if (!msg.trim() || sending) return;
+    setSending(true);
+    // Ruta real del bot: POST /api/broadcast (auth + ownerOnly).
+    const res = await api("broadcast", { method: "POST", body: JSON.stringify({ message: msg }) });
+    if (res?.ok) { setMsg(""); showToast("Broadcast enviado a todos los servidores", "success"); }
+    else showToast(res?.msg || "Error al enviar el broadcast", "error");
+    setSending(false);
   };
   return (
     <div className="space-y-6">
       <div><h2 className="text-xl font-black text-white mb-1">📢 Broadcast</h2><p className="text-sm text-gray-500">Envía un mensaje a todos los servidores.</p></div>
       <div className="glass rounded-2xl p-6 space-y-4">
         <div><label className="block text-xs text-gray-500 mb-1.5">Mensaje</label><Textarea value={msg} onChange={(e) => setMsg(e.target.value)} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none h-32 min-h-0 resize-none" /></div>
-        <button onClick={send} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB]"><Send size={14} /> Enviar a todos</button>
+        <button onClick={send} disabled={sending} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-semibold hover:bg-[#00B8DB] disabled:opacity-60"><Send size={14} /> {sending ? "Enviando…" : "Enviar a todos"}</button>
       </div>
     </div>
   );
@@ -2612,68 +2617,156 @@ function ActivityLogsSection({ api, guildId }: { api: any; guildId: string }) {
 
 // ── ROLE PERMISSIONS SECTION ───────────────────────────────────────────────
 function RolePermsSection({ api, guildId, roles, showToast }: { api: any; guildId: string; roles: any[]; showToast: any }) {
+  // Sistema de DENEGACIÓN por rol y comando: se guarda qué comandos NO puede
+  // usar cada rol (db 'rolePerms' del bot) y el bot lo aplica en cada invocación.
   const [selectedRole, setSelectedRole] = useState("");
-  const [rolePerms, setRolePerms] = useState<Record<string, string[]>>({
-    moderation: ["ban", "kick", "timeout", "warn", "purge"],
-    tickets: ["open", "close", "claim", "move", "delete"],
-    welcome: ["configure", "test"],
-    levels: ["reset", "set"],
-    economy: ["give", "take", "set"],
-    admin: ["config", "broadcast", "globalban"],
-  });
-  const [newPerm, setNewPerm] = useState({ category: "moderation", permission: "" });
+  const [commands, setCommands] = useState<{ name: string; category: string; description?: string }[]>([]);
+  const [rolePerms, setRolePerms] = useState<Record<string, string[]>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const allPerms = Object.entries(rolePerms).flatMap(([cat, perms]) => perms.map(p => ({ category: cat, permission: p, label: `${cat}.${p}` })));
-
-  const addPerm = () => {
-    if (!newPerm.permission) return;
-    const updated = { ...rolePerms };
-    if (!updated[newPerm.category]) updated[newPerm.category] = [];
-    if (!updated[newPerm.category].includes(newPerm.permission)) {
-      updated[newPerm.category].push(newPerm.permission);
-      setRolePerms(updated);
-      showToast("Permiso agregado", "success");
+  const load = useCallback(async () => {
+    setLoading(true);
+    const r = await api(`guild/${guildId}/roleperms`);
+    if (r?.ok) {
+      setRolePerms(r.rolePerms || {});
+      setCommands(r.commands || []);
+    } else if (r) {
+      showToast(r.msg || "No se pudieron cargar los permisos", "error");
     }
+    setLoading(false);
+  }, [api, guildId, showToast]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const denied = selectedRole ? (rolePerms[selectedRole] || []) : [];
+
+  const toggleCommand = (name: string) => {
+    if (!selectedRole) return showToast("Selecciona un rol primero", "error");
+    setRolePerms((prev) => {
+      const current = new Set(prev[selectedRole] || []);
+      if (current.has(name)) current.delete(name); else current.add(name);
+      const next = { ...prev };
+      if (current.size) next[selectedRole] = [...current].sort();
+      else delete next[selectedRole];
+      return next;
+    });
   };
 
-  const removePerm = (cat: string, perm: string) => {
-    const updated = { ...rolePerms };
-    updated[cat] = (updated[cat] || []).filter(p => p !== perm);
-    setRolePerms(updated);
-    showToast("Permiso eliminado", "success");
+  const save = async () => {
+    if (!selectedRole) return showToast("Selecciona un rol", "error");
+    setSaving(true);
+    const r = await api(`guild/${guildId}/roleperms`, {
+      method: "POST",
+      body: JSON.stringify({ roleId: selectedRole, deny: denied }),
+    });
+    if (r?.ok) {
+      setRolePerms(r.rolePerms || {});
+      showToast("Permisos guardados", "success");
+    } else if (r) {
+      showToast(r.msg || "Error al guardar", "error");
+    }
+    setSaving(false);
   };
+
+  const grouped: Record<string, typeof commands> = {};
+  for (const c of commands) {
+    if (!grouped[c.category]) grouped[c.category] = [];
+    grouped[c.category].push(c);
+  }
+  const roleById: Record<string, any> = {};
+  for (const r of roles || []) roleById[r.id] = r;
+  const roleOptions = [
+    { value: "", label: "Seleccionar rol..." },
+    { value: guildId, label: "@everyone (todo el servidor)" },
+    ...(roles || []).map((r: any) => ({ value: r.id, label: r.name })),
+  ];
+  const withDenials = Object.entries(rolePerms).filter(([, cmds]) => Array.isArray(cmds) && cmds.length);
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-black text-white mb-1">🛡️ Permisos de Roles</h2>
-        <p className="text-sm text-gray-500">Configura qué roles pueden hacer qué acciones en el bot.</p>
+        <p className="text-sm text-gray-500">Sistema de denegación: marca los comandos que <b>no</b> puede usar cada rol. El bot lo aplica al instante.</p>
       </div>
-      <SelectInput value={selectedRole} onChange={setSelectedRole} options={[{ value: "", label: "Seleccionar rol..." }, ...roles.map((r: any) => ({ value: r.id, label: r.name }))]} label="Seleccionar Rol" />
-      {selectedRole && (
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
         <div className="glass rounded-2xl p-6 space-y-4">
-          <h3 className="font-bold text-white">Permisos del rol: {roles.find((r: any) => r.id === selectedRole)?.name}</h3>
-          {Object.entries(rolePerms).map(([category, perms]) => (
-            <div key={category} className="border border-white/10 rounded-xl p-4 space-y-2">
-              <h4 className="text-sm font-bold text-white capitalize">{category}</h4>
-              <div className="flex flex-wrap gap-2">
-                {perms.map((perm) => (
-                  <span key={perm} className="flex items-center gap-1 px-3 py-1 rounded-full bg-[#00E5FF]/10 text-[#00E5FF] text-xs">
-                    {perm}
-                    <button onClick={() => removePerm(category, perm)} className="hover:text-red-400 ml-1">✕</button>
-                  </span>
-                ))}
-                {perms.length === 0 && <span className="text-xs text-gray-600">Sin permisos</span>}
-              </div>
+          <h3 className="font-bold text-white">1 · Rol</h3>
+          <SelectInput value={selectedRole} onChange={setSelectedRole} options={roleOptions} label="Seleccionar Rol" />
+          {selectedRole && (
+            <div className="rounded-xl bg-white/[0.03] border border-white/10 p-3 text-xs text-gray-400">
+              <span className="text-white font-bold text-sm">{denied.length}</span> denegado(s) ·{" "}
+              <span className="text-white font-bold text-sm">{Math.max(commands.length - denied.length, 0)}</span> permitido(s)
             </div>
-          ))}
-          <div className="flex gap-2">
-            <SelectInput value={newPerm.category} onChange={(v) => setNewPerm({ ...newPerm, category: v })} options={[{ value: "moderation", label: "Moderación" }, { value: "tickets", label: "Tickets" }, { value: "welcome", label: "Bienvenida" }, { value: "levels", label: "Niveles" }, { value: "economy", label: "Economía" }, { value: "admin", label: "Admin" }]} label="Categoría" />
-            <TextInput value={newPerm.permission} onChange={(v) => setNewPerm({ ...newPerm, permission: v })} label="Permiso" placeholder=" Nombre del permiso" />
-            <div className="flex items-end"><button onClick={addPerm} className="px-4 py-2.5 rounded-xl bg-[#00E5FF]/10 text-[#00E5FF] text-sm font-semibold hover:bg-[#00E5FF]/20"><Plus size={14} className="inline" /> Agregar</button></div>
+          )}
+          <button
+            onClick={save}
+            disabled={saving || !selectedRole || loading}
+            className="w-full flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#00E5FF] text-[#02141a] text-sm font-bold hover:bg-[#00B8DB] disabled:opacity-50"
+          >
+            <Save size={14} /> {saving ? "Guardando…" : "Guardar permisos"}
+          </button>
+          <div className="pt-3 border-t border-white/10 space-y-2">
+            <div className="text-[11px] font-bold text-gray-500 uppercase">Roles con denegaciones</div>
+            {withDenials.length === 0 && (
+              <div className="text-xs text-gray-600">Ninguno: todos los roles pueden usar todos los comandos.</div>
+            )}
+            {withDenials.map(([rid, cmds]) => (
+              <button
+                key={rid}
+                onClick={() => setSelectedRole(rid)}
+                className={`w-full text-left rounded-lg px-3 py-2 text-xs flex items-center justify-between gap-2 transition-colors ${selectedRole === rid ? "bg-[#00E5FF]/15 text-[#00E5FF]" : "bg-white/[0.03] hover:bg-white/[0.06] text-gray-300"}`}
+              >
+                <span className="truncate">{rid === guildId ? "@everyone" : roleById[rid]?.name || rid}</span>
+                <span className="font-bold shrink-0">{cmds.length}</span>
+              </button>
+            ))}
           </div>
         </div>
-      )}
+
+        <div className="glass rounded-2xl p-6 lg:col-span-2 space-y-4">
+          <h3 className="font-bold text-white">2 · Comandos {selectedRole && <span className="text-gray-500 font-normal">— {roleById[selectedRole]?.name || (selectedRole === guildId ? "@everyone" : selectedRole)}</span>}</h3>
+          {loading ? (
+            <div className="py-10"><div className="w-8 h-8 border-2 border-[#00E5FF] border-t-transparent rounded-full animate-spin mx-auto" /></div>
+          ) : !selectedRole ? (
+            <p className="text-sm text-gray-500 py-6">Selecciona un rol para ver y denegar comandos.</p>
+          ) : Object.keys(grouped).length === 0 ? (
+            <p className="text-sm text-gray-500 py-6">No se encontraron comandos.</p>
+          ) : (
+            Object.entries(grouped).map(([cat, list]) => {
+              const nDenied = list.filter((c) => denied.includes(c.name)).length;
+              return (
+                <div key={cat} className="border border-white/10 rounded-xl p-4 space-y-2">
+                  <h4 className="text-sm font-bold text-white capitalize">
+                    {cat} <span className="text-gray-600 font-normal">({nDenied}/{list.length} denegados)</span>
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {list.map((c) => {
+                      const on = denied.includes(c.name);
+                      return (
+                        <button
+                          key={c.name}
+                          onClick={() => toggleCommand(c.name)}
+                          title={c.description || c.name}
+                          className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${on ? "bg-red-500/15 text-red-300 border-red-500/40" : "bg-white/5 text-gray-300 border-white/10 hover:bg-white/10"}`}
+                        >
+                          {on ? "🚫 " : "✓ "}{c.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })
+          )}
+          {selectedRole && !loading && commands.length > 0 && (
+            <p className="text-[11px] text-gray-600">
+              🔴 = denegado (el rol no puede usarlo) · ⚪ = permitido. Cambia un comando y pulsa <b>Guardar permisos</b>.
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
