@@ -134,21 +134,23 @@ function BotStatusStrip() {
           {!loaded ? "conectando…" : online ? "online" : "sin conexión"}
         </span>
       </div>
-      <dl className="grid grid-cols-2 divide-x divide-y divide-[var(--line)] sm:grid-cols-4 sm:divide-y-0">
+      {/* No es una lista de definiciones: Lighthouse marcaba el <dl> con
+          <dt>/<dd> anidados como estructura inválida. Mismo layout, sin dl. */}
+      <div className="grid grid-cols-2 divide-x divide-y divide-[var(--line)] sm:grid-cols-4 sm:divide-y-0">
         {items.map((it) => (
           <div key={it.label} className="flex items-center gap-2 px-3 py-2.5">
             <it.icon aria-hidden className="h-3.5 w-3.5 shrink-0 text-[var(--data)]" />
             <div className="min-w-0">
-              <dt className="font-[family-name:var(--font-mono)] text-[9px] uppercase tracking-[0.14em] text-[var(--text-3)]">
+              <div className="font-[family-name:var(--font-mono)] text-[9px] uppercase tracking-[0.14em] text-[var(--text-3)]">
                 {it.label}
-              </dt>
-              <dd className="truncate font-[family-name:var(--font-mono)] text-[13px] text-[var(--text)]">
+              </div>
+              <div className="truncate font-[family-name:var(--font-mono)] text-[13px] text-[var(--text)]">
                 {it.value}
-              </dd>
+              </div>
             </div>
           </div>
         ))}
-      </dl>
+      </div>
     </div>
   );
 }
