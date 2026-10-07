@@ -14,17 +14,26 @@ export async function POST(req: NextRequest) {
 
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
-    const postId = formData.get("postId") as string | null;
+    const rawPostId = formData.get("postId") as string | null;
 
-    if (!file || !postId) {
-      return NextResponse.json({ error: "file y postId requeridos" }, { status: 400 });
+    if (!file) {
+      return NextResponse.json({ error: "file requerido" }, { status: 400 });
+    }
+    // Sin postId los archivos van al "bucket" general del sitio.
+    const postId = (rawPostId || "general").trim();
+    if (!/^[a-zA-Z0-9_-]{1,64}$/.test(postId)) {
+      return NextResponse.json({ error: "postId inválido" }, { status: 400 });
     }
     if (file.size > MAX_SIZE) {
       return NextResponse.json({ error: "Archivo supera el máximo de 10 MB" }, { status: 413 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(bytes)));
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    let bin = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) {
+      bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    }
+    const base64 = btoa(bin);
 
     const fileRecord = await addBlogFile({
       postId,

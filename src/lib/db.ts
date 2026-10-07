@@ -123,6 +123,10 @@ export async function ensureBlogTables() {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `;
+  // Archivos sueltos (imágenes/archivos del sitio) usan post_id = 'general':
+  // se elimina la FK para poder guardarlos sin un post real. deleteBlogPost
+  // ya borra los archivos del post por su cuenta.
+  await query`ALTER TABLE blog_files DROP CONSTRAINT IF EXISTS blog_files_post_id_fkey`;
 }
 
 export async function createBlogPost(data: { title: string; slug: string; excerpt?: string; content?: string; category?: string; coverUrl?: string; author?: string; published?: boolean }) {
@@ -149,19 +153,29 @@ export async function getBlogPost(slug: string) {
   return rows[0] || null;
 }
 
-export async function updateBlogPost(id: string, data: { title?: string; excerpt?: string; content?: string; category?: string; coverUrl?: string; published?: boolean }) {
+export async function getBlogPostById(id: string) {
   await ensureBlogTables();
-  const fields: string[] = [];
-  const updates: unknown[] = [];
-  if (data.title !== undefined) { fields.push("title = " + String(fields.length + 1)); updates.push(data.title); }
-  if (data.excerpt !== undefined) { fields.push("excerpt = " + String(fields.length + 1)); updates.push(data.excerpt); }
-  if (data.content !== undefined) { fields.push("content = " + String(fields.length + 1)); updates.push(data.content); }
-  if (data.category !== undefined) { fields.push("category = " + String(fields.length + 1)); updates.push(data.category); }
-  if (data.coverUrl !== undefined) { fields.push("cover_url = " + String(fields.length + 1)); updates.push(data.coverUrl); }
-  if (data.published !== undefined) { fields.push("published = " + String(fields.length + 1)); updates.push(data.published); }
-  fields.push("updated_at = NOW()");
-  if (fields.length === 0) return null;
-  const rows = await query`UPDATE blog_posts SET ${query`${fields.join(", ")}`} WHERE id = ${id} RETURNING *`;
+  const rows = await query`SELECT * FROM blog_posts WHERE id = ${id} LIMIT 1`;
+  return rows[0] || null;
+}
+
+export async function updateBlogPost(id: string, data: { title?: string; slug?: string; excerpt?: string; content?: string; category?: string; coverUrl?: string; published?: boolean }) {
+  await ensureBlogTables();
+  const current = await getBlogPostById(id);
+  if (!current) return null;
+  const rows = await query`
+    UPDATE blog_posts SET
+      title = ${data.title ?? current.title},
+      slug = ${data.slug ?? current.slug},
+      excerpt = ${data.excerpt ?? current.excerpt ?? ""},
+      content = ${data.content ?? current.content ?? ""},
+      category = ${data.category ?? current.category ?? "General"},
+      cover_url = ${data.coverUrl ?? current.cover_url ?? ""},
+      published = ${data.published ?? current.published ?? false},
+      updated_at = NOW()
+    WHERE id = ${id}
+    RETURNING *
+  `;
   return rows[0] || null;
 }
 
@@ -181,9 +195,17 @@ export async function addBlogFile(data: { postId: string; filename: string; file
   return rows[0];
 }
 
-export async function getBlogFiles(postId: string) {
+export async function getBlogFiles(postId?: string) {
   await ensureBlogTables();
-  return await query`SELECT id, post_id, filename, mime, size, downloads, created_at FROM blog_files WHERE post_id = ${postId} ORDER BY created_at DESC`;
+  if (postId) {
+    return await query`SELECT id, post_id, filename, mime, size, downloads, created_at FROM blog_files WHERE post_id = ${postId} ORDER BY created_at DESC`;
+  }
+  return await query`SELECT id, post_id, filename, mime, size, downloads, created_at FROM blog_files ORDER BY created_at DESC`;
+}
+
+export async function deleteBlogFile(fileId: string) {
+  await ensureBlogTables();
+  await query`DELETE FROM blog_files WHERE id = ${fileId}`;
 }
 
 export async function getBlogFileData(fileId: string) {

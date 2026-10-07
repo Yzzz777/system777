@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import ContentAdminSection from "@/components/dashboard/ContentAdminSection";
 
 const BOT_INVITE = "https://discord.com/oauth2/authorize?client_id=1502804306125132057&permissions=8&scope=bot%20applications.commands";
 const SUPPORT_SERVER = "https://discord.gg/system777";
@@ -91,6 +92,7 @@ const OWNER_NAV = [
     { id: "moderation", label: "Moderación", icon: ShieldBan },
   ]},
   { category: "Owner", items: [
+    { id: "contenido", label: "Contenido Web", icon: FileText },
     { id: "botcontrol", label: "Control del Bot", icon: Power },
     { id: "botmessages", label: "Mensajes del Bot", icon: MessageSquare },
     { id: "globalbans", label: "Bans Globales", icon: Ban },
@@ -277,6 +279,7 @@ export default function BotDashboardPage() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileData, setProfileData] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [contentAdminOpen, setContentAdminOpen] = useState(false);
 
   const isOwner = OWNER_IDS.includes((session?.user as any)?.id || session?.user?.name || "");
 
@@ -410,6 +413,31 @@ export default function BotDashboardPage() {
     );
   }
 
+  // Panel de Contenido Web (owner): accesible sin elegir servidor.
+  if (contentAdminOpen && isOwner) {
+    return (
+      <div className="min-h-screen" style={{ background: "#04070e" }}>
+        <header className="border-b border-[rgba(150,200,255,0.08)]" style={{ background: "#081019" }}>
+          <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[#00E5FF]/20 flex items-center justify-center"><FileText size={18} className="text-[#00E5FF]" /></div>
+              <span className="font-bold text-white">Contenido Web</span>
+            </div>
+            <button
+              onClick={() => setContentAdminOpen(false)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 text-sm text-gray-300 hover:bg-white/10"
+            >
+              <ChevronLeft size={14} /> Volver
+            </button>
+          </div>
+        </header>
+        <main className="max-w-5xl mx-auto px-4 py-8">
+          <ContentAdminSection showToast={showToast} />
+        </main>
+      </div>
+    );
+  }
+
   if (!selectedServer) {
     return (
       <div className="min-h-screen" style={{ background: "#04070e" }}>
@@ -420,6 +448,14 @@ export default function BotDashboardPage() {
               <span className="font-bold text-white">System 777</span>
             </div>
             <div className="flex items-center gap-3">
+              {isOwner && (
+                <button
+                  onClick={() => setContentAdminOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#00E5FF]/10 text-[#00E5FF] text-xs font-semibold hover:bg-[#00E5FF]/20"
+                >
+                  <FileText size={13} /> Contenido
+                </button>
+              )}
               <a href={BOT_INVITE} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-[#00E5FF]/10 text-[#00E5FF] text-xs font-semibold hover:bg-[#00E5FF]/20">Invitame</a>
               <a href={SUPPORT_SERVER} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-white/5 text-gray-400 text-xs hover:bg-white/10">Soporte</a>
               <div className="relative">
@@ -696,6 +732,7 @@ export default function BotDashboardPage() {
           {activeTab === "premiumadmin" && <PremiumAdminSection api={api} />}
           {activeTab === "jarvis" && <JarvisSection api={api} stats={stats} />}
           {activeTab === "botlogs" && <BotLogsSection api={api} />}
+          {activeTab === "contenido" && isOwner && <ContentAdminSection showToast={showToast} />}
           {activeTab === "notifications" && <NotificationsSection api={api} channels={channelOptions} roles={roleOptions} guildId={selectedServer!} showToast={showToast} />}
 
           {/* ── Logs de Actividad ── */}
