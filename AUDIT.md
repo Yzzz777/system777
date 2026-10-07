@@ -6,6 +6,7 @@
 - **Producción:** https://jrsystem7777.com (Cloudflare Pages)
 - **Alcance:** inspección estática + ejecución local + inspección con Playwright (Chromium 153)
 - **Regla aplicada:** auditoría sin modificar código. System 777 y el contador NO se tocaron.
+- **Actualizado:** 2026-10-05 — cierre tras las fases 0–5 → ver **§13 Estado final** y **§14 Validación**.
 
 ---
 
@@ -276,3 +277,63 @@ Home + `Announcements.tsx`: "Mantenimiento programado domingo 20 de octubre", "N
 - [x] Se documentaron enlaces rotos
 - [x] Se documentaron datos falsos, antiguos o placeholders
 - [x] Existe `AUDIT.md`
+
+---
+
+## 13. Estado final (2026-10-05) — cierre de la auditoría
+
+Todo el plan se ejecutó en 6 fases (0–5), **1 commit por fase con aprobación previa**,
+repartidas entre el repo del bot (`Yzzz777/system-777`) y el del web (`Yzzz777/system777`):
+
+| Fase | Contenido | Commits |
+|---|---|---|
+| 0 | Base de comparación | bot `3f00ce1` |
+| 1 | Estabilidad: cleanup null-safe (TypeError de horario), flush al apagar, antiRaid/spy con blacklist como objeto, tickets unificados en PostgreSQL, reinicio anti-bucle en errores críticos | bot `86d231c` |
+| 2 | Logs sincronizados: modLog canónico (warns/modlogs), config `log_<bucket>`, activityLogs normalizados, trazas de eventos, casos desde `POST /action`, 401 explícito | bot `abe8388` · web `9db9652` |
+| 3 | **Permisos de Roles reales** (denegación por rol y comando con endpoints `roleperms` + chequeo en el dispatch), `Broadcast` al endpoint real `/api/broadcast`, race `guild//seccion`, **QA de Playwright con `bot-api` mockeada** | bot `7f1ab33` · web `8226154` |
+| 4 | Cierre de restos: `manifest` + canonical/noindex del panel, ESLint limpio, hidratación del contador, `resend`+`src/lib/email` fuera, uptime legible en `/api/analytics` | bot `78a2c32` · web `1cdb736` |
+| 5 | Validación: Lighthouse, suite Playwright ampliada y re-auditoría | web `1bca3c3` |
+
+### Hallazgos de §11 — estado
+
+| # | Hallazgo | Estado |
+|---|---|---|
+| P0-1 | Navbar invisible en la portada | ✅ Resuelto (`header fixed`, sin `y:-100`; medido `top: 0`) |
+| P0-2 | Hydration error en `/` | ✅ Resuelto (RNG sembrada, three con `ssr:false`, contador con `suppressHydrationWarning`); **0 errores medidos** |
+| P0-3 | Datos inventados (`/about`, `/api/bot/stats`, blog, biblioteca, anuncios, cifras de `/bot`) | ✅ Resuelto: contenido real o estados vacíos honestos; fallback de stats con `available:false` |
+| P0-4 | Endpoints de blog sin autenticación | ✅ Resuelto (owner-only vía cookie de Discord + `OWNER_DISCORD_ID`; botón "Nuevo post" solo owner) |
+| P0-5 | Enlaces a `/register`, `/community`, `/announcements`, `/dashboard`, `/admin` | ✅ Resuelto (navbar/footer/about → rutas vivas; test E2E) |
+| P1-6 | Keys duplicadas + overflow horizontal en `/bot/commands` | ✅ Resuelto (clave `category-name`, 0 duplicados; 0 px de overflow a 1440) |
+| P1-7 | Uptime tratado como ms | ✅ Resuelto (`formatUptime` en segundos) + panel Analytics con uptime legible |
+| P1-8 | SEO (título/descripción iguales, sin canonical/OG/sitemap/robots) | ✅ Resuelto: 14 `generateMetadata`, `sitemap.ts`, `robots.ts`, canonical por ruta, OG/twitter, **`manifest.ts`**, y `/bot/dashboard` con canonical propio + `noindex` |
+| P1-9 | Sin página 404 | ✅ `not-found.tsx` (HTTP 404 verificado en prod) |
+| P1-10 | ESLint escaneaba `.next` (46.843 problemas) | ✅ `ignores` completo (`.next`, `_deploy`, `functions`, `test-results`…) → **`npx eslint .` = 0 problemas** |
+| P1-11 | Cifras desactualizadas ("21 servidores / 4.600 usuarios") | ✅ Resuelto (datos en vivo desde la API) |
+| P1-12 | Enlaces rotos y filtro roto en `/projects` | ✅ Resuelto (sin `href="#"`, sin `/t` inexistente, sin filtro muerto) |
+| P2-13 | 10 componentes muertos + dependencias sin uso | ✅ Resuelto: componentes borrados; fuera `gsap`, `@studio-freight/lenis`, `jspdf`, `html2canvas`, `stripe`, `@react-three/drei`, **`resend` + `src/lib/email`** (`three`/`fiber` sí se usan en el hero) |
+| P2-14 | `banner.gif` 1,9 MB | ✅ Resuelto (hero 373 KB + banner webp 42 KB) |
+| P2-15 | `/bot/status` sin `<h1>` | ✅ Resuelto |
+| P2-16 | Menú "System 777" solo-hover | ✅ Resuelto (hover + `onClick` + `Escape` + click fuera) |
+| P2-17 | Sin `:focus-visible` propio | ✅ Resuelto (`globals.css`) |
+
+**Resto pendiente:** rendimiento (§14).
+
+---
+
+## 14. Validación (2026-10-05)
+
+- **Playwright — 12/12** (`npm run test:e2e`, todo mockeado con `page.route("**://bot-api.jrsystem7777.com/**")`, sin tocar prod):
+  - Panel: carga del servidor, flujo completo de Permisos de Roles (persistencia incluida), Broadcast a `/api/broadcast`, Protección, "nada sale sin interceptar", SEO del panel.
+  - Pública: hidratación + navbar de la portada, 404 propia, `/bot/commands` (keys/overflow/consola), middleware `307 → /login`, enlaces a rutas eliminadas, responsive 320 y 1440.
+- **Lighthouse** (build de producción, perfil móvil simulado): Accesibilidad **100** · Best Practices **100** · SEO **100** · **Performance 33–39** (baseline).
+  - Métricas: TBT ~11,5 s · LCP ~10 s · FCP 2,2 s · **CLS 0** · payload 1 MB (GIF 374 KB + webp 120 KB + ~150 KB JS).
+  - Causa principal: `scriptEvaluation` 10,4 s en el hilo principal bajo CPU×4.
+- **Gates de push**: `tsc --noEmit` 0 · `eslint .` 0 · `next build` exit 0.
+- **Bot**: `integrity ✅` 158 archivos · pm2 `system-777` online · `error.log` 0 errores.
+- **Deploy final**: GitHub Actions *Deploy to Cloudflare Pages* → run de `1bca3c3` **success** (2026-10-05 04:40 UTC).
+  Producción verificada: `/` 200 · `/about` 200 · `/no-existe` **404** · `/manifest.webmanifest` 200 · `/sitemap.xml` 200 · `/bot/dashboard` **307 → `/login`** sin sesión · canonical único por ruta (sin duplicados).
+
+### Pendientes no bloqueantes
+1. **Rendimiento** (opcional): aplazar el three.js del hero, reducir el GIF y gatear animaciones con `prefers-reduced-motion`.
+2. **Fase 6** (sin empezar): integrar `src/utils/ticketLogViewer.js` (105 líneas, 0 imports) y las pruebas reales de *Verificación → Desactivar*.
+3. **Secretos tuyos**: `npx wrangler pages secret put DISCORD_CONTACT_WEBHOOK --project-name=system777` · password VPS (opcional) · aviso de librería YouTube en los logs (preexistente).
