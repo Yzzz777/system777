@@ -76,8 +76,8 @@ const roadmap = [
     desc: "Integrar el visor de transcripts de tickets en el dashboard (fase pendiente de la auditoría).",
   },
   {
-    title: "Optimización de rendimiento",
-    desc: "Diferir la carga del GIF del hero y reducir el payload inicial (Performance es el puntaje bajo actual).",
+    title: "Re-auditar Lighthouse",
+    desc: "Tras diferir el GIF del hero y fuera three.js, re-medir el puntaje de Performance y el TBT que marcó la última auditoría.",
   },
   {
     title: "Webhook del formulario de contacto",
