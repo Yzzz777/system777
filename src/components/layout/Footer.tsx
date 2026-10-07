@@ -15,6 +15,7 @@ const footerLinks = {
   Contenido: [
     { label: "Blog", href: "/blog" },
     { label: "Biblioteca", href: "/library" },
+    { label: "Changelog", href: "/changelog" },
     { label: "Contacto", href: "/contact" },
   ],
   "System 777": [

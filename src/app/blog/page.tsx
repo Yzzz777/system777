@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Search,
@@ -19,12 +19,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -51,7 +45,6 @@ export default function BlogPage() {
   const [error, setError] = useState("");
   const [category, setCategory] = useState("Todos");
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<BlogPost | null>(null);
   const [isOwner, setIsOwner] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [sending, setSending] = useState(false);
@@ -84,8 +77,6 @@ export default function BlogPage() {
       alive = false;
     };
   }, []);
-
-  const closeDialog = useCallback(() => setSelected(null), []);
 
   const categories = ["Todos", ...Array.from(new Set((posts ?? []).map((p) => p.category || "General")))];
   const filtered = (posts ?? []).filter((p) => {
@@ -137,7 +128,6 @@ export default function BlogPage() {
       const res = await fetch(`/api/blog/posts?id=${id}`, { method: "DELETE" });
       if (res.ok) {
         setPosts((prev) => (prev ?? []).filter((p) => p.id !== id));
-        setSelected(null);
         toast.success("Artículo eliminado");
       }
     } catch {
@@ -394,7 +384,7 @@ export default function BlogPage() {
                       variant="link"
                       size="sm"
                       className="px-0"
-                      onClick={() => setSelected(post)}
+                      render={<Link href={`/blog/${post.slug}`} />}
                     >
                       Leer
                       <ArrowRight aria-hidden />
@@ -416,81 +406,6 @@ export default function BlogPage() {
           </ul>
         )}
       </div>
-
-      {/* Modal de lectura */}
-      <Dialog
-        open={!!selected}
-        onOpenChange={(open) => {
-          if (!open) closeDialog();
-        }}
-      >
-        <DialogContent
-          showCloseButton={false}
-          aria-labelledby="post-dialog-title"
-          className="max-h-[85vh] overflow-y-auto p-6 sm:max-w-2xl sm:p-8"
-        >
-          {selected && (
-            <>
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <Badge variant="outline" className="font-mono">
-                    {selected.category || "General"}
-                  </Badge>
-                  <DialogTitle
-                    id="post-dialog-title"
-                    className="mt-2 font-[family-name:var(--font-display)] text-xl font-bold"
-                  >
-                    {selected.title}
-                  </DialogTitle>
-                  <time
-                    dateTime={selected.created_at}
-                    className="mt-1 block font-[family-name:var(--font-mono)] text-[11px] text-[var(--text-3)]"
-                  >
-                    {new Date(selected.created_at).toLocaleDateString("es-ES")} ·{" "}
-                    {selected.author || "Ángel"}
-                  </time>
-                </div>
-                <DialogClose
-                  aria-label="Cerrar"
-                  render={
-                    <Button
-                      variant="outline"
-                      size="icon-sm"
-                      className="shrink-0 text-[var(--text-3)] hover:text-[var(--text)]"
-                    />
-                  }
-                >
-                  <svg
-                    aria-hidden
-                    viewBox="0 0 24 24"
-                    width="16"
-                    height="16"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  >
-                    <path d="M18 6 6 18M6 6l12 12" />
-                  </svg>
-                </DialogClose>
-              </div>
-
-              <div className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--text-2)]">
-                {selected.content || selected.excerpt || "Sin contenido todavía."}
-              </div>
-
-              {selected.cover_url && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={selected.cover_url}
-                  alt=""
-                  className="max-h-72 w-full rounded-[10px] object-cover"
-                />
-              )}
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
 
       <p className="relative mt-10 text-center text-xs text-[var(--text-3)]">
         ¿Buscas documentación técnica?{" "}

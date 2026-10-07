@@ -33,6 +33,7 @@ export type NavLink = {
 
 export const navLinks: NavLink[] = [
   { label: "Inicio", href: "/" },
+  { label: "Sobre mí", href: "/about" },
   { label: "Proyectos", href: "/projects" },
   { label: "Tecnologías", href: "/technologies" },
   { label: "Cybersecurity", href: "/cybersecurity" },

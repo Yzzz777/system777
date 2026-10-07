@@ -76,6 +76,47 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+/* Datos estructurados (JSON-LD) — solo información real del sitio.
+   Person + WebSite para el portafolio; SoftwareApplication para System 777. */
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": `${siteConfig.url}/#person`,
+      name: "Ángel — Yzzz 777",
+      url: siteConfig.url,
+      jobTitle: "Developer",
+      description: siteConfig.description,
+      sameAs: [siteConfig.social.github, siteConfig.social.instagram, siteConfig.social.tiktok],
+      knowsAbout: ["Desarrollo web", "Linux", "Ciberseguridad", "Bots de Discord"],
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${siteConfig.url}/#website`,
+      url: siteConfig.url,
+      name: siteConfig.name,
+      inLanguage: "es",
+      publisher: { "@id": `${siteConfig.url}/#person` },
+    },
+    {
+      "@type": "SoftwareApplication",
+      name: "System 777",
+      url: `${siteConfig.url}/bot`,
+      applicationCategory: "CommunicationApplication",
+      operatingSystem: "Linux",
+      description:
+        "Bot de Discord con moderación, protección anti-raid, tickets, economía, niveles y control de VPS.",
+      author: { "@id": `${siteConfig.url}/#person` },
+      offers: [
+        { "@type": "Offer", name: "Normal", price: "4.99", priceCurrency: "USD" },
+        { "@type": "Offer", name: "Pro", price: "9.99", priceCurrency: "USD" },
+        { "@type": "Offer", name: "Max", price: "19.99", priceCurrency: "USD" },
+      ],
+    },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -83,6 +124,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className={`${manrope.variable} ${syne.variable} ${jetbrainsMono.variable}`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className="min-h-screen antialiased">
         <a href="#contenido" className="skip-link">
           Saltar al contenido

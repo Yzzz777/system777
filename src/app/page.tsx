@@ -33,6 +33,8 @@ import {
   Download,
   Mail,
   CheckCircle2,
+  HelpCircle,
+  ChevronDown,
 } from "lucide-react";
 import StudyTimeCounter from "@/components/StudyTimeCounter";
 import RealEye from "@/components/RealEye";
@@ -281,6 +283,33 @@ const premiumPlans = [
   { name: "Max", price: "$19.99/mes" },
 ];
 
+const faqItems = [
+  {
+    q: "¿Qué es System 777?",
+    a: "Un bot de Discord multifunción que construí y opero yo mismo: moderación con casos, protección anti-raid y anti-nuke, tickets con panel público, economía, niveles, música y una terminal para gestionar el VPS. Corre 24/7 en mi servidor y puedes ver su estado en vivo en /bot/status.",
+  },
+  {
+    q: "¿Cuánto cuesta?",
+    a: "Usar el bot es gratuito. Los planes premium (Normal $4.99/mes, Pro $9.99/mes, Max $19.99/mes) son opcionales y desbloquean funciones avanzadas; los precios están en la sección Premium de /bot.",
+  },
+  {
+    q: "¿Cómo lo añado a mi servidor?",
+    a: "Usa el botón “Invitar bot” de esta página o el de /bot. Discord te pedirá permisos de administrador; después puedes configurarlo desde el dashboard con tu cuenta de Discord.",
+  },
+  {
+    q: "¿Qué datos guarda?",
+    a: "La configuración de tu servidor y los datos de uso de los comandos (economía, niveles, warns, tickets). No vendo datos, no hay cookies de rastreo y puedes pedir la eliminación de los datos de tu servidor por Discord o el formulario de contacto.",
+  },
+  {
+    q: "¿Cómo sé si el bot está funcionando?",
+    a: "La página /bot/status muestra servidores, usuarios, ping y uptime en tiempo real desde la API del bot. Si el servicio cae, se muestra “No disponible” en lugar de números inventados.",
+  },
+  {
+    q: "¿Cómo te contacto?",
+    a: "Por Discord (respuesta más rápida), desde el formulario de /contact o por GitHub. Para colaboraciones, dudas técnicas o soporte del bot, cualquier vía sirve.",
+  },
+];
+
 interface BlogPost {
   id: string;
   title: string;
@@ -331,6 +360,7 @@ const libraryResources = [
    ========================================================= */
 export default function HomePage() {
   const [posts, setPosts] = useState<BlogPost[] | null>(null);
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   /* Motion estilo Apple — gate post-hidratación para reduced-motion
      (SSR y primer render del cliente son idénticos: sin desajuste) */
@@ -341,6 +371,25 @@ export default function HomePage() {
     upd();
     mq.addEventListener?.("change", upd);
     return () => mq.removeEventListener?.("change", upd);
+  }, []);
+
+  /* GIF decorativo del hero: se carga diferido (idle) para no bloquear el
+     hilo principal en la carga inicial, y se omite con reduced-motion. */
+  const [heroGif, setHeroGif] = useState(false);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let idleId: number | undefined;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    const activate = () => setHeroGif(true);
+    if ("requestIdleCallback" in window) {
+      idleId = window.requestIdleCallback(activate, { timeout: 2500 });
+    } else {
+      timeoutId = setTimeout(activate, 1200);
+    }
+    return () => {
+      if (idleId != null) window.cancelIdleCallback(idleId);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
   const { scrollY } = useScroll();
   const portraitY = useTransform(scrollY, [0, 700], [0, -70]);
@@ -371,18 +420,20 @@ export default function HomePage() {
         {/* ============================ HERO ============================ */}
         <section className="relative overflow-hidden px-4 pb-16 pt-10 sm:px-6 sm:pt-16 lg:pb-24">
           <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-            <Image
-              src="/hero-sasuke.gif"
-              alt=""
-              fill
-              unoptimized
-              sizes="100vw"
-              className="object-cover opacity-45"
-              style={{
-                maskImage: "radial-gradient(120% 100% at 60% 45%, #000 35%, transparent 92%)",
-                WebkitMaskImage: "radial-gradient(120% 100% at 60% 45%, #000 35%, transparent 92%)",
-              }}
-            />
+            {heroGif && (
+              <Image
+                src="/hero-sasuke.gif"
+                alt=""
+                fill
+                unoptimized
+                sizes="100vw"
+                className="object-cover opacity-45"
+                style={{
+                  maskImage: "radial-gradient(120% 100% at 60% 45%, #000 35%, transparent 92%)",
+                  WebkitMaskImage: "radial-gradient(120% 100% at 60% 45%, #000 35%, transparent 92%)",
+                }}
+              />
+            )}
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,7,14,0.78)_0%,rgba(4,7,14,0.55)_45%,rgba(4,7,14,0.88)_100%)]" />
           </div>
           <motion.div
@@ -943,7 +994,7 @@ export default function HomePage() {
                 <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {posts.slice(0, 3).map((p, i) => (
                     <Reveal as="li" key={p.id} delay={i * 60}>
-                      <Link href="/blog" className="panel panel-hover block h-full p-5">
+                      <Link href={`/blog/${p.slug}`} className="panel panel-hover block h-full p-5">
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className="font-mono">
                             {p.category || "General"}
@@ -1045,15 +1096,79 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* ============================ FAQ ============================ */}
+        <section
+          id="faq"
+          className="border-t border-[rgba(0,229,255,0.14)] bg-[var(--bg-raised)] px-4 py-[var(--section-y)] sm:px-6"
+        >
+          <div className="mx-auto grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+            <Reveal blur>
+              <div className="section-head !mb-0">
+                <span className="eyebrow">08 — Preguntas frecuentes</span>
+                <h2>Dudas habituales</h2>
+                <p className="!text-[var(--text-3)] !text-sm">
+                  Respuestas directas, sin letra pequeña. Si falta alguna, pregunta por Discord o
+                  en el formulario de contacto.
+                </p>
+              </div>
+            </Reveal>
+
+            <Reveal delay={80}>
+              <ul className="space-y-3">
+                {faqItems.map((item, i) => {
+                  const open = openFaq === i;
+                  return (
+                    <li key={item.q} className="panel overflow-hidden">
+                      <h3>
+                        <button
+                          type="button"
+                          onClick={() => setOpenFaq(open ? null : i)}
+                          aria-expanded={open}
+                          aria-controls={`faq-panel-${i}`}
+                          className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-white/[0.03] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--brand)]"
+                        >
+                          <HelpCircle
+                            aria-hidden
+                            className="h-4 w-4 shrink-0 text-[var(--brand)]"
+                          />
+                          <span className="flex-1 text-[15px] font-semibold text-[var(--text)]">
+                            {item.q}
+                          </span>
+                          <ChevronDown
+                            aria-hidden
+                            className={`h-4 w-4 shrink-0 text-[var(--text-3)] transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+                          />
+                        </button>
+                      </h3>
+                      <div
+                        id={`faq-panel-${i}`}
+                        role="region"
+                        aria-label={item.q}
+                        className={`grid transition-[grid-template-rows] duration-300 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+                      >
+                        <div className="overflow-hidden">
+                          <p className="border-t border-[var(--line)] px-5 py-4 text-sm leading-relaxed text-[var(--text-2)]">
+                            {item.a}
+                          </p>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Reveal>
+          </div>
+        </section>
+
         {/* ============================ CONTACTO ============================ */}
         <section
           id="contacto"
-          className="border-t border-[rgba(0,229,255,0.14)] bg-[var(--bg-raised)] px-4 py-[var(--section-y)] sm:px-6"
+          className="border-t border-[rgba(0,229,255,0.14)] px-4 py-[var(--section-y)] sm:px-6"
         >
           <div className="mx-auto max-w-4xl">
             <Reveal>
               <div className="panel p-8 text-center sm:p-12">
-                <span className="eyebrow justify-center">08 — Contacto</span>
+                <span className="eyebrow justify-center">09 — Contacto</span>
                 <h2 className="mt-4 text-[clamp(1.6rem,3.4vw,2.4rem)] font-bold">
                   ¿Hablamos?
                 </h2>

@@ -1,24 +1,151 @@
 "use client";
 
+import Link from "next/link";
 import { FadeIn } from "@/components/ui/Animations";
+import { siteConfig } from "@/lib/config";
+
+const sections: { title: string; body: React.ReactNode }[] = [
+  {
+    title: "1. Qué es este sitio",
+    body: (
+      <>
+        jrsystem7777.com es el portafolio personal de Ángel (Yzzz 777), con blog, estado en vivo
+        del bot <span className="text-[var(--text)]">System 777</span> y un panel privado de
+        administración al que se accede con Discord. No vende cursos, productos digitales ni
+        servicios de educación.
+      </>
+    ),
+  },
+  {
+    title: "2. Datos que recopilamos",
+    body: (
+      <ul className="list-disc space-y-2 pl-5">
+        <li>
+          <span className="text-[var(--text)]">Formulario de contacto</span>: nombre, correo y
+          mensaje. Se envían directamente al owner para responderte; no se usan para nada más.
+        </li>
+        <li>
+          <span className="text-[var(--text)]">Inicio de sesión con Discord</span>: si accedes al
+          dashboard, guardamos tu ID de Discord, nombre y avatar para mantenerte la sesión.
+        </li>
+        <li>
+          <span className="text-[var(--text)]">Datos de uso del bot</span>: configuración de cada
+          servidor y datos generados por los comandos (economía, niveles, warns, tickets),
+          almacenados en base de datos.
+        </li>
+        <li>
+          <span className="text-[var(--text)]">Preferencias</span>: el tema visual elegido se
+          guarda en tu navegador (localStorage).
+        </li>
+      </ul>
+    ),
+  },
+  {
+    title: "3. Cookies",
+    body: (
+      <>
+        Solo usamos la cookie de sesión (HttpOnly) para mantenerte autenticado en el dashboard. No
+        hay cookies de publicidad, análisis ni rastreo de terceros. Puedes borrar la sesión
+        cerrando el login cuando quieras.
+      </>
+    ),
+  },
+  {
+    title: "4. Con quién se comparten datos",
+    body: (
+      <>
+        No vendemos ni alquilamos datos. Los proveedores necesarios para operar el servicio son:{" "}
+        <span className="text-[var(--text)]">Discord</span> (autenticación y API del bot),{" "}
+        <span className="text-[var(--text)]">Cloudflare</span> (alojamiento y CDN),{" "}
+        <span className="text-[var(--text)]">Neon</span> (base de datos) y{" "}
+        <span className="text-[var(--text)]">GitHub</span> (código fuente público). Cada uno
+        trata los datos según sus propias políticas.
+      </>
+    ),
+  },
+  {
+    title: "5. Retención y borrado",
+    body: (
+      <>
+        Conservamos los datos mientras la cuenta o el servidor usen el servicio. Puedes pedir la
+        eliminación de los datos de tu servidor o de tu sesión escribiendo por{" "}
+        <a
+          href={siteConfig.social.discord}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[var(--brand)] hover:underline"
+        >
+          Discord
+        </a>{" "}
+        o desde el{" "}
+        <Link href="/contact" className="text-[var(--brand)] hover:underline">
+          formulario de contacto
+        </Link>
+        .
+      </>
+    ),
+  },
+  {
+    title: "6. Menores de edad",
+    body: (
+      <>
+        El servicio está dirigido a mayores de 13 años (edad mínima de Discord). No recopilamos
+        conscientemente datos de menores de 13 años.
+      </>
+    ),
+  },
+  {
+    title: "7. Seguridad",
+    body: (
+      <>
+        Las contraseñas se guardan con hash, las peticiones del dashboard verifican sesión y
+        permisos, y todo el sitio se sirve por HTTPS. Aun así, ningún sistema es 100% seguro: si
+        detectas una vulnerabilidad, repórtala por Discord.
+      </>
+    ),
+  },
+  {
+    title: "8. Contacto",
+    body: (
+      <>
+        Dudas sobre privacidad: por{" "}
+        <a
+          href={siteConfig.social.discord}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[var(--brand)] hover:underline"
+        >
+          Discord
+        </a>{" "}
+        o el{" "}
+        <Link href="/contact" className="text-[var(--brand)] hover:underline">
+          formulario de contacto
+        </Link>
+        .
+      </>
+    ),
+  },
+];
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen py-12">
+    <div className="py-12">
       <div className="mx-auto max-w-4xl px-4">
         <FadeIn>
-          <h1 className="text-4xl font-bold text-white">Política de Privacidad</h1>
-          <p className="mt-2 text-sm text-gray-500">Última actualización: Junio 2025</p>
-          <div className="mt-8 space-y-8 text-gray-400 leading-relaxed">
-            <section><h2 className="text-xl font-semibold text-white mb-3">1. Información que Recopilamos</h2><p>Recopilamos información que nos proporcionas directamente: nombre, correo electrónico, nombre de usuario, contraseña (hasheada), información de pago (procesada por transferencia bancaria o PayPal) y datos de perfil. También recopilamos datos de uso como páginas visitadas, progreso en cursos e información del dispositivo.</p></section>
-            <section><h2 className="text-xl font-semibold text-white mb-3">2. Cómo Usamos tu Información</h2><p>Usamos tu información para: proveer y mejorar nuestros servicios, procesar pagos, enviar actualizaciones de cursos y notificaciones, personalizar tu experiencia, asegurar la seguridad y cumplir con obligaciones legales.</p></section>
-            <section><h2 className="text-xl font-semibold text-white mb-3">3. Compartir Datos</h2><p>No vendemos tus datos personales. Podemos compartir datos con: Banreservas y PayPal (procesamiento de pagos), Vercel (hosting) y Cloudflare (CDN/seguridad). Estos proveedores están vinculados por acuerdos de procesamiento de datos.</p></section>
-            <section><h2 className="text-xl font-semibold text-white mb-3">4. Seguridad de Datos</h2><p>Implementamos medidas de seguridad estándar de la industria incluyendo cifrado (TLS/SSL), contraseñas hasheadas (Argon2), protección CSRF, limitación de velocidad y auditorías de seguridad regulares.</p></section>
-            <section><h2 className="text-xl font-semibold text-white mb-3">5. Cookies</h2><p>Usamos cookies esenciales para autenticación y gestión de sesiones. No usamos cookies de rastreo. Puedes gestionar las preferencias de cookies en la configuración de tu navegador.</p></section>
-            <section><h2 className="text-xl font-semibold text-white mb-3">6. Tus Derechos</h2><p>Tienes derecho a: acceder a tus datos, corregir datos inexactos, eliminar tu cuenta y datos, exportar tus datos y optar por no recibir comunicaciones no esenciales. Contáctanos para ejercer estos derechos.</p></section>
-            <section><h2 className="text-xl font-semibold text-white mb-3">7. Retención de Datos</h2><p>Retenemos tus datos mientras tu cuenta esté activa. Al eliminar tu cuenta, eliminamos los datos personales dentro de los 30 días, excepto donde la ley lo requiera.</p></section>
-            <section><h2 className="text-xl font-semibold text-white mb-3">8. Privacidad de Menores</h2><p>Nuestro servicio no está destinado a menores de 13 años. No recopilamos conscientemente datos de menores de 13 años.</p></section>
-            <section><h2 className="text-xl font-semibold text-white mb-3">9. Contacto</h2><p>Para preguntas sobre privacidad, contáctanos en <a href="mailto:rksagmita@jrsystem7777.com" className="text-[#00E5FF] hover:underline">rksagmita@jrsystem7777.com</a>.</p></section>
+          <span className="eyebrow">Legal</span>
+          <h1 className="mt-4 font-[family-name:var(--font-display)] text-[clamp(1.9rem,5vw,3rem)] font-bold tracking-tight text-[var(--text)]">
+            Política de Privacidad
+          </h1>
+          <p className="mt-2 font-[family-name:var(--font-mono)] text-sm text-[var(--text-3)]">
+            Última actualización: Octubre 2026
+          </p>
+          <div className="mt-8 space-y-8 text-[15px] leading-relaxed text-[var(--text-2)]">
+            {sections.map((s) => (
+              <section key={s.title}>
+                <h2 className="mb-3 text-xl font-semibold text-[var(--text)]">{s.title}</h2>
+                <div>{s.body}</div>
+              </section>
+            ))}
           </div>
         </FadeIn>
       </div>
