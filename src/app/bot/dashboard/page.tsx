@@ -279,6 +279,7 @@ export default function BotDashboardPage() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileData, setProfileData] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [bioExpanded, setBioExpanded] = useState(false);
   const [contentAdminOpen, setContentAdminOpen] = useState(false);
 
   const isOwner = OWNER_IDS.includes((session?.user as any)?.id || session?.user?.name || "");
@@ -466,6 +467,7 @@ export default function BotDashboardPage() {
                   onClick={() => {
                     const next = !profileOpen;
                     setProfileOpen(next);
+                    if (next) setBioExpanded(false);
                     if (next && !profileData && !profileLoading) {
                       setProfileLoading(true);
                       fetch("/api/auth/profile")
@@ -493,12 +495,23 @@ export default function BotDashboardPage() {
                         transition={{ duration: 0.18 }}
                         className="absolute right-0 top-full mt-2 w-[290px] z-50 rounded-2xl border border-white/10 bg-[#11161f] overflow-hidden shadow-[0_18px_50px_rgba(0,0,0,0.55)]"
                       >
+                        {profileData?.frameUrl && (
+                          <Image
+                            src={profileData.frameUrl}
+                            alt=""
+                            fill
+                            unoptimized
+                            className="pointer-events-none z-10 object-fill"
+                          />
+                        )}
                         <div
                           className="relative h-20 bg-cover bg-center"
                           style={{
                             background: profileData?.accentColor != null
                               ? `#${profileData.accentColor.toString(16).padStart(6, "0")}`
-                              : "#23272a",
+                              : profileData?.themeColors?.[0] != null
+                                ? `#${profileData.themeColors[0].toString(16).padStart(6, "0")}`
+                                : "#23272a",
                           }}
                         >
                           {profileData?.bannerUrl && (
@@ -517,18 +530,40 @@ export default function BotDashboardPage() {
                                 className="rounded-full border-4 border-[#11161f] bg-[#11161f]"
                               />
                             )}
-                            <span className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full bg-[#23a559] border-[3px] border-[#11161f]" />
+                            {profileData?.decoration?.url && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={profileData.decoration.url}
+                                alt=""
+                                aria-hidden
+                                className="pointer-events-none absolute left-1/2 top-1/2 z-10 h-[145%] w-[145%] -translate-x-1/2 -translate-y-1/2"
+                              />
+                            )}
+                            <span className="absolute bottom-0.5 right-0.5 z-20 w-4 h-4 rounded-full bg-[#23a559] border-[3px] border-[#11161f]" />
                           </div>
                         </div>
                         <div className="px-4 pt-2 pb-4">
                           <div className="font-bold text-white leading-tight">{profileData?.globalName || session.user?.name}</div>
                           {profileData?.username && <div className="text-xs text-gray-400">@{profileData.username}</div>}
+                          {profileData?.pronouns && <div className="mt-0.5 text-xs italic text-gray-500">{profileData.pronouns}</div>}
                           <div className="mt-3 border-t border-white/10 pt-3">
                             <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Descripción</div>
                             {profileLoading ? (
                               <p className="text-xs text-gray-500">Cargando perfil de Discord…</p>
                             ) : profileData?.bio ? (
-                              <p className="text-[13px] text-gray-300 whitespace-pre-wrap break-words">{profileData.bio}</p>
+                              <>
+                                <p className={`text-[13px] text-gray-300 whitespace-pre-wrap break-words ${bioExpanded ? "" : "line-clamp-4"}`}>
+                                  {profileData.bio}
+                                </p>
+                                {profileData.bio.length > 140 && (
+                                  <button
+                                    onClick={() => setBioExpanded((v) => !v)}
+                                    className="mt-1 text-xs text-[#00E5FF] hover:underline"
+                                  >
+                                    {bioExpanded ? "Ver menos" : "Ver biografía completa"}
+                                  </button>
+                                )}
+                              </>
                             ) : (
                               <p className="text-xs text-gray-600">Sin descripción en Discord.</p>
                             )}
