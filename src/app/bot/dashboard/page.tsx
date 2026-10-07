@@ -467,13 +467,15 @@ export default function BotDashboardPage() {
                   onClick={() => {
                     const next = !profileOpen;
                     setProfileOpen(next);
-                    if (next) setBioExpanded(false);
-                    if (next && !profileData && !profileLoading) {
+                    if (next) {
+                      setBioExpanded(false);
+                      // Refresca en cada apertura: los cambios de Discord
+                      // (bio, decoración…) aparecen sin recargar la página.
                       setProfileLoading(true);
                       fetch("/api/auth/profile")
                         .then((r) => r.json())
-                        .then((d) => setProfileData(d?.profile ?? null))
-                        .catch(() => setProfileData(null))
+                        .then((d) => setProfileData((prev: any) => d?.profile ?? prev))
+                        .catch(() => {})
                         .finally(() => setProfileLoading(false));
                     }
                   }}
@@ -548,7 +550,7 @@ export default function BotDashboardPage() {
                           {profileData?.pronouns && <div className="mt-0.5 text-xs italic text-gray-500">{profileData.pronouns}</div>}
                           <div className="mt-3 border-t border-white/10 pt-3">
                             <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Descripción</div>
-                            {profileLoading ? (
+                            {profileLoading && !profileData ? (
                               <p className="text-xs text-gray-500">Cargando perfil de Discord…</p>
                             ) : profileData?.bio ? (
                               <>
@@ -565,7 +567,14 @@ export default function BotDashboardPage() {
                                 )}
                               </>
                             ) : (
-                              <p className="text-xs text-gray-600">Sin descripción en Discord.</p>
+                              <>
+                                <p className="text-xs text-gray-600">Sin descripción en Discord.</p>
+                                {profileData?.diag && (
+                                  <p className="mt-1 font-mono text-[10px] text-gray-700" title="Diagnóstico de la API de perfil">
+                                    diag: {profileData.diag}
+                                  </p>
+                                )}
+                              </>
                             )}
                           </div>
                           {profileData?.id && (

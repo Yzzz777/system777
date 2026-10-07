@@ -137,6 +137,7 @@ export async function GET(req: NextRequest) {
     const parsed = await verifySession(cookie);
     if (!parsed) return NextResponse.json({ profile: null });
     let sessionData = parsed as SessionData;
+    let diag = "sin-token";
 
     if (!sessionData.accessToken || (sessionData.expiresAt && Date.now() > sessionData.expiresAt)) {
       if (sessionData.refreshToken) {
@@ -154,6 +155,7 @@ export async function GET(req: NextRequest) {
           cache: "no-store",
         });
         if (res.ok) {
+          diag = "ok";
           const u = await res.json();
           sessionData = {
             ...sessionData,
@@ -193,12 +195,16 @@ export async function GET(req: NextRequest) {
                 avatar_decoration: (pu.avatar_decoration_data as SessionData["avatar_decoration"]) ?? sessionData.avatar_decoration ?? null,
                 frame_url: extractFrameUrl(prof) || sessionData.frame_url || null,
               };
+              diag = `perfil-200 bio=${sessionData.bio ? "si" : "no"} dec=${sessionData.avatar_decoration ? "si" : "no"} frame=${sessionData.frame_url ? "si" : "no"}`;
+            } else {
+              diag = `perfil-${pr.status}`;
             }
-          } catch {
+          } catch (e) {
             /* perfil no disponible: seguimos con lo de /users/@me */
+            diag = e instanceof Error && e.name === "TimeoutError" ? "perfil-timeout" : "perfil-error-red";
           }
 
-          const response = NextResponse.json({ profile: buildProfile(sessionData) });
+          const response = NextResponse.json({ profile: { ...buildProfile(sessionData), diag } });
           response.cookies.set("system777_session", await signSession(sessionData as unknown as Record<string, unknown>), {
             path: "/",
             httpOnly: true,
@@ -208,12 +214,14 @@ export async function GET(req: NextRequest) {
           });
           return response;
         }
-      } catch {
+        diag = `me-${res.status}`;
+      } catch (e) {
         /* sin red: devolvemos lo que hay en sesión */
+        diag = e instanceof Error && e.name === "TimeoutError" ? "me-timeout" : "me-error-red";
       }
     }
 
-    return NextResponse.json({ profile: buildProfile(sessionData) });
+    return NextResponse.json({ profile: { ...buildProfile(sessionData), diag } });
   } catch {
     return NextResponse.json({ profile: null });
   }
