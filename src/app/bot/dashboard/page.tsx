@@ -274,6 +274,9 @@ export default function BotDashboardPage() {
   const [webhookAvatar, setWebhookAvatar] = useState("");
   const [slowmodeChannel, setSlowmodeChannel] = useState("");
   const [slowmodeDuration, setSlowmodeDuration] = useState(0);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileData, setProfileData] = useState<any>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   const isOwner = OWNER_IDS.includes((session?.user as any)?.id || session?.user?.name || "");
 
@@ -419,9 +422,89 @@ export default function BotDashboardPage() {
             <div className="flex items-center gap-3">
               <a href={BOT_INVITE} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-[#00E5FF]/10 text-[#00E5FF] text-xs font-semibold hover:bg-[#00E5FF]/20">Invitame</a>
               <a href={SUPPORT_SERVER} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-white/5 text-gray-400 text-xs hover:bg-white/10">Soporte</a>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5">
-                {session.user?.image && <Image src={session.user.image} alt="" width={24} height={24} className="rounded-full" />}
-                <span className="text-sm text-white">{session.user?.name}</span>
+              <div className="relative">
+                <button
+                  type="button"
+                  aria-haspopup="menu"
+                  aria-expanded={profileOpen}
+                  onClick={() => {
+                    const next = !profileOpen;
+                    setProfileOpen(next);
+                    if (next && !profileData && !profileLoading) {
+                      setProfileLoading(true);
+                      fetch("/api/auth/profile")
+                        .then((r) => r.json())
+                        .then((d) => setProfileData(d?.profile ?? null))
+                        .catch(() => setProfileData(null))
+                        .finally(() => setProfileLoading(false));
+                    }
+                  }}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  {session.user?.image && <Image src={session.user.image} alt="" width={24} height={24} className="rounded-full" />}
+                  <span className="text-sm text-white">{session.user?.name}</span>
+                  <ChevronDown size={14} className={`text-gray-500 transition-transform ${profileOpen ? "rotate-180" : ""}`} />
+                </button>
+                <AnimatePresence>
+                  {profileOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} aria-hidden />
+                      <motion.div
+                        role="menu"
+                        initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                        transition={{ duration: 0.18 }}
+                        className="absolute right-0 top-full mt-2 w-[290px] z-50 rounded-2xl border border-white/10 bg-[#11161f] overflow-hidden shadow-[0_18px_50px_rgba(0,0,0,0.55)]"
+                      >
+                        <div
+                          className="relative h-20 bg-cover bg-center"
+                          style={{
+                            background: profileData?.accentColor != null
+                              ? `#${profileData.accentColor.toString(16).padStart(6, "0")}`
+                              : "#23272a",
+                          }}
+                        >
+                          {profileData?.bannerUrl && (
+                            <Image src={profileData.bannerUrl} alt="" fill unoptimized className="object-cover" />
+                          )}
+                        </div>
+                        <div className="px-4 -mt-8 relative">
+                          <div className="relative inline-block">
+                            {(profileData?.avatarUrl || session.user?.image) && (
+                              <Image
+                                src={profileData?.avatarUrl || session.user?.image || ""}
+                                alt=""
+                                width={64}
+                                height={64}
+                                unoptimized
+                                className="rounded-full border-4 border-[#11161f] bg-[#11161f]"
+                              />
+                            )}
+                            <span className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full bg-[#23a559] border-[3px] border-[#11161f]" />
+                          </div>
+                        </div>
+                        <div className="px-4 pt-2 pb-4">
+                          <div className="font-bold text-white leading-tight">{profileData?.globalName || session.user?.name}</div>
+                          {profileData?.username && <div className="text-xs text-gray-400">@{profileData.username}</div>}
+                          <div className="mt-3 border-t border-white/10 pt-3">
+                            <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Descripción</div>
+                            {profileLoading ? (
+                              <p className="text-xs text-gray-500">Cargando perfil de Discord…</p>
+                            ) : profileData?.bio ? (
+                              <p className="text-[13px] text-gray-300 whitespace-pre-wrap break-words">{profileData.bio}</p>
+                            ) : (
+                              <p className="text-xs text-gray-600">Sin descripción en Discord.</p>
+                            )}
+                          </div>
+                          {profileData?.id && (
+                            <div className="mt-3 text-[10px] text-gray-600 font-mono">ID: {profileData.id}</div>
+                          )}
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </div>
